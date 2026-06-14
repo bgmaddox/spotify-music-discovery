@@ -37,8 +37,9 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   adjacencies seeded for the Americana/indie-folk clusters), read before reasoning.
   `RECIPES.md` adds Recipe 6 (Last.fm-seeded lateral ladder). Verified in-session: all three
   CLI subcommands return real data with caching; Recipe 6 chain (gather → filter-to-new →
-  `search_verify`) surfaced 25 genuinely-new candidates from 2 seeds and verified 3 of them
-  (Vincent Neil Emerson, 49 Winchester, Flatland Cavalry). Live playlist build not yet run.
+  `search_verify`) run end-to-end: seeded from Isbell/Avett/Sturgill/Carlile, surfaced 58
+  genuinely-new candidates (filtered vs. 307 known artists), built a real 10-track private
+  playlist ("Lateral roots — Last.fm ladder"), 0 verify misses. Acceptance bar cleared.
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 
