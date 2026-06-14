@@ -104,8 +104,32 @@ both anchors. This is where the surprising-but-right picks live.
 ## User preferences (edit me)
 
 > Brett: record likes/dislikes/avoid-lists here so future sessions honor them.
-> Examples to fill in over time:
-- **Lean into:** _(e.g. lyric-forward writing, live/raw recordings, pedal steel & fiddle)_
-- **Go easy on:** _(e.g. overproduced pop-country, very-low-energy ambient)_
-- **Always worth a stretch toward:** _(e.g. older originals behind modern revival acts)_
-- **Hard no:** _(e.g. holiday music, comedy tracks)_
+> Items tagged **(proposed)** are *inferred from your play data* — confirm, edit, or
+> delete them. Items tagged **(you fill)** can't be inferred (play history shows what you
+> play, never what you'd reject), so they're left for you. Strike the tags once you've
+> reviewed each line.
+
+**Lean into**
+- **(proposed)** Lyric-forward / narrative songwriting — your spine is storytellers
+  (Childers, Isbell, John Prine, The Mountain Goats, The Decemberists).
+- **(proposed)** Harmony-rich, vocal-forward arrangements (Avett, The Milk Carton Kids,
+  Pentatonix, the vocal-jazz cluster).
+- **(proposed)** Acoustic string instrumentation — fiddle / pedal steel / mandolin / banjo
+  (heavy bluegrass & newgrass presence: Grisman, Stringdusters, Watchhouse).
+- **(proposed)** Live / raw / retro-soul energy over studio polish (Rateliff, California
+  Honeydrops, Taj Mahal).
+
+**Always worth a stretch toward**
+- **(proposed)** Older originals behind modern revival acts (Waylon / Townes / Prine behind
+  the Childers–Sturgill axis).
+- **(proposed)** Cross-cluster bridges — your taste rewards them (roots×hip-hop via
+  Shaboozey, hip-hop×jazz via André 3000). See `genre_map.md` bridges.
+
+**Go easy on**
+- **(you fill)** _Textures/sub-genres you tolerate but rarely want more of — can't be read
+  from play data._
+
+**Hard no**
+- **(you fill)** _Genres/themes to never suggest. NOTE: not holiday music — Christmas is a
+  top-artist cluster for you. Kids' music (CoComelon, Ms. Rachel) is already excluded as
+  functional, not taste._
