@@ -5,6 +5,7 @@ auth:         auth.py  (get_client(scopes) wraps SpotifyOAuth)
 tools:        tools.py  (search_verify, verify_detail, build_playlist; lib + CLI)
 sensing:      sensing.py  (now_playing, library_scan; lib + CLI)
 lastfm:       lastfm.py  (similar_artists, similar_tracks, artist_tags; lib + CLI; caches to .cache_lastfm/)
+mcp (Mode C): mcp_server.py  (Phase 6; read-only FastMCP server for mobile Claude) · deploy: DEPLOY_MCP.md
 recipes:      RECIPES.md  (1 ladder, 2 now-playing, 3 taste-report, 4 archaeologist, 5 time-machine, 6 lastfm-seeded ladder)
 knowledge:    knowledge/  (discovery_heuristics.md = angles, genre_map.md = static adjacencies; read before reasoning)
 data:         data/    (taste_*.json, library_*.json dumps, gitignored)

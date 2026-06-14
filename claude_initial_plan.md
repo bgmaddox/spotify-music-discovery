@@ -232,6 +232,58 @@ of external sources is uneven, so verification is the source of truth).
 > **Mode B (optional, later):** the Last.fm primitives and `knowledge/` library are reused
 > unchanged; only the in-session reasoning moves into an API call.
 
+### Phase 6 — Remote MCP server (Mode C: mobile Claude)  ·  build model: `claude-opus-4-8`
+**Motivation.** Modes A/B both require being at a computer (a Claude Code session or a
+script run). Phase 6 adds a third front door: a remote **MCP server** the Claude *mobile
+app* connects to, so discovery works from a phone. This is **purely additive** — it reuses
+the existing primitives and knowledge base unchanged; deleting it leaves Modes A/B identical.
+
+**Architecture.** The Claude mobile app reaches MCP connectors *via Anthropic's cloud*, not
+from the device — so the server must be at a public HTTPS URL (Tailscale alone is
+insufficient). It runs on the Pi behind a **Cloudflare Tunnel** (free public HTTPS, no
+port-forwarding). It is **read-only**: exposes the discovery signal + sensing + knowledge,
+but **no write tools** — playlist/library writes stay with Claude's built-in Spotify
+connector, keeping the public surface minimal (per the scope decision).
+
+**Decisions (resolved with user):** host = Pi + Cloudflare Tunnel; scope = read-only
+discovery, writes via the built-in connector; connector auth = static bearer token
+(`MCP_BEARER_TOKEN`), with Cloudflare Access / OAuth as the fallback if the app's connector
+flow demands a full OAuth handshake (verify on first connect).
+
+**Deliverables**
+- `Spotify/mcp_server.py` — a FastMCP server (`stateless_http=True, json_response=True`,
+  `streamable-http` transport) exposing:
+  - **tools (read):** `lastfm_similar_artists`, `lastfm_similar_tracks`,
+    `lastfm_artist_tags`, `taste_snapshot` (compact summary of the newest local taste
+    dump), `search_verify` (the mandatory reality-check), `now_playing`.
+  - **resources:** `knowledge://recipes`, `knowledge://heuristics`, `knowledge://genre-map`
+    (RECIPES.md + knowledge/*.md, so the remote model can follow the recipes/angles it
+    can't read off disk).
+  - **auth:** `StaticBearerVerifier` (fail-closed; refuses to start without
+    `MCP_BEARER_TOKEN`). No write capability anywhere in the server.
+- `requirements.txt` gains `mcp`; `.env.example` documents `MCP_BEARER_TOKEN` /
+  `MCP_PUBLIC_URL` / `MCP_HOST` / `MCP_PORT`.
+- `Spotify/DEPLOY_MCP.md` — the deploy runbook (Spotify pre-auth → copy `.cache` to Pi →
+  systemd unit → Cloudflare Tunnel → add connector in the mobile app), with each step
+  marked 🤖 (Claude can do) vs 🧑 (user must do).
+
+**Acceptance**
+- The server boots locally with a bearer token set and imports cleanly (smoke test).
+- Deployed: `curl https://<public-url>/ -H "Authorization: Bearer $TOKEN"` returns an MCP
+  JSON response; the wrong/no token is rejected.
+- In the Claude mobile app, the connector lists the tools + resources, and a phone prompt
+  ("what's playing? three new verified artists like it") drives
+  `now_playing` → `lastfm_similar_artists` → `search_verify` with no errors.
+
+> **Adversarial note.** *Pragmatist:* the tool layer is already clean lib functions, so the
+> wrapper is thin; Pi + Cloudflare Tunnel is free and reuses existing infra; unlocks phone
+> use with all Phase 5 work intact. *Skeptic:* Mode A's quality comes from a rich session
+> reading the repo — mobile reasoning is more freeform and may follow recipes less faithfully
+> (mitigated by exposing them as resources); a public endpoint is real surface (mitigated by
+> read-only + fail-closed bearer auth + no secrets in repo); it's a step up from "script" to
+> "hosted service" (uptime, token refresh, cert via Cloudflare). *Verify-on-deploy:* the
+> exact connector-auth handshake the mobile app requires is the one piece needing a live test.
+
 ---
 
 ## 5. Runtime model assignments (Mode B only — optional)
@@ -300,7 +352,12 @@ breakpoint so repeated calls within ~5 min read it at ~10% input price (Phase 4 
   API to run a recipe's reasoning without a human, enabling cron / Pi / Streamlit use.
   Reuses the same tool primitives; adds only the API call, the §5 model/effort choices, and
   the §5 cost. Build per-feature, only for what you actually want automated.
+- **Mode C — remote MCP / mobile (optional, additive; Phase 6).** A read-only MCP server
+  (`mcp_server.py`) on the Pi behind a Cloudflare Tunnel lets the Claude *mobile app* drive
+  the same primitives from a phone. The remote model is the reasoner (like Mode A) but reads
+  the knowledge base via MCP resources instead of off disk. Writes stay with the built-in
+  Spotify connector. Reuses the tool layer unchanged.
 
-**Decision: build Mode A now; keep the tool layer API-agnostic so Mode B is a later
-add-on.** No reasoning logic in Python during Phases 0–4 — the tools fetch and act, the
-session reasons.
+**Decision: build Mode A now; keep the tool layer API-agnostic so Modes B and C are later
+add-ons.** No reasoning logic in Python during Phases 0–4 — the tools fetch and act, the
+session (or, in Mode C, the mobile model) reasons.

@@ -1,4 +1,5 @@
 spotipy
 python-dotenv
 requests  # Phase 5: Last.fm HTTP calls (already pulled in transitively by spotipy)
+mcp       # Phase 6: remote MCP server (FastMCP, streamable-http) for mobile Claude
 # anthropic  # add only when/if Mode B (standalone API orchestrator) is built — see plan §8
