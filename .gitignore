@@ -1,0 +1,9 @@
+.env
+.cache
+__pycache__/
+.venv/
+*.json
+data/
+
+# keep the example env tracked
+!.env.example

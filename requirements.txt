@@ -1,0 +1,3 @@
+spotipy
+python-dotenv
+# anthropic  # add only when/if Mode B (standalone API orchestrator) is built — see plan §8
