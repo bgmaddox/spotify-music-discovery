@@ -1,3 +1,4 @@
 spotipy
 python-dotenv
+requests  # Phase 5: Last.fm HTTP calls (already pulled in transitively by spotipy)
 # anthropic  # add only when/if Mode B (standalone API orchestrator) is built — see plan §8

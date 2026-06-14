@@ -1,5 +1,6 @@
 .env
 .cache
+.cache_lastfm/
 __pycache__/
 .venv/
 *.json

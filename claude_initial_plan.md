@@ -170,6 +170,68 @@ feature as a **recipe** the session executes. Reasoning stays in-session.
   discovery-ladder recipe (Phase 2) can be driven end-to-end in a session using these
   commands.
 
+### Phase 5 — External discovery signal + knowledge library  ·  build model: `claude-opus-4-8`
+**Motivation.** Phases 0–4 form a closed loop: the only input to Claude's reasoning is the
+user's *own* taste data. That can resurface and recombine what's already known, but it has
+no fresh external signal to pull in artists the user has never touched. The Spotify
+endpoints that *were* that signal (`related-artists`, `recommendations`) are dead (§1).
+Phase 5 restores an external similarity signal via a non-Spotify API and gives Claude a
+static **knowledge library** of discovery *heuristics* (strategy, not data) so the reasoning
+is repeatable across sessions and editable by the user.
+
+Same architecture rules hold: the new API layer stays **dumb** (fetch JSON, dump/return it);
+all reasoning stays in-session; every candidate it surfaces still round-trips through the
+existing Spotify `search_verify` before being shown or added (the catalog/name-match quality
+of external sources is uneven, so verification is the source of truth).
+
+**Gap this fills**
+
+| Spotify endpoint (dead) | What it gave | Phase 5 replacement |
+|---|---|---|
+| `related-artists` | artist→artist similarity | Last.fm `artist.getSimilar` |
+| `recommendations` | seed→track suggestions | Last.fm `track.getSimilar` + `tag.getTopTracks` |
+
+**Deliverables**
+- `Spotify/lastfm.py` (lib + CLI, mirroring `sensing.py`) exposing:
+  - `similar_artists(artist)` → ranked similar artists (name + match score).
+  - `similar_tracks(artist, title)` → ranked similar tracks.
+  - `artist_tags(artist)` → top crowd tags (genre/mood signal to replace dead audio-features
+    as a *coarse* descriptor).
+  - Uses a free Last.fm API key in `.env` (`LASTFM_API_KEY`); no OAuth. Cache responses to
+    disk like the taste dumps (respect ~5 req/s rate limit). Output is JSON for the session.
+- `Spotify/cli.py` gains `similar-artists` / `similar-tracks` / `artist-tags` subcommands.
+- `Spotify/knowledge/` — static markdown Claude reads before reasoning:
+  - `discovery_heuristics.md` — the playbook of discovery *angles*: production/label lineage,
+    tour-opener adjacency, cover/sample chains, sideman trails, era×region cross-sections,
+    scene clusters. Editable by the user to encode their own preferences.
+  - `genre_map.md` — a static genre-adjacency reference for the user's core clusters
+    (indie/folk/Americana per Phase 3 findings), seeded from Every Noise at Once's frozen
+    micro-genre taxonomy. A lookup table of "sounds like" neighbors, not live data.
+- `RECIPES.md` gains a recipe that chains the new signal into the discovery ladder:
+  taste dump → seed artists → Last.fm `similar_artists`/`similar_tracks` for fresh
+  candidates → consult `knowledge/` for an angle → `search_verify` → `build_playlist`.
+- `.env.example` documents `LASTFM_API_KEY`.
+
+**Acceptance**
+- `python cli.py similar-artists "<a seed artist from the user's taste dump>"` returns a
+  non-empty ranked list with no errors.
+- In a session, the new recipe surfaces ≥3 artists **absent from the user's current taste
+  dump** (genuinely new, not resurfaced), each `search_verify`'d, and builds a playlist with
+  rationales citing the discovery angle used.
+
+> **Adversarial note.** *Pragmatist:* Last.fm restores the exact deprecated capability, no
+> OAuth, drops into the existing sensing pattern, and human-scrobble similarity suits a
+> personal tool. *Skeptic:* match quality is weak for very obscure/new artists (verification
+> mandatory), it adds a key + dependency + rate limit to manage, and it reintroduces an
+> "algorithmic" flavor — acceptable here because it is *input to* Claude's reasoning, not a
+> black box replacing it. *Fast-follows if it proves out:* Discogs (label/producer/credits),
+> Setlist.fm (tour-opener adjacency), ListenBrainz/AcousticBrainz (open data + frozen
+> audio-feature dumps). Scrape-y sources (Bandcamp, WhoSampled, RateYourMusic) stay deferred
+> unless a specific need arises.
+
+> **Mode B (optional, later):** the Last.fm primitives and `knowledge/` library are reused
+> unchanged; only the in-session reasoning moves into an API call.
+
 ---
 
 ## 5. Runtime model assignments (Mode B only — optional)

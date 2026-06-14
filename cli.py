@@ -10,6 +10,9 @@ session can drive each primitive with a single uniform command:
     python cli.py build-playlist "My Playlist" spotify:track:xxx [...] [--uris-file f]
     python cli.py now-playing
     python cli.py library-scan [--cap 500] [--no-write]
+    python cli.py similar-artists "Colter Wall" [--limit 30]
+    python cli.py similar-tracks "Colter Wall" "Sleeping on the Blacktop" [--limit 30]
+    python cli.py artist-tags "Colter Wall" [--limit 10]
 
 Convention: the machine-readable result (a path or URI) goes to stdout; human
 notes go to stderr — so `$(python cli.py dump-taste)` captures just the path.
@@ -27,6 +30,7 @@ import sys
 import time
 
 import taste_profile
+from lastfm import _cmd_artist_tags, _cmd_similar_artists, _cmd_similar_tracks
 from sensing import _cmd_library_scan, _cmd_now_playing
 from tools import _cmd_build_playlist, _cmd_search_verify
 
@@ -110,6 +114,26 @@ def main() -> int:
     lsc.add_argument("--cap", type=int, default=500, help="Max saved tracks to fetch.")
     lsc.add_argument("--no-write", action="store_true", help="Don't write a JSON dump.")
     lsc.set_defaults(func=_cmd_library_scan)
+
+    sa = sub.add_parser(
+        "similar-artists", help="Last.fm artists similar to a seed artist."
+    )
+    sa.add_argument("artist")
+    sa.add_argument("--limit", type=int, default=30)
+    sa.set_defaults(func=_cmd_similar_artists)
+
+    st = sub.add_parser(
+        "similar-tracks", help="Last.fm tracks similar to a seed track."
+    )
+    st.add_argument("artist")
+    st.add_argument("title")
+    st.add_argument("--limit", type=int, default=30)
+    st.set_defaults(func=_cmd_similar_tracks)
+
+    at = sub.add_parser("artist-tags", help="Last.fm top crowd tags for an artist.")
+    at.add_argument("artist")
+    at.add_argument("--limit", type=int, default=10)
+    at.set_defaults(func=_cmd_artist_tags)
 
     args = p.parse_args()
     return args.func(args)
