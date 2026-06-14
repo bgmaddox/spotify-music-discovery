@@ -28,6 +28,17 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   younger than MIN minutes (`--force` always refetches). Verified all five subcommands run
   clean (no 403s): fresh `dump-taste` → 50/50/50/259, cache reuse hit, `search-verify` and
   `now-playing` resolved real tracks. The per-module CLIs still work and are equivalent.
+- **Phase 5 — done (tooling).** `lastfm.py` restores the external similarity signal that
+  Spotify's dead `related-artists`/`recommendations` provided: `similar_artists` /
+  `similar_tracks` / `artist_tags` (lib + CLI), disk-cached to `.cache_lastfm/` (7-day TTL)
+  with client-side rate limiting. Uses only `LASTFM_API_KEY` (read methods; the secret is
+  unused). Three subcommands wired into `cli.py`. `knowledge/` library added —
+  `discovery_heuristics.md` (the menu of discovery angles) + `genre_map.md` (static genre
+  adjacencies seeded for the Americana/indie-folk clusters), read before reasoning.
+  `RECIPES.md` adds Recipe 6 (Last.fm-seeded lateral ladder). Verified in-session: all three
+  CLI subcommands return real data with caching; Recipe 6 chain (gather → filter-to-new →
+  `search_verify`) surfaced 25 genuinely-new candidates from 2 seeds and verified 3 of them
+  (Vincent Neil Emerson, 49 Winchester, Flatland Cavalry). Live playlist build not yet run.
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 

@@ -11,6 +11,16 @@ Tools available:
 - `build_playlist(name, uris, description="", public=False)` → playlist URL  *(tools.py)*
 - `now_playing()` → `{id, uri, title, artists, album, is_playing, progress_ms, duration_ms}` or `None`  *(sensing.py)*
 - `library_scan(cap=500)` → `{count, tracks, path}`; writes `data/library_*.json`  *(sensing.py)*
+- `similar_artists(artist)` → `[{name, match}]` (Last.fm crowd similarity)  *(lastfm.py)*
+- `similar_tracks(artist, title)` → `[{artist, title, match}]`  *(lastfm.py)*
+- `artist_tags(artist)` → `[{tag, count}]` (coarse genre/mood signal)  *(lastfm.py)*
+
+Knowledge library (read *before* reasoning — strategy, not data):
+- `knowledge/discovery_heuristics.md` — the menu of discovery *angles* (Last.fm adjacency,
+  tag intersection, producer/label lineage, sideman trails, era/region shifts, bridges).
+  Name the angle you used in each rationale.
+- `knowledge/genre_map.md` — static genre adjacencies for the user's clusters; pick a
+  *direction*, then confirm specific artists via Last.fm and tracks via `search_verify`.
 
 CLI equivalents — one unified entry point (`cli.py`, Phase 4). Each prints its
 machine-readable result (path or URI) to stdout, human notes to stderr:
@@ -22,6 +32,9 @@ python cli.py build-playlist "Name" --uris-file uris.txt
 python cli.py build-playlist "Name" spotify:track:AAA spotify:track:BBB
 python cli.py now-playing                               # prints URI + track line, or exit 1
 python cli.py library-scan --cap 500                    # prints dump path
+python cli.py similar-artists "Tyler Childers"          # one similar artist per line
+python cli.py similar-tracks "Tyler Childers" "Feathered Indians"   # artist<TAB>title per line
+python cli.py artist-tags "Tyler Childers"              # tag<TAB>count per line
 ```
 The per-module CLIs (`python tools.py …`, `python sensing.py …`,
 `python taste_profile.py`) still work and are equivalent; `cli.py` just routes to them.
@@ -137,6 +150,50 @@ Goal: a playlist for a given vibe / era / theme the user names.
 
 ---
 
+## Recipe 6 — Lateral discovery (Last.fm-seeded ladder)
+
+Goal: the discovery ladder (Recipe 1), but powered by an *external* similarity signal so
+the picks are genuinely new — artists the user has never touched — rather than recombined
+from their own taste dump. This is the recipe Phase 5 exists for.
+
+**Why it's different from Recipe 1:** Recipe 1 reasons only from the taste dump (a closed
+loop). Recipe 6 injects fresh candidates from Last.fm and steers them with the
+`knowledge/` angles, so it can reach past what the session already associates with the
+user. It directly replaces what Spotify's dead `related-artists`/`recommendations` did.
+
+**Steps**
+
+1. **Sense.** Run/reuse a `data/taste_*.json` dump. Pick **2–4 seed artists** that are
+   central *and* distinct from each other (don't seed near-duplicates).
+2. **Gather external candidates.** For each seed:
+   - `similar_artists(seed)` — split by `match`: ≥0.5 center, 0.2–0.5 stretch, tail
+     left-field.
+   - `artist_tags(seed)` — note the 2–3 defining tags (the *why*, per angle 2).
+   - Optionally `similar_tracks(seed, <a loved title>)` for track-level candidates.
+   Cache makes re-runs free.
+3. **Filter to genuinely new.** **Drop any candidate already in the taste dump**
+   (`top_artists`, `top_tracks`, `recently_played`, and — if scanned — saved library).
+   The acceptance bar is *new* artists, not resurfaced ones.
+4. **Steer with knowledge/.** Read `discovery_heuristics.md` and `genre_map.md`. Assign
+   each surviving candidate a rung and a **named angle** (e.g. "tag intersection: outlaw
+   country × singer-songwriter", "genre_map bridge: bluegrass × indie"). Prefer mid-`match`
+   Last.fm names that the genre map confirms sit in an adjacent cluster.
+5. **Pick a track per artist.** For each chosen artist, name a specific entry-point
+   **artist + title** (their best-known or most representative track, or a `similar_tracks`
+   hit). A new *artist* isn't enough — you need a concrete track to verify.
+6. **Verify** every candidate with `search_verify`/`verify_detail`; log misses. Last.fm
+   name-matching is uneven, so this step is doing real work — watch for wrong-artist or
+   cover matches (treat as miss).
+7. **Build** with `build_playlist` (private), then **report**: the playlist URL, tracks
+   grouped by rung with their Last.fm `match` + the named angle, the seed→candidate trail
+   (so the user sees *why* each new artist surfaced), and dropped/missed candidates.
+
+**Acceptance:** ≥3 artists **absent from the current taste dump** (genuinely new), each
+`search_verify`'d, on a real private playlist, each rationale citing its discovery angle and
+the seed it came from.
+
+---
+
 ## Notes & guardrails
 
 - **Knowledge-cutoff guardrail:** the session's music knowledge has a training cutoff.
@@ -147,4 +204,10 @@ Goal: a playlist for a given vibe / era / theme the user names.
 - **Re-auth:** the first `build_playlist` of a session may pop a browser OAuth consent
   to widen scopes to `playlist-modify-private`. That's expected and happens once.
 - **Deprecated endpoints stay off-limits** (see CLAUDE.md): no audio-features,
-  recommendations, related-artists, or editorial playlists — design around search.
+  recommendations, related-artists, or editorial playlists — design around search. The
+  external similarity signal those endpoints used to provide now comes from **Last.fm**
+  (`lastfm.py`, Recipe 6) — but it's an *input to* the session's reasoning, never a
+  black-box autopilot, and every track it suggests still passes through `search_verify`.
+- **Last.fm match quality is uneven** for very obscure or very new artists: names can
+  mis-resolve. The crowd similarity is a strong *idea source*, not ground truth — Spotify
+  `search` remains the source of truth for whether a track exists.
