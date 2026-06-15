@@ -200,6 +200,49 @@ the seed it came from.
 
 ---
 
+## Recipe 7 — Genre-ladder discovery (everynoise-seeded)
+
+Goal: the discovery ladder, but the *lateral move is along genre topology* instead of
+artist similarity. Last.fm (Recipe 6) answers "who sounds like this artist?"; everynoise
+answers "what genre sits next to this genre?" — a different axis. Use this when you want
+to step *sideways into an adjacent scene* the user has barely touched, then populate it
+with real artists.
+
+**Why it's different from Recipe 6:** Recipe 6 walks an artist→artist graph (listening
+co-occurrence). Recipe 7 walks a genre→genre map (sonic/scene adjacency), so it can jump
+to a whole *neighboring style* (e.g. outlaw country → cosmic american, or indie folk →
+chamber pop) and only *then* find artists in it. The two compose well: pick the genre with
+Recipe 7, fill it with Recipe 6.
+
+**Steps**
+
+1. **Anchor on a genre.** From the taste dump (or a now-playing track), name the genre the
+   user is centered in. If unsure of the exact everynoise name, resolve it:
+   `python cli.py … ` → `python genre_map.py find "<partial>"`.
+2. **Step sideways.** `python cli.py genre-neighbors "<genre>" --limit 15`. The list is
+   **pre-ranked** — the head is the closest scene-lineage neighbor, the tail degrades into
+   loose texture-matches (good for a left-field rung, per angle 11). Pick a neighbor genre
+   that is *adjacent but under-represented* in the taste dump — that's the discovery target.
+   For genres inside Brett's curated clusters, `knowledge/genre_map.md` is the faster,
+   hand-tuned lookup; use `genre-neighbors` for anything outside it.
+3. **Fill the genre with artists.** The genre map names genres, not a ready artist list.
+   Get artists two ways and cross-reference: (a) the `example` artist `find` shows for that
+   genre as a seed, then `similar_artists` on it (Recipe 6 step 2); (b) the session's own
+   knowledge of who defines that genre — treated as a *hypothesis* until verified.
+4. **Filter to genuinely new.** Drop anything already in the taste dump (same bar as
+   Recipe 6 step 3).
+5. **Pick a track per artist**, **verify** each with `search_verify`/`verify_detail`
+   (log misses), and **build** a private `🤖 `-prefixed playlist.
+6. **Report:** the playlist URL, plus the *genre trail* (`seed genre → neighbor genre →
+   artists`) so the user sees they were moved one scene over — and which everynoise rung
+   (head = close, tail = left-field) each neighbor came from.
+
+**Acceptance:** ≥3 verified, genuinely-new artists drawn from a *neighboring genre*
+(not the anchor genre itself), on a real private playlist, each rationale naming the
+seed genre, the everynoise neighbor it stepped to, and that neighbor's rank in the list.
+
+---
+
 ## Notes & guardrails
 
 - **Knowledge-cutoff guardrail:** the session's music knowledge has a training cutoff.
@@ -217,3 +260,8 @@ the seed it came from.
 - **Last.fm match quality is uneven** for very obscure or very new artists: names can
   mis-resolve. The crowd similarity is a strong *idea source*, not ground truth — Spotify
   `search` remains the source of truth for whether a track exists.
+- **everynoise is a frozen 2023 snapshot** (`genre-neighbors`, Recipe 7): its feeds died
+  with Glenn McDonald's Spotify layoff, so genres coined since 2023 are missing and artist
+  examples are stale. Use the *head* of the nearby list (closest neighbors); the tail is
+  loose texture-matching. It supplies a genre-adjacency *direction* only — artists still
+  come from Last.fm/session knowledge and every track still passes `search_verify`.

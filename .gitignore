@@ -1,6 +1,7 @@
 .env
 .cache
 .cache_lastfm/
+.cache_everynoise/
 __pycache__/
 .venv/
 *.json
@@ -8,3 +9,5 @@ data/
 
 # keep the example env tracked
 !.env.example
+# keep the parsed everynoise genre map (static reference data, not a secret/dump)
+!knowledge/genres_coords.json

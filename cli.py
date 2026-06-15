@@ -13,6 +13,7 @@ session can drive each primitive with a single uniform command:
     python cli.py similar-artists "Colter Wall" [--limit 30]
     python cli.py similar-tracks "Colter Wall" "Sleeping on the Blacktop" [--limit 30]
     python cli.py artist-tags "Colter Wall" [--limit 10]
+    python cli.py genre-neighbors "indie folk" [--limit 15]
 
 Convention: the machine-readable result (a path or URI) goes to stdout; human
 notes go to stderr — so `$(python cli.py dump-taste)` captures just the path.
@@ -30,6 +31,7 @@ import sys
 import time
 
 import taste_profile
+from genre_map import _cmd_neighbors as _cmd_genre_neighbors
 from lastfm import _cmd_artist_tags, _cmd_similar_artists, _cmd_similar_tracks
 from sensing import _cmd_library_scan, _cmd_now_playing
 from tools import _cmd_build_playlist, _cmd_search_verify
@@ -134,6 +136,14 @@ def main() -> int:
     at.add_argument("artist")
     at.add_argument("--limit", type=int, default=10)
     at.set_defaults(func=_cmd_artist_tags)
+
+    gn = sub.add_parser(
+        "genre-neighbors",
+        help="everynoise's ranked nearby genres for a genre (cached web lookup).",
+    )
+    gn.add_argument("genre")
+    gn.add_argument("--limit", type=int, default=15)
+    gn.set_defaults(func=_cmd_genre_neighbors)
 
     args = p.parse_args()
     return args.func(args)

@@ -10,6 +10,16 @@
 > Listed artists are *examples to seed from or verify against*, not a ready playlist. An
 > artist in **bold** is one already in Brett's taste (use as a seed, don't "discover" it).
 
+> **Going outside these clusters?** This file is the *curated* core — Brett's real
+> neighborhood, hand-tuned. For any genre **not** covered here, don't guess: query the full
+> everynoise sonic map (6,291 genres) with
+> `python cli.py genre-neighbors "<genre>" [--limit N]`. It returns everynoise's own
+> ranked "nearby genres" list (scene-lineage adjacency, head = closest). Use `python
+> genre_map.py find "<partial>"` to resolve an exact genre name first. **Do not** read
+> `knowledge/genres_coords.json` wholesale — it's the machine index behind that tool.
+> everynoise is a frozen 2023 snapshot, so treat its output as a *direction* and confirm
+> artists with `lastfm.py` + tracks with `search_verify`, same as everything else here.
+
 ---
 
 ## Derived listening profile (factual, from the dumps)
