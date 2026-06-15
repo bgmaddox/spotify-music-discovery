@@ -61,10 +61,12 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
     `mint_pi_cache.py` mints a read-only Spotify `.cache` without touching the local
     superset cache. Full as-built runbook in `DEPLOY_MCP.md`.
   - **Verified live through the funnel:** auth gates (401 without/with wrong bearer),
-    `initialize` 200, `tools/list` = 6 tools, `taste_snapshot` + `lastfm_*` return real
-    data, `now_playing`/`search_verify` fail cleanly (0.1s) until the Spotify `.cache` is
-    copied up. **Remaining 🧑 steps:** run `mint_pi_cache.py` (browser) to enable the two
-    Spotify tools, and add the connector in the mobile app.
+    `initialize` 200, `tools/list` = 6 tools. ALL SIX work: `taste_snapshot` + `lastfm_*`
+    return real data; the read-only Spotify `.cache` was minted via `mint_pi_cache.py`
+    (scope `user-read-currently-playing` only) and copied up, so `search_verify` (e.g.
+    Tyler Childers "Feathered Indians" → real URI) and `now_playing` resolve too.
+    **Only remaining 🧑 step:** add the connector in the mobile app (URL + bearer; bearer
+    lives in the Pi Caddyfile under `@discoveryAuthed`).
 - **Hardening pass — done.** Five improvements landed together: (1) **tests** — `tests/`
   (pytest, 26 cases) locks the pure/fragile logic with no network/auth: Last.fm dict-vs-list
   collapse + numeric coercion, the everynoise `_NEARBY` regex + seed dedup, `_best_track`
