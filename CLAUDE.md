@@ -78,6 +78,14 @@ python cli.py -h                   # one entry point for every primitive (Phase 
 - **When building playlists, never add tracks to Liked Songs** — playlist-add only.
   The Python tool (`build_playlist`) already does this correctly. If building live via
   Claude's Spotify connector, create + add items only; do **not** call `add_to_library`.
+- **Playlist naming:** prefix every Claude-built playlist name with `🤖 ` so they all
+  group together. The Spotify Web API can't create folders or move playlists into them
+  (client-only feature), so the user keeps a "Claude" folder and drags new playlists in
+  — the prefix makes them trivial to find and multi-select. Applies to both
+  `build_playlist` and the connector.
+- **Playlist descriptions:** write a brief (1–2 sentence) summary of the actual
+  playlist — the artists, mood, era, or theme that makes it interesting. Never use a
+  generic "Claude curated" label or describe the tooling. Cap ~300 chars.
 
 ## Mode
 Building Mode A (Claude-Code-native). Mode B (standalone Anthropic API) is a later,

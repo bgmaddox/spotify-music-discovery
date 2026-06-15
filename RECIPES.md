@@ -66,8 +66,14 @@ outward to genuine left-field picks, each with a one-line rationale.
    proposed — a miss usually means a hallucinated/mis-titled track, so don't silently
    drop it; note it and optionally retry with a corrected title.
 
-4. **Build.** `build_playlist("<descriptive name>", verified_uris,
-   description="discovery ladder, <date>")`. Private by default.
+4. **Build.** `build_playlist("🤖 <descriptive name>", verified_uris,
+   description="<brief thematic summary>")`. Private by default.
+   - **Name:** prefix every Claude-built playlist with `🤖 ` so they group together
+     and the user can drag them into a "Claude" folder (the Web API can't create or
+     move folders — that step is manual, one-time).
+   - **Description:** a 1–2 sentence summary of *this* playlist — the artists, mood,
+     era, or through-line that makes it interesting. **Not** "Claude curated" or any
+     description of the tooling. (Spotify caps descriptions at 300 chars.)
 
 5. **Report** to the user: the playlist URL, the verified tracks grouped by rung with
    their rationales, and the list of dropped candidates (with why each missed).
