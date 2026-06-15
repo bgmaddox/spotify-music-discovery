@@ -52,11 +52,11 @@ outward to genuine left-field picks, each with a one-line rationale.
    if it's fresh enough). Read it. Note dominant artists, genres, eras, popularity
    band, and what's conspicuously recent in `recently_played`.
 
-2. **Propose a ladder** of ~9 candidates, in three rungs, each with a one-line why:
-   - **~3 center-of-taste** — squarely in the user's wheelhouse; safe, high-confidence.
-   - **~3 one-axis stretches** — change exactly one variable (a near genre, an adjacent
+2. **Propose a ladder** of ~12 candidates, in three rungs, each with a one-line why:
+   - **~4 center-of-taste** — squarely in the user's wheelhouse; safe, high-confidence.
+   - **~4 one-axis stretches** — change exactly one variable (a near genre, an adjacent
      era, a collaborator/side-project, a different scene from a loved artist).
-   - **~3 left-field** — a real reach that's still defensible from something they love.
+   - **~4 left-field** — a real reach that's still defensible from something they love.
 
    Avoid tracks already in `top_tracks`/`saved_tracks`/`recently_played` unless the
    point is a deep cut. Name a specific **artist + title** for each — not a vibe.
@@ -78,7 +78,7 @@ outward to genuine left-field picks, each with a one-line rationale.
 5. **Report** to the user: the playlist URL, the verified tracks grouped by rung with
    their rationales, and the list of dropped candidates (with why each missed).
 
-**Acceptance:** ≥7 verified tracks on a real private playlist, rationales given,
+**Acceptance:** ≥10 verified tracks on a real private playlist, rationales given,
 dropped candidates reported.
 
 ---
