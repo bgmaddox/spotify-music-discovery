@@ -40,15 +40,19 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   `search_verify`) run end-to-end: seeded from Isbell/Avett/Sturgill/Carlile, surfaced 58
   genuinely-new candidates (filtered vs. 307 known artists), built a real 10-track private
   playlist ("Lateral roots — Last.fm ladder"), 0 verify misses. Acceptance bar cleared.
-- **Phase 6 — tooling written, not deployed (Mode C).** `mcp_server.py` is a read-only
-  FastMCP server (`streamable-http`, fail-closed bearer auth) exposing the discovery
-  primitives (`lastfm_*`, `taste_snapshot`, `search_verify`, `now_playing`) as tools and
-  the knowledge base (`RECIPES.md`, `knowledge/*.md`) as `knowledge://` resources, so the
-  Claude **mobile app** can drive discovery from a phone. No write tools — playlist writes
-  stay with Claude's built-in Spotify connector. Purely additive: Modes A/B unchanged.
-  `requirements.txt` gains `mcp`; `.env.example` documents `MCP_*`. `DEPLOY_MCP.md` is the
-  Pi + Cloudflare Tunnel runbook (steps marked 🤖 vs 🧑). Acceptance (live mobile connect)
-  pending deploy; the connector-auth handshake is the one piece needing a live test.
+- **Phase 6 — tooling written + smoke-tested; deploy pending (Mode C).** `mcp_server.py` is
+  a read-only FastMCP server (`streamable-http`, fail-closed bearer auth) exposing the
+  discovery primitives (`lastfm_*`, `taste_snapshot`, `search_verify`, `now_playing`) as
+  tools and the knowledge base (`RECIPES.md`, `knowledge/*.md`) as `knowledge://` resources,
+  so the Claude **mobile app** can drive discovery from a phone. No write tools — playlist
+  writes stay with Claude's built-in Spotify connector. Purely additive: Modes A/B unchanged.
+  `requirements.txt` gains `mcp` (installed v1.27.2); `.env.example` documents `MCP_*`.
+  `DEPLOY_MCP.md` is the Pi + Cloudflare Tunnel runbook (steps marked 🤖 vs 🧑). Local
+  smoke test passed: 6 tools + 3 resources register, bearer auth accepts/rejects correctly,
+  server boots under uvicorn and returns 401 on `/mcp` without a token, `taste_snapshot`
+  returns real data (fixed a dict-vs-str artist-normalization bug found by the test).
+  Acceptance (live mobile connect) still pending deploy; the connector-auth handshake is the
+  one piece needing a live test.
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 
