@@ -117,8 +117,12 @@ ssh rachett 'journalctl -u spotify-discovery-mcp.service -n 50 --no-pager'
 # deploy a code change
 ssh rachett 'cd /home/bgmaddox/apps/SpotifyDiscoveryMCP && git pull --ff-only && sudo systemctl restart spotify-discovery-mcp.service'
 
-# refresh taste data on the Pi (taste_snapshot reads the newest data/taste_*.json)
-#   copy a fresh dump up, or run dump-taste on the Pi once a .cache is present
+# taste data auto-refreshes daily via spotify-discovery-refresh.timer (~04:00).
+#   This needs a .cache minted with --read-all (the three taste read scopes). Check/run:
+ssh rachett 'systemctl list-timers spotify-discovery-refresh.timer --no-pager'
+ssh rachett 'sudo systemctl start spotify-discovery-refresh.service'   # force a refresh now
+ssh rachett 'journalctl -u spotify-discovery-refresh.service -n 20 --no-pager'
+#   (manual fallback: scp a fresh local dump up)
 scp $(ls -t data/taste_*.json | head -1) rachett:/home/bgmaddox/apps/SpotifyDiscoveryMCP/data/
 
 # public smoke test (no auth header — the secret path is the credential)
