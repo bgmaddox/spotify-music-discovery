@@ -29,6 +29,7 @@ from dotenv import load_dotenv
 from mcp.server.auth.provider import AccessToken, TokenVerifier
 from mcp.server.auth.settings import AuthSettings
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import AnyHttpUrl
 
 import lastfm
@@ -55,6 +56,12 @@ PATH = os.getenv("MCP_PATH", "/mcp")
 #    handshake the mobile connector doesn't need. Pair with MCP_HOST=127.0.0.1 so only
 #    the local proxy (not the whole tailnet) can reach the unauthenticated port.
 TRUST_PROXY_AUTH = os.getenv("MCP_TRUST_PROXY_AUTH", "").lower() in ("1", "true", "yes")
+# The MCP streamable-http transport validates the Host (and Origin) header to block DNS
+# rebinding. Behind a reverse proxy the upstream sees the PUBLIC hostname, so that host
+# must be whitelisted or every proxied request 421s. Set MCP_ALLOWED_HOSTS to a
+# comma-separated list (e.g. "rachett.tail504ae5.ts.net,127.0.0.1:8890"); leave unset
+# locally to keep the SDK's default (localhost-only) protection.
+_ALLOWED_HOSTS = [h.strip() for h in os.getenv("MCP_ALLOWED_HOSTS", "").split(",") if h.strip()]
 
 
 class StaticBearerVerifier(TokenVerifier):
@@ -78,6 +85,13 @@ _fastmcp_kwargs = dict(
     port=PORT,
     streamable_http_path=PATH,
 )
+if _ALLOWED_HOSTS:
+    _fastmcp_kwargs["transport_security"] = TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=_ALLOWED_HOSTS,
+        allowed_origins=[f"https://{h}" for h in _ALLOWED_HOSTS]
+        + [f"http://{h}" for h in _ALLOWED_HOSTS],
+    )
 if not TRUST_PROXY_AUTH:
     _fastmcp_kwargs.update(
         token_verifier=StaticBearerVerifier(),
