@@ -11,6 +11,7 @@ Writes: data/taste_<UTC-timestamp>.json
 
 from __future__ import annotations
 
+import glob
 import json
 import os
 from datetime import datetime, timezone
@@ -30,6 +31,28 @@ SAVED_CAP = 500         # cap on saved tracks pulled
 PAGE = 50               # page size for paginated saved tracks
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+KEEP_DUMPS = 5          # retain only the newest N dumps per prefix (rest are pruned)
+
+
+def prune_dumps(prefix: str, keep: int = KEEP_DUMPS) -> list[str]:
+    """Delete all but the newest `keep` data/<prefix>_*.json dumps; return removed paths.
+
+    Dumps are timestamped snapshots that pile up otherwise (each taste pull is ~220KB).
+    Shared by taste_profile and sensing.library_scan so both prune the same way.
+    """
+    paths = sorted(
+        glob.glob(os.path.join(DATA_DIR, f"{prefix}_*.json")),
+        key=os.path.getmtime,
+        reverse=True,
+    )
+    removed = []
+    for p in paths[keep:]:
+        try:
+            os.remove(p)
+            removed.append(p)
+        except OSError:
+            pass
+    return removed
 
 
 def _artist_record(a: dict) -> dict:
@@ -118,6 +141,7 @@ def main() -> None:
     path = os.path.join(DATA_DIR, f"taste_{stamp}.json")
     with open(path, "w") as f:
         json.dump(profile, f, indent=2)
+    prune_dumps("taste")
 
     print(f"Wrote {path}")
     print(

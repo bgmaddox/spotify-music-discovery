@@ -95,9 +95,14 @@ both anchors. This is where the surprising-but-right picks live.
    - **One-axis stretch** → angles 4, 5, 8, 9, or 10 (pick the axis deliberately).
    - **Left-field** → angle 7 or 11 (name both anchors in the rationale).
 4. Drop anything already in `top_tracks`/`saved_tracks`/`recently_played` (unless the point
-   is a deep cut). The goal is *new*.
+   is a deep cut) **AND anything in the discovery ledger** (`cli.py log-artists` =
+   what Claude already surfaced in past sessions). The taste dump = what the user knows;
+   the ledger = what's already been proposed. The goal is *new on both axes*.
 5. Name a specific **artist + title** per pick, tag it with the angle used, then
    `search_verify`. Log misses.
+6. After building a playlist, append the picks to the ledger so future sessions don't
+   recycle them: `cli.py log-add --from-tsv picks.tsv --recipe N --playlist URL`
+   (one `artist<TAB>title<TAB>uri` line per pick).
 
 ---
 

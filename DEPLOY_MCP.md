@@ -29,8 +29,16 @@ public HTTPS hostname without opening any ports on your router.
 ## Step 1 — Pre-authorize Spotify, headless-ready  🤖 (local) + 🧑 (one browser click)
 The server reads `search_verify` / `now_playing` using the cached refresh token. Do this
 on your Mac once (it has the browser):
-1. 🤖/🧑 `python cli.py now-playing` (or `dump-taste`) to ensure `.cache` holds a valid
-   token with read scopes. (You approve the browser consent once.)
+1. 🤖/🧑 `python cli.py now-playing` to mint a `.cache` whose token carries ONLY the
+   read scope the server needs (`user-read-currently-playing`; `search_verify` needs no
+   scope at all). You approve the browser consent once.
+   - **Don't** seed the Pi's `.cache` via `dump-taste`/`build-playlist` — those widen the
+     token to include `playlist-modify-*`, so the public box would hold a write-capable
+     token even though the server exposes no write tool. `search_verify`/`now_playing`
+     default to read-only scopes (`SEARCH_SCOPES` / `NOW_PLAYING_SCOPES`) precisely so the
+     Pi's token can't modify playlists. If your local `.cache` is already the write
+     superset, make a clean read-only one for the Pi: `rm .cache && python cli.py now-playing`
+     (then re-auth your local session afterward, since playlist builds need the superset).
 2. The `.cache` file now has a refresh token that renews silently forever. You'll copy it
    to the Pi in Step 3.
 

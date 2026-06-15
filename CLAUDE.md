@@ -53,6 +53,20 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   returns real data (fixed a dict-vs-str artist-normalization bug found by the test).
   Acceptance (live mobile connect) still pending deploy; the connector-auth handshake is the
   one piece needing a live test.
+- **Hardening pass — done.** Five improvements landed together: (1) **tests** — `tests/`
+  (pytest, 26 cases) locks the pure/fragile logic with no network/auth: Last.fm dict-vs-list
+  collapse + numeric coercion, the everynoise `_NEARBY` regex + seed dedup, `_best_track`
+  fielded→loose fallback, the MCP artist-normalization regression, and the discovery ledger.
+  Run `pytest -q`. (2) **MCP read-only token** — `search_verify`/`verify_detail` now default to
+  `SEARCH_SCOPES = []` (search needs no scope), so the public Pi box never holds a
+  write-capable token; `DEPLOY_MCP.md` Step 1 updated to seed `.cache` read-only. (3) **Discovery
+  ledger** — `discovery_log.py` (`log-add`/`log-artists`/`log-recent`) records what Claude has
+  already surfaced across sessions → `data/discovery_log.jsonl`; filter new candidates against
+  BOTH the taste dump (what the user knows) and the ledger (what Claude already proposed).
+  (4) **CLI drift fixed** — `genre-find` is now exposed in `cli.py` (was module-only). (5)
+  **Hygiene** — dumps self-prune to newest 5 (`prune_dumps`), Last.fm CLI prints clean errors
+  instead of tracebacks, `import html` hoisted in `genre_map.py`. All five primitives + new
+  commands verified clean.
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 

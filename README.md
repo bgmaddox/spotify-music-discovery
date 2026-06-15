@@ -76,9 +76,25 @@ python cli.py build-playlist "🤖 Name" spotify:track:xxx --description "…"
 python cli.py similar-artists "Colter Wall" [--limit 30]
 python cli.py similar-tracks "Colter Wall" "Sleeping on the Blacktop"
 python cli.py artist-tags "Colter Wall"
+python cli.py genre-neighbors "indie folk"           # everynoise's nearby genres
+python cli.py genre-find "americana"                 # resolve an exact genre name
+python cli.py log-add --artist "Tyler Childers" --recipe 6   # record a surfaced pick
+python cli.py log-artists                            # what Claude already suggested
+python cli.py log-recent
 ```
 
 Convention: machine output (a path or URI) goes to stdout; human notes go to stderr.
+
+### Tests
+
+```bash
+pip install -r requirements.txt   # includes pytest
+pytest -q
+```
+
+The suite covers the pure, fragile logic — Last.fm response shapes, the everynoise
+genre-page regex, track-match fallback, and the discovery ledger — with no network or
+auth, so it runs offline in well under a second.
 
 ---
 
@@ -91,11 +107,14 @@ Convention: machine output (a path or URI) goes to stdout; human notes go to std
 | `sensing.py` | `now-playing` + `library-scan` |
 | `tools.py` | `search-verify` + `build-playlist` |
 | `lastfm.py` | Similar artists/tracks + tags (the discovery signal) |
+| `genre_map.py` | `genre-neighbors` / `genre-find` over the everynoise genre map |
+| `discovery_log.py` | Cross-session ledger of what Claude has already surfaced (dedup) |
 | `mcp_server.py` | Read-only server for the Claude mobile app (Phase 6) |
 | `probe.py` | Confirms which Spotify endpoints are dead |
 | `RECIPES.md` | The discovery workflows Claude follows |
 | `knowledge/` | `discovery_heuristics.md` (angles) + `genre_map.md` (adjacencies) |
-| `data/` | Cached taste/library JSON dumps |
+| `tests/` | `pytest` suite over the pure parsing/normalization logic |
+| `data/` | Cached taste/library dumps (newest 5 kept) + `discovery_log.jsonl` |
 | `CLAUDE.md` | Instructions for Claude (not a user doc) |
 | `DEPLOY_MCP.md` | Pi + Cloudflare Tunnel deploy runbook for the mobile server |
 | `claude_initial_plan.md` | The original phase-by-phase build plan |

@@ -14,6 +14,10 @@ session can drive each primitive with a single uniform command:
     python cli.py similar-tracks "Colter Wall" "Sleeping on the Blacktop" [--limit 30]
     python cli.py artist-tags "Colter Wall" [--limit 10]
     python cli.py genre-neighbors "indie folk" [--limit 15]
+    python cli.py genre-find "americana"
+    python cli.py log-add --artist "Tyler Childers" [--title T --uri U --recipe 6 --playlist URL]
+    python cli.py log-artists          # artists already surfaced (cross-session dedup)
+    python cli.py log-recent [--limit 20]
 
 Convention: the machine-readable result (a path or URI) goes to stdout; human
 notes go to stderr — so `$(python cli.py dump-taste)` captures just the path.
@@ -31,6 +35,13 @@ import sys
 import time
 
 import taste_profile
+from discovery_log import (
+    _add_log_add_args,
+    _cmd_log_add,
+    _cmd_log_artists,
+    _cmd_log_recent,
+)
+from genre_map import _cmd_find as _cmd_genre_find
 from genre_map import _cmd_neighbors as _cmd_genre_neighbors
 from lastfm import _cmd_artist_tags, _cmd_similar_artists, _cmd_similar_tracks
 from sensing import _cmd_library_scan, _cmd_now_playing
@@ -144,6 +155,28 @@ def main() -> int:
     gn.add_argument("genre")
     gn.add_argument("--limit", type=int, default=15)
     gn.set_defaults(func=_cmd_genre_neighbors)
+
+    gf = sub.add_parser(
+        "genre-find", help="Substring search for an exact everynoise genre name."
+    )
+    gf.add_argument("query")
+    gf.add_argument("--limit", type=int, default=20)
+    gf.set_defaults(func=_cmd_genre_find)
+
+    la = sub.add_parser(
+        "log-add", help="Record surfaced artist(s)/track(s) in the discovery ledger."
+    )
+    _add_log_add_args(la)
+    la.set_defaults(func=_cmd_log_add)
+
+    lar = sub.add_parser(
+        "log-artists", help="Print artists already surfaced (for cross-session dedup)."
+    )
+    lar.set_defaults(func=_cmd_log_artists)
+
+    lr = sub.add_parser("log-recent", help="Print the most recent ledger entries.")
+    lr.add_argument("--limit", type=int, default=20)
+    lr.set_defaults(func=_cmd_log_recent)
 
     args = p.parse_args()
     return args.func(args)

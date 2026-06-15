@@ -28,6 +28,7 @@ CLI:
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import os
 import re
@@ -100,9 +101,7 @@ def nearby(genre: str, limit: int = 15) -> list[dict]:
     out: list[dict] = []
     seen = {seed["name"].lower()}
     for m in _NEARBY.finditer(_fetch_page(seed["href"])):
-        import html as _html
-
-        name = _html.unescape(m.group("name"))
+        name = html.unescape(m.group("name"))
         if name.lower() in seen:  # the seed appears first; later dups are noise
             continue
         seen.add(name.lower())
@@ -112,7 +111,7 @@ def nearby(genre: str, limit: int = 15) -> list[dict]:
                 "seed": seed["name"],
                 "rank": len(out) + 1,
                 "name": name,
-                "example": _html.unescape(ex) if ex else None,
+                "example": html.unescape(ex) if ex else None,
             }
         )
         if len(out) >= limit:

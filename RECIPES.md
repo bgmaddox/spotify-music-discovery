@@ -247,6 +247,11 @@ seed genre, the everynoise neighbor it stepped to, and that neighbor's rank in t
 
 - **Knowledge-cutoff guardrail:** the session's music knowledge has a training cutoff.
   Treat any track you name as a *hypothesis* until `search_verify` returns a URI.
+- **Dedup across sessions:** the taste dump shows what the *user* already knows; the
+  discovery ledger (`cli.py log-artists`) shows what *Claude* has already surfaced in past
+  sessions. Filter new candidates against both so a good lateral pick isn't recycled weeks
+  later. After building a playlist, record the picks: `cli.py log-add --from-tsv picks.tsv
+  --recipe N --playlist URL` (one `artist<TAB>title<TAB>uri` per line).
 - **Match sanity:** `verify_detail` returns the matched name/artist/album. If the match
   drifts (wrong artist, a karaoke/cover, a wildly different title), treat it as a miss
   rather than adding the wrong track.

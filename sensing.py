@@ -27,7 +27,7 @@ import sys
 from datetime import datetime, timezone
 
 from auth import get_client
-from taste_profile import DATA_DIR, _track_record, fetch_saved_tracks
+from taste_profile import DATA_DIR, _track_record, fetch_saved_tracks, prune_dumps
 
 # Minimal scopes per primitive. Kept separate from tools.py's write superset so a
 # read-only session never requests playlist-modify just to see what's playing.
@@ -84,6 +84,7 @@ def library_scan(cap: int = 500, sp=None, write: bool = True) -> dict:
         }
         with open(path, "w") as f:
             json.dump(payload, f, indent=2)
+        prune_dumps("library")
     return {"count": len(tracks), "tracks": tracks, "path": path}
 
 

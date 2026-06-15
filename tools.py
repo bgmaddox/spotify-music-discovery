@@ -41,6 +41,12 @@ SCOPES = [
     "playlist-modify-public",
 ]
 
+# Search needs an app token but NO user scope. verify/search default to this empty set
+# so a read-only context (e.g. the public MCP server on the Pi) never holds a
+# write-capable token just to confirm tracks exist. It's a subset of SCOPES, so a local
+# session that also builds playlists still reuses one cached token without re-auth churn.
+SEARCH_SCOPES: list[str] = []
+
 ADD_CHUNK = 100  # Spotify caps playlist_add_items at 100 URIs per call
 
 
@@ -74,7 +80,7 @@ def search_verify(artist: str, title: str, sp=None) -> str | None:
     it — search is the source of truth, the model is only the idea generator.
     Pass an existing `sp` client to avoid re-creating one per candidate in a loop.
     """
-    sp = sp or get_client(SCOPES)
+    sp = sp or get_client(SEARCH_SCOPES)
     track = _best_track(sp, artist, title)
     return track.get("uri") if track else None
 
@@ -84,7 +90,7 @@ def verify_detail(artist: str, title: str, sp=None) -> dict | None:
 
     Returns {uri, name, artists, album} of the matched track, or None on a miss.
     """
-    sp = sp or get_client(SCOPES)
+    sp = sp or get_client(SEARCH_SCOPES)
     track = _best_track(sp, artist, title)
     if not track:
         return None

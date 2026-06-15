@@ -178,7 +178,11 @@ def artist_tags(artist: str, limit: int = 10, use_cache: bool = True) -> list[di
 
 
 def _cmd_similar_artists(args) -> int:
-    rows = similar_artists(args.artist, limit=args.limit)
+    try:
+        rows = similar_artists(args.artist, limit=args.limit)
+    except LastfmError as e:
+        print(f"Last.fm error: {e}", file=sys.stderr)
+        return 2
     if not rows:
         print(f"No similar artists found for {args.artist!r}.", file=sys.stderr)
         return 1
@@ -189,7 +193,11 @@ def _cmd_similar_artists(args) -> int:
 
 
 def _cmd_similar_tracks(args) -> int:
-    rows = similar_tracks(args.artist, args.title, limit=args.limit)
+    try:
+        rows = similar_tracks(args.artist, args.title, limit=args.limit)
+    except LastfmError as e:
+        print(f"Last.fm error: {e}", file=sys.stderr)
+        return 2
     if not rows:
         print(f"No similar tracks for {args.artist!r} — {args.title!r}.", file=sys.stderr)
         return 1
@@ -201,7 +209,11 @@ def _cmd_similar_tracks(args) -> int:
 
 
 def _cmd_artist_tags(args) -> int:
-    rows = artist_tags(args.artist, limit=args.limit)
+    try:
+        rows = artist_tags(args.artist, limit=args.limit)
+    except LastfmError as e:
+        print(f"Last.fm error: {e}", file=sys.stderr)
+        return 2
     if not rows:
         print(f"No tags found for {args.artist!r}.", file=sys.stderr)
         return 1

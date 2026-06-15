@@ -103,6 +103,17 @@ def lastfm_artist_tags(artist: str, limit: int = 10) -> list[dict]:
     return lastfm.artist_tags(artist, limit=limit)
 
 
+def _artist_names(track: dict) -> str:
+    """Join a track's artist names, tolerating both shapes a dump can carry.
+
+    Artist entries are normally {name: ...} dicts, but some dumps store plain strings;
+    this normalizes either to a comma-joined string and drops blanks. (Regression: a
+    str-vs-dict mismatch here once crashed taste_snapshot — see the test.)
+    """
+    names = [a if isinstance(a, str) else a.get("name", "") for a in track.get("artists", [])]
+    return ", ".join(n for n in names if n)
+
+
 @mcp.tool()
 def taste_snapshot() -> dict:
     """A compact summary of the user's taste from the latest local dump.
@@ -122,11 +133,6 @@ def taste_snapshot() -> dict:
         for g in a.get("genres", []):
             genres[g] = genres.get(g, 0) + 1
     top_genres = sorted(genres, key=genres.get, reverse=True)[:15]
-
-    def _artist_names(t: dict) -> str:
-        # artist entries may be plain strings or {name: ...} dicts depending on dump
-        names = [a if isinstance(a, str) else a.get("name", "") for a in t.get("artists", [])]
-        return ", ".join(n for n in names if n)
 
     recent = [
         f"{t.get('name')} — {_artist_names(t)}"
