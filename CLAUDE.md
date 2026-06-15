@@ -72,10 +72,15 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
     return real data; the read-only Spotify `.cache` was minted via `mint_pi_cache.py`
     (scope `user-read-currently-playing` only) and copied up, so `search_verify` (e.g.
     Tyler Childers "Feathered Indians" → real URI) and `now_playing` resolve too. All six
-    verified through the funnel via the capability URL with **no auth header**.
-    **Only remaining 🧑 step:** add the connector on claude.ai web/Desktop (it syncs to
-    mobile; the app has no "add connector" entry), URL = the capability URL from `MCP_PATH`,
-    OAuth fields left blank.
+    verified through the funnel via the capability URL with **no auth header**. Connector
+    added on claude.ai (syncs to mobile) — **live on the phone, tools confirmed showing.**
+  - **Daily taste refresh (autonomous).** `spotify-discovery-refresh.timer` runs
+    `cli.py dump-taste` on the Pi daily ~04:00 (`Persistent=true`, catches up after
+    downtime); `prune_dumps` keeps the newest 5. Needs a `.cache` minted with `--read-all`
+    (the 3 taste read scopes + currently-playing; still no write scopes), so the Pi token
+    is now read-only-everything rather than currently-playing-only — a small, write-free
+    blast-radius bump that lets the Pi self-refresh. Verified: timer run wrote a fresh dump
+    (50/50/50/259) and `taste_snapshot` served it through the connector.
 - **Hardening pass — done.** Five improvements landed together: (1) **tests** — `tests/`
   (pytest, 26 cases) locks the pure/fragile logic with no network/auth: Last.fm dict-vs-list
   collapse + numeric coercion, the everynoise `_NEARBY` regex + seed dedup, `_best_track`
