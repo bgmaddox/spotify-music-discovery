@@ -42,6 +42,19 @@ HERE = os.path.dirname(__file__)
 PUBLIC_URL = os.getenv("MCP_PUBLIC_URL", "http://localhost:8890")
 HOST = os.getenv("MCP_HOST", "0.0.0.0")
 PORT = int(os.getenv("MCP_PORT", "8890"))
+# Path the streamable-http endpoint is served on. Configurable so the server can sit at
+# a distinct path behind a shared reverse proxy (e.g. /discovery-mcp on the Pi's Caddy,
+# alongside another MCP server already using /mcp).
+PATH = os.getenv("MCP_PATH", "/mcp")
+# Two auth modes:
+#  * default (local / standalone): this server verifies a static bearer itself and
+#    advertises OAuth metadata (fail-closed — refuses to start without MCP_BEARER_TOKEN).
+#  * MCP_TRUST_PROXY_AUTH=1 (Pi deploy): a front proxy (Caddy) already gates the bearer,
+#    so run as a "naked" streamable-http endpoint with no app-level auth — mirrors how
+#    supergateway exposes the sibling stdio server, and avoids advertising an OAuth
+#    handshake the mobile connector doesn't need. Pair with MCP_HOST=127.0.0.1 so only
+#    the local proxy (not the whole tailnet) can reach the unauthenticated port.
+TRUST_PROXY_AUTH = os.getenv("MCP_TRUST_PROXY_AUTH", "").lower() in ("1", "true", "yes")
 
 
 class StaticBearerVerifier(TokenVerifier):
@@ -58,19 +71,24 @@ class StaticBearerVerifier(TokenVerifier):
         return None
 
 
-mcp = FastMCP(
-    "Spotify Discovery (read-only)",
+_fastmcp_kwargs = dict(
     stateless_http=True,
     json_response=True,
     host=HOST,
     port=PORT,
-    token_verifier=StaticBearerVerifier(),
-    auth=AuthSettings(
-        issuer_url=AnyHttpUrl(PUBLIC_URL),
-        resource_server_url=AnyHttpUrl(PUBLIC_URL),
-        required_scopes=["read"],
-    ),
+    streamable_http_path=PATH,
 )
+if not TRUST_PROXY_AUTH:
+    _fastmcp_kwargs.update(
+        token_verifier=StaticBearerVerifier(),
+        auth=AuthSettings(
+            issuer_url=AnyHttpUrl(PUBLIC_URL),
+            resource_server_url=AnyHttpUrl(PUBLIC_URL),
+            required_scopes=["read"],
+        ),
+    )
+
+mcp = FastMCP("Spotify Discovery (read-only)", **_fastmcp_kwargs)
 
 
 # ------------------------------------------------------------------- tools (read)
@@ -209,6 +227,13 @@ def genre_map() -> str:
 
 
 if __name__ == "__main__":
-    if not os.getenv("MCP_BEARER_TOKEN"):
-        raise SystemExit("Refusing to start: set MCP_BEARER_TOKEN in .env first.")
+    if not TRUST_PROXY_AUTH and not os.getenv("MCP_BEARER_TOKEN"):
+        raise SystemExit(
+            "Refusing to start: set MCP_BEARER_TOKEN in .env (or MCP_TRUST_PROXY_AUTH=1 "
+            "if a front proxy like Caddy gates the bearer)."
+        )
+    import sys
+
+    mode = "proxy-gated (no app auth)" if TRUST_PROXY_AUTH else "app static-bearer auth"
+    print(f"Serving MCP on {HOST}:{PORT}{PATH}  [{mode}]", file=sys.stderr)
     mcp.run(transport="streamable-http")
