@@ -122,8 +122,14 @@ def taste_snapshot() -> dict:
         for g in a.get("genres", []):
             genres[g] = genres.get(g, 0) + 1
     top_genres = sorted(genres, key=genres.get, reverse=True)[:15]
+
+    def _artist_names(t: dict) -> str:
+        # artist entries may be plain strings or {name: ...} dicts depending on dump
+        names = [a if isinstance(a, str) else a.get("name", "") for a in t.get("artists", [])]
+        return ", ".join(n for n in names if n)
+
     recent = [
-        f"{t.get('name')} — {', '.join(t.get('artists', []))}"
+        f"{t.get('name')} — {_artist_names(t)}"
         for t in d.get("recently_played", [])[:15]
     ]
     return {
