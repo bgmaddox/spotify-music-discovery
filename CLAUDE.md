@@ -40,19 +40,31 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   `search_verify`) run end-to-end: seeded from Isbell/Avett/Sturgill/Carlile, surfaced 58
   genuinely-new candidates (filtered vs. 307 known artists), built a real 10-track private
   playlist ("Lateral roots — Last.fm ladder"), 0 verify misses. Acceptance bar cleared.
-- **Phase 6 — tooling written + smoke-tested; deploy pending (Mode C).** `mcp_server.py` is
-  a read-only FastMCP server (`streamable-http`, fail-closed bearer auth) exposing the
-  discovery primitives (`lastfm_*`, `taste_snapshot`, `search_verify`, `now_playing`) as
-  tools and the knowledge base (`RECIPES.md`, `knowledge/*.md`) as `knowledge://` resources,
-  so the Claude **mobile app** can drive discovery from a phone. No write tools — playlist
-  writes stay with Claude's built-in Spotify connector. Purely additive: Modes A/B unchanged.
-  `requirements.txt` gains `mcp` (installed v1.27.2); `.env.example` documents `MCP_*`.
-  `DEPLOY_MCP.md` is the Pi + Cloudflare Tunnel runbook (steps marked 🤖 vs 🧑). Local
-  smoke test passed: 6 tools + 3 resources register, bearer auth accepts/rejects correctly,
-  server boots under uvicorn and returns 401 on `/mcp` without a token, `taste_snapshot`
-  returns real data (fixed a dict-vs-str artist-normalization bug found by the test).
-  Acceptance (live mobile connect) still pending deploy; the connector-auth handshake is the
-  one piece needing a live test.
+- **Phase 6 — DEPLOYED (Mode C), 2026-06-14.** `mcp_server.py` is a read-only FastMCP
+  server (`streamable-http`) exposing the discovery primitives (`lastfm_*`,
+  `taste_snapshot`, `search_verify`, `now_playing`) as tools and the knowledge base
+  (`RECIPES.md`, `knowledge/*.md`) as `knowledge://` resources, so the Claude **mobile app**
+  can drive discovery from a phone. No write tools — playlist writes stay with Claude's
+  built-in Spotify connector. Live at `https://rachett.tail504ae5.ts.net/discovery-mcp`.
+  - **As-built differs from the original plan:** the Pi already had **Tailscale Funnel +
+    Caddy** running a sibling Node Spotify MCP server (playback/writes, on `/mcp`), so we
+    mirrored that proven path instead of standing up Cloudflare. Ours is additive on
+    `/discovery-mcp`, port 8890, dir `apps/SpotifyDiscoveryMCP`, service
+    `spotify-discovery-mcp.service`. The Node server proved the mobile app accepts a
+    **static bearer gated at Caddy** (no OAuth handshake) — so ours runs proxy-auth mode
+    (`MCP_TRUST_PROXY_AUTH=1`), bound to 127.0.0.1, bearer enforced by Caddy.
+  - **Three deploy-time code fixes** (all committed, default/local behavior unchanged):
+    `MCP_TRUST_PROXY_AUTH` + `MCP_PATH` (run naked behind a proxy at a custom path);
+    `MCP_ALLOWED_HOSTS` → `TransportSecuritySettings` (the transport's Host-header check
+    421'd proxied requests until the public host was whitelisted); `SPOTIPY_NONINTERACTIVE`
+    (headless Spotipy would block forever on the OAuth prompt — now fails fast).
+    `mint_pi_cache.py` mints a read-only Spotify `.cache` without touching the local
+    superset cache. Full as-built runbook in `DEPLOY_MCP.md`.
+  - **Verified live through the funnel:** auth gates (401 without/with wrong bearer),
+    `initialize` 200, `tools/list` = 6 tools, `taste_snapshot` + `lastfm_*` return real
+    data, `now_playing`/`search_verify` fail cleanly (0.1s) until the Spotify `.cache` is
+    copied up. **Remaining 🧑 steps:** run `mint_pi_cache.py` (browser) to enable the two
+    Spotify tools, and add the connector in the mobile app.
 - **Hardening pass — done.** Five improvements landed together: (1) **tests** — `tests/`
   (pytest, 26 cases) locks the pure/fragile logic with no network/auth: Last.fm dict-vs-list
   collapse + numeric coercion, the everynoise `_NEARBY` regex + seed dedup, `_best_track`

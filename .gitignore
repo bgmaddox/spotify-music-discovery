@@ -1,5 +1,6 @@
 .env
 .cache
+.cache_pi_readonly
 .cache_lastfm/
 .cache_everynoise/
 __pycache__/

@@ -1,116 +1,122 @@
 # DEPLOY_MCP.md — putting the discovery server on your phone (Mode C)
 
-Goal: run `mcp_server.py` on the Pi, expose it at a public HTTPS URL via Cloudflare
-Tunnel, and add it to the Claude mobile app as a custom connector. Read-only discovery
-server; playlist writes stay with Claude's built-in Spotify connector.
+Goal: run `mcp_server.py` on the Pi, expose it at a public HTTPS URL, and add it to the
+Claude mobile app as a custom connector. Read-only discovery server; playlist writes stay
+with Claude's built-in Spotify connector.
 
-> **Who does what:** 🤖 = Claude can do it for you in a Claude Code session on the right
-> machine. 🧑 = you do it (account/dashboard/phone actions Claude can't perform).
-
----
-
-## Architecture (how the pieces connect)
-```
- Phone Claude app ──HTTPS──> Anthropic cloud ──HTTPS──> Cloudflare edge
-        │                                                     │ (Tunnel)
-        │                                              cloudflared on Pi
-        │                                                     │ localhost:8890
-        └──(playlist writes go via the built-in Spotify connector, not this server)
-                                                       mcp_server.py
-                                                       │        │
-                                                  Last.fm   Spotify (read, via .cache)
-```
-Key point: **Anthropic connects from its cloud, not your phone** — so the server must be
-reachable on the public internet (Tailscale alone won't work). Cloudflare Tunnel gives a
-public HTTPS hostname without opening any ports on your router.
+> **STATUS: DEPLOYED (2026-06-14).** Live at
+> `https://rachett.tail504ae5.ts.net/discovery-mcp`. This runbook documents the
+> *as-built* setup, which uses **Tailscale Funnel + Caddy** (not Cloudflare — see history
+> note at the bottom). 🤖 = Claude did it over SSH. 🧑 = you do it (browser/phone).
 
 ---
 
-## Step 1 — Pre-authorize Spotify, headless-ready  🤖 (local) + 🧑 (one browser click)
-The server reads `search_verify` / `now_playing` using the cached refresh token. Do this
-on your Mac once (it has the browser):
-1. 🤖/🧑 `python cli.py now-playing` to mint a `.cache` whose token carries ONLY the
-   read scope the server needs (`user-read-currently-playing`; `search_verify` needs no
-   scope at all). You approve the browser consent once.
-   - **Don't** seed the Pi's `.cache` via `dump-taste`/`build-playlist` — those widen the
-     token to include `playlist-modify-*`, so the public box would hold a write-capable
-     token even though the server exposes no write tool. `search_verify`/`now_playing`
-     default to read-only scopes (`SEARCH_SCOPES` / `NOW_PLAYING_SCOPES`) precisely so the
-     Pi's token can't modify playlists. If your local `.cache` is already the write
-     superset, make a clean read-only one for the Pi: `rm .cache && python cli.py now-playing`
-     (then re-auth your local session afterward, since playlist builds need the superset).
-2. The `.cache` file now has a refresh token that renews silently forever. You'll copy it
-   to the Pi in Step 3.
+## Architecture (as built)
+```
+ Phone Claude app ──HTTPS──> Anthropic cloud ──HTTPS──> rachett.tail504ae5.ts.net
+                                                          │ (Tailscale Funnel, already on)
+                                                     Caddy :80 on the Pi
+                                                          │  /discovery-mcp*  (gated by a
+                                                          │   static bearer at Caddy)
+                                                     mcp_server.py @ 127.0.0.1:8890
+                                                          │        │
+                                                     Last.fm   Spotify (read, via .cache)
+```
+Key facts that shaped this:
+- **Anthropic connects from its cloud, not your phone** — the server must be public.
+  Tailscale **Funnel** (already enabled on the Pi → Caddy on :80) provides that; no
+  Cloudflare, no router ports.
+- A **sibling MCP server already lives here**: the Node `spotify-mcp-server` (playback +
+  playlist writes) at `apps/SpotifyMCP`, exposed via supergateway on `/mcp`. Ours is
+  additive and complementary (discovery signal + taste + knowledge), on `/discovery-mcp`.
+- The Node server proved the Claude mobile app **accepts a plain static bearer** gated at
+  the proxy — no OAuth handshake needed. So ours runs in **proxy-auth mode**
+  (`MCP_TRUST_PROXY_AUTH=1`): a naked streamable-http endpoint, with Caddy holding the
+  bearer. Bound to `127.0.0.1` so only Caddy (not the whole tailnet) can reach the port.
 
-## Step 2 — Generate the server secret  🤖
+---
+
+## As-built coordinates
+
+| Piece | Value |
+|---|---|
+| Pi app dir | `/home/bgmaddox/apps/SpotifyDiscoveryMCP` |
+| Service | `spotify-discovery-mcp.service` |
+| Local bind | `127.0.0.1:8890`, path `/discovery-mcp` |
+| Public URL | `https://rachett.tail504ae5.ts.net/discovery-mcp` |
+| Auth | static bearer matched at Caddy (`@discoveryAuthed`); separate from the Node token |
+| Caddyfile | `/etc/caddy/Caddyfile` (backup `.bak.<ts>` written on each edit) |
+
+`.env` on the Pi (perms 600):
+```
+SPOTIPY_CLIENT_ID / SPOTIPY_CLIENT_SECRET / SPOTIPY_REDIRECT_URI   # same Spotify app
+LASTFM_API_KEY / LASTFM_SECRET
+MCP_TRUST_PROXY_AUTH=1
+MCP_HOST=127.0.0.1
+MCP_PORT=8890
+MCP_PATH=/discovery-mcp
+MCP_PUBLIC_URL=https://rachett.tail504ae5.ts.net/discovery-mcp
+MCP_ALLOWED_HOSTS=rachett.tail504ae5.ts.net,127.0.0.1:8890,localhost:8890
+SPOTIPY_NONINTERACTIVE=1
+```
+Two non-obvious env vars, both learned the hard way during deploy:
+- **`MCP_ALLOWED_HOSTS`** — the MCP streamable-http transport validates the `Host` header
+  (DNS-rebinding protection). Behind the proxy the upstream sees the public hostname, so it
+  must be whitelisted or every request 421s.
+- **`SPOTIPY_NONINTERACTIVE=1`** — without a cached token Spotipy's OAuth flow blocks
+  forever waiting for a pasted redirect URL; this makes `get_client` fail fast instead.
+
+---
+
+## Enabling `search_verify` + `now_playing` (the Spotify `.cache`)  🧑 browser + 🤖 copy
+
+4 of 6 tools (the three `lastfm_*` + `taste_snapshot`) and all `knowledge://` resources
+work with no Spotify token. `search_verify` and `now_playing` need a read-only Spotify
+token cached on the Pi. Mint it on your Mac (it has the browser):
+
+1. 🧑 `python mint_pi_cache.py` — approve the consent once. Writes `.cache_pi_readonly`
+   (scope `user-read-currently-playing` only) **without touching your main `.cache`**.
+2. 🤖 Copy it to the Pi as `.cache` and restart:
+   ```bash
+   scp .cache_pi_readonly rachett:/home/bgmaddox/apps/SpotifyDiscoveryMCP/.cache
+   ssh rachett 'sudo systemctl restart spotify-discovery-mcp.service'
+   ```
+The token renews silently forever; `SPOTIPY_NONINTERACTIVE=1` means a bad/expired cache
+just surfaces a tidy error rather than hanging.
+
+---
+
+## Add the connector in the Claude mobile app  🧑
+1. Claude app → Settings → Connectors → **Add custom connector**.
+2. URL: `https://rachett.tail504ae5.ts.net/discovery-mcp` — and the bearer token (stored
+   in the Pi's Caddyfile under `@discoveryAuthed`; ask Claude/look there if you need it).
+3. In a chat, confirm the tools appear (`lastfm_similar_artists`, `lastfm_similar_tracks`,
+   `lastfm_artist_tags`, `taste_snapshot`, `search_verify`, `now_playing`) and the
+   `knowledge://` resources are attachable.
+
+---
+
+## Operating it
+
 ```bash
-python -c "import secrets; print(secrets.token_urlsafe(32))"
+# health / restart / logs
+ssh rachett 'systemctl status spotify-discovery-mcp.service'
+ssh rachett 'sudo systemctl restart spotify-discovery-mcp.service'
+ssh rachett 'journalctl -u spotify-discovery-mcp.service -n 50 --no-pager'
+
+# deploy a code change
+ssh rachett 'cd /home/bgmaddox/apps/SpotifyDiscoveryMCP && git pull --ff-only && sudo systemctl restart spotify-discovery-mcp.service'
+
+# refresh taste data on the Pi (taste_snapshot reads the newest data/taste_*.json)
+#   copy a fresh dump up, or run dump-taste on the Pi once a .cache is present
+scp $(ls -t data/taste_*.json | head -1) rachett:/home/bgmaddox/apps/SpotifyDiscoveryMCP/data/
+
+# public smoke test
+curl -s -X POST https://rachett.tail504ae5.ts.net/discovery-mcp \
+  -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"t","version":"1"}}}'
 ```
-Put it in the Pi's `.env` as `MCP_BEARER_TOKEN=...` (Step 3). Keep a copy — you'll paste it
-into the Claude connector config in Step 6.
-
-## Step 3 — Deploy the app to the Pi  🤖 (mostly) + 🧑 (sudo)
-Following the global "Adding a new app to the Pi" pattern:
-1. 🤖 Push this repo (already on GitHub: `bgmaddox/spotify-music-discovery`).
-2. 🧑/🤖 On the Pi: clone to `/home/bgmaddox/apps/SpotifyMCP`, make a `.venv`,
-   `pip install -r requirements.txt`.
-3. 🧑 Copy your Mac's `.env` and `.cache` to the Pi app dir (scp). Add to `.env`:
-   `MCP_BEARER_TOKEN`, `MCP_PUBLIC_URL` (filled after Step 4), `MCP_PORT=8890`.
-4. 🧑/🤖 Also copy a recent `data/taste_*.json` so `taste_snapshot` has data (or run
-   `python cli.py dump-taste` on the Pi using the copied `.cache`).
-5. 🧑 Create `/etc/systemd/system/spotify-mcp.service` (template below), then
-   `sudo systemctl enable --now spotify-mcp.service`.
-
-```ini
-[Unit]
-Description=Spotify discovery MCP server
-After=network-online.target
-
-[Service]
-User=bgmaddox
-WorkingDirectory=/home/bgmaddox/apps/SpotifyMCP
-EnvironmentFile=/home/bgmaddox/apps/SpotifyMCP/.env
-ExecStart=/home/bgmaddox/apps/SpotifyMCP/.venv/bin/python mcp_server.py
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-```
-Verify locally on the Pi: `curl -s localhost:8890/` should respond (401/JSON, not refused).
-
-## Step 4 — Expose it with a Cloudflare Tunnel  🧑 (Cloudflare account) + 🤖 (config help)
-A Cloudflare Tunnel is a free outbound connection from the Pi to Cloudflare's edge — no
-port-forwarding, automatic HTTPS. You need a domain on Cloudflare (a cheap one is fine).
-1. 🧑 `cloudflared` is installed on the Pi; `cloudflared tunnel login`.
-2. 🤖/🧑 `cloudflared tunnel create spotify-mcp`; route a hostname, e.g.
-   `spotify-mcp.<yourdomain>`, to `http://localhost:8890`.
-3. 🧑 Run it as a service: `sudo cloudflared service install` (or a systemd unit).
-4. Put the resulting `https://spotify-mcp.<yourdomain>` into the Pi `.env` as
-   `MCP_PUBLIC_URL` and restart `spotify-mcp.service`.
-> Alternative if you don't want a domain: a Cloudflare **quick tunnel** gives a random
-> `*.trycloudflare.com` URL with zero setup — fine for testing, but it changes on every
-> restart, so not great for a permanent connector.
-
-## Step 5 — Smoke-test the public endpoint  🤖
-```bash
-curl -s https://spotify-mcp.<yourdomain>/ -H "Authorization: Bearer $MCP_BEARER_TOKEN"
-```
-Expect a JSON MCP response, not a connection error or HTML.
-
-## Step 6 — Add the connector in the Claude mobile app  🧑
-1. 🧑 Claude app → Settings → Connectors → **Add custom connector**.
-2. 🧑 Enter the URL `https://spotify-mcp.<yourdomain>` and the bearer token from Step 2.
-3. 🧑 In a chat, confirm the tools appear (`lastfm_similar_artists`, `taste_snapshot`,
-   `search_verify`, `now_playing`) and the `knowledge://` resources are attachable.
-
-> ⚠️ **Auth caveat to confirm on first connect:** the MCP connector spec leans on OAuth
-> 2.1/PKCE; this server ships a simple static-bearer verifier (right call for one read-only
-> user). If the app's connector flow insists on a full OAuth handshake, the fix is to front
-> the tunnel with **Cloudflare Access (service token)** or swap `StaticBearerVerifier` for
-> an OAuth verifier. We'll verify which the app wants the first time you add it and adjust
-> then — it's the one step that genuinely needs a live test.
-
----
 
 ## Using it on the phone
 Ask naturally — e.g. *"What's playing? Give me three new artists like it, check they're
@@ -118,9 +124,20 @@ real."* Mobile-me will call `now_playing` → `lastfm_similar_artists` → `sear
 consult the `knowledge://` resources for an angle, and hand you verified picks. To actually
 build the playlist, it uses the **built-in Spotify connector** (this server can't write).
 
-## Security posture (why this is acceptable)
-- **Read-only:** no playlist/library writes on the public server; worst case a leaked token
-  exposes your music taste + lets someone run Last.fm/Spotify *searches*. No account writes.
-- **Fail-closed auth:** the server refuses to start or serve without `MCP_BEARER_TOKEN`.
-- **No secrets in the repo:** `.env` and `.cache` are gitignored and only copied to the Pi.
-- Rotate the bearer token any time by changing `.env` + the connector config.
+## Security posture
+- **Read-only:** no playlist/library writes on the public server. The Spotify token is
+  scoped `user-read-currently-playing` only — it can't modify your account.
+- **Bound to localhost:** the app listens on `127.0.0.1:8890`; only Caddy reaches it. The
+  bearer is enforced at Caddy (`/discovery-mcp*` without it → 401).
+- **No secrets in the repo:** `.env` and `.cache` are gitignored, only copied to the Pi.
+- Rotate the bearer any time: edit `@discoveryAuthed` in the Caddyfile, `sudo systemctl
+  reload caddy`, and update the connector config.
+
+---
+
+## History note
+The original plan targeted a **Cloudflare Tunnel** (Steps 1–6 of the prior draft). On
+deploy we found the Pi already had Tailscale Funnel + Caddy running a sibling Spotify MCP
+server, so we mirrored that proven path instead — simpler, no domain/Cloudflare account,
+and it confirmed the static-bearer connector flow works. The Cloudflare route remains a
+valid fallback if the Funnel is ever retired.
