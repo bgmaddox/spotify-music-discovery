@@ -50,9 +50,16 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
     Caddy** running a sibling Node Spotify MCP server (playback/writes, on `/mcp`), so we
     mirrored that proven path instead of standing up Cloudflare. Ours is additive on
     `/discovery-mcp`, port 8890, dir `apps/SpotifyDiscoveryMCP`, service
-    `spotify-discovery-mcp.service`. The Node server proved the mobile app accepts a
-    **static bearer gated at Caddy** (no OAuth handshake) — so ours runs proxy-auth mode
-    (`MCP_TRUST_PROXY_AUTH=1`), bound to 127.0.0.1, bearer enforced by Caddy.
+    `spotify-discovery-mcp.service`, proxy-auth mode (`MCP_TRUST_PROXY_AUTH=1`), bound to
+    127.0.0.1.
+  - **Auth = capability URL (no bearer).** First gated it with a static bearer at Caddy,
+    but Claude's managed connector only supports OAuth (DCR/PKCE) or no-auth — no
+    bearer/header field — so the bearer 401'd ("couldn't register with the sign-in
+    service"). Switched to **no-auth at an unguessable secret path** (`MCP_PATH` =
+    `/discovery-mcp-<32-char secret>`; Caddy routes only that path to :8890). Proportionate
+    for read-only music-taste data; the secret in the URL is the credential. Cloudflare
+    Access was ruled out (its machine auth is header service-tokens the connector can't
+    supply either). Real OAuth remains the free upgrade path if wanted.
   - **Three deploy-time code fixes** (all committed, default/local behavior unchanged):
     `MCP_TRUST_PROXY_AUTH` + `MCP_PATH` (run naked behind a proxy at a custom path);
     `MCP_ALLOWED_HOSTS` → `TransportSecuritySettings` (the transport's Host-header check
@@ -64,9 +71,11 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
     `initialize` 200, `tools/list` = 6 tools. ALL SIX work: `taste_snapshot` + `lastfm_*`
     return real data; the read-only Spotify `.cache` was minted via `mint_pi_cache.py`
     (scope `user-read-currently-playing` only) and copied up, so `search_verify` (e.g.
-    Tyler Childers "Feathered Indians" → real URI) and `now_playing` resolve too.
-    **Only remaining 🧑 step:** add the connector in the mobile app (URL + bearer; bearer
-    lives in the Pi Caddyfile under `@discoveryAuthed`).
+    Tyler Childers "Feathered Indians" → real URI) and `now_playing` resolve too. All six
+    verified through the funnel via the capability URL with **no auth header**.
+    **Only remaining 🧑 step:** add the connector on claude.ai web/Desktop (it syncs to
+    mobile; the app has no "add connector" entry), URL = the capability URL from `MCP_PATH`,
+    OAuth fields left blank.
 - **Hardening pass — done.** Five improvements landed together: (1) **tests** — `tests/`
   (pytest, 26 cases) locks the pure/fragile logic with no network/auth: Last.fm dict-vs-list
   collapse + numeric coercion, the everynoise `_NEARBY` regex + seed dedup, `_best_track`
