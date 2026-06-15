@@ -75,6 +75,9 @@ python cli.py -h                   # one entry point for every primitive (Phase 
   that belongs in the Claude session (Mode A). See `claude_initial_plan.md` for phases.
 - Every track Claude proposes MUST be verified via Spotify `search` before it is
   surfaced or added to a playlist.
+- **When building playlists, never add tracks to Liked Songs** — playlist-add only.
+  The Python tool (`build_playlist`) already does this correctly. If building live via
+  Claude's Spotify connector, create + add items only; do **not** call `add_to_library`.
 
 ## Mode
 Building Mode A (Claude-Code-native). Mode B (standalone Anthropic API) is a later,
