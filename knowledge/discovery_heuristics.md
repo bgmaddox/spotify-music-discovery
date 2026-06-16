@@ -82,6 +82,23 @@ The genuine reach: find a third artist who is plausibly downstream of *two* thin
 loves at once (a bridge between two of their clusters). Defensible because you can point to
 both anchors. This is where the surprising-but-right picks live.
 
+### 12. Graph-walk (A → B path)
+Not a single jump but a *chain*: walk `similar_artists` from endpoint A toward endpoint B,
+picking stepping-stone artists whose similarity lists overlap, so a playlist morphs from one
+corner of the user's taste to another. The deliverable is an **ordered path**, not a set —
+see Recipe 8. Angle 11 is one jump; this is the whole bridge, sequenced.
+
+### 13. Anti-popularity (deep cut)
+Move *inward*, not outward: same beloved artist, but the low-popularity, non-single,
+deep-catalog track instead of the hit. Uses the popularity band, not similarity. `verify_detail`
+confirms it's actually the deep cut (right album, not the radio edit). The fade-back twin of
+this — your *own* music you've drifted from — is the `long_term` vs `short_term` split (Recipe 12).
+
+### 14. Sequence / energy arc
+Not a candidate-finder but a *finishing pass*: once a set is verified, order it into an arc
+(warm-up → build → peak → comedown). No audio-features in this app, so the arc comes from
+`artist_tags` + session read, not a tempo column. Ordering is curation — see Recipe 9.
+
 ---
 
 ## Putting a ladder together (quick procedure)

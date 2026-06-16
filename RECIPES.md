@@ -243,6 +243,176 @@ seed genre, the everynoise neighbor it stepped to, and that neighbor's rank in t
 
 ---
 
+## Recipe 8 — Bridge / morph (A → B)
+
+Goal: a playlist that is a **path**, not a bag — it starts at artist/cluster **A** and
+audibly *morphs* into artist/cluster **B** over the tracklist, so playing it start-to-finish
+is a guided segue between two corners of the user's taste (or one loved artist and one
+target). This is the first recipe whose deliverable is *ordered*.
+
+**Why it's different:** every prior recipe collects an unordered set. Here the **sequence
+is the product** — track _n_ has to sit between _n−1_ and _n+1_, so a wrong order breaks it.
+
+**Steps**
+
+1. **Pick the endpoints.** A = something central in the taste dump; B = a target (another
+   cluster, a new artist, or a left-field reach). Name both.
+2. **Walk the graph.** Use `similar_artists(A)` and `similar_artists(B)` and find artists
+   whose similarity lists *overlap* — those are the stepping stones in the middle. Aim for
+   ~8–12 stops where each is more like its neighbors than like the far endpoint.
+3. **One track per stop**, chosen so the *transition* works (shared tempo/key/mood by ear,
+   per `artist_tags`). Name artist + title for each.
+4. **Verify** every track (`search_verify`/`verify_detail`); log misses. If a miss breaks
+   the chain, find a substitute that preserves the segue, not just any track by that artist.
+5. **Build in order** — pass the URIs to `build_playlist` in the walked sequence (do **not**
+   sort or dedup-reorder). Report the **trail** (A → … → B) so the user sees the path.
+
+**Acceptance:** ≥8 verified tracks in a deliberate A→B order on a real private playlist,
+with the stepping-stone trail reported.
+
+---
+
+## Recipe 9 — Sequenced set / energy arc
+
+Goal: take a candidate set (from Recipe 1/5/6/7, or named by the user) and deliver it
+**sequenced into an arc** — warm-up → build → peak → comedown — instead of a flat bag.
+Think of it as a finishing pass that any "collect URIs" recipe can hand off to.
+
+**Why it's different:** audio-features are dead to this app, so there's no tempo/energy
+column to sort on. The arc is built from `artist_tags` (energy/mood signal) + the session's
+own read of each track. Ordering *is* the curation.
+
+**Steps**
+
+1. **Gather candidates** as usual (or accept a list the user gives). Verify them first.
+2. **Score each for energy/mood** — use `artist_tags` for coarse signal (e.g. `mellow`,
+   `anthemic`, `driving`) and session knowledge for the specific track. A rough 1–5 energy
+   tag per track is enough.
+3. **Lay the arc:** open low-medium, climb to one or two peaks, ease down to a closer.
+   Avoid hard whiplash between adjacent tracks (key/tempo/mood jumps).
+4. **Build in that exact order** (don't let `build_playlist` reorder) and report the arc
+   shape — which tracks are the warm-up, the peak, the landing.
+
+**Optional helper:** if this gets used a lot, a tiny `sequence.py` that takes
+`uri<TAB>energy` lines and prints a reasonable arc order would remove the manual ordering —
+but it's not needed; the session can order by hand. Flag for later, don't build now.
+
+**Acceptance:** a verified set delivered in a deliberate energy arc (not source order),
+with the warm-up/peak/comedown structure named in the report.
+
+---
+
+## Recipe 10 — Deep cuts (anti-hits)
+
+Goal: inward discovery instead of lateral. Take artists the user **already loves** and
+surface their *non-single, deep-catalog* tracks they probably skipped — "you know the hits,
+here's the album they're buried on."
+
+**Why it's different:** Recipes 1/6/7 push *outward* to new artists. This pushes *inward* —
+same artists, deeper catalog — using the **popularity band** the taste dump already records.
+
+**Steps**
+
+1. **Sense.** From the taste dump, pick ~4–6 artists in `top_artists` (favor prolific ones
+   with real catalogs, not single-album acts).
+2. **Propose deep cuts** — for each artist, name 2–3 album tracks that are *not* the obvious
+   singles (B-sides, late-album tracks, deep catalog). Skip anything in `top_tracks`/
+   `recently_played` (those are already the user's hits).
+3. **Verify with `verify_detail`** — confirm the match is the right artist *and* check the
+   returned `album`/name to make sure it's the deep cut you meant, not the radio edit or a
+   re-recording. Treat a popular-single match as a miss for this recipe's purpose.
+4. **Build** a private `🤖 ` playlist and report each track with the album it's pulled from,
+   so the user sees the catalog spelunking.
+
+**Acceptance:** ≥8 verified non-single tracks from artists already in `top_artists`, each
+reported with its source album, none of them existing `top_tracks`.
+
+---
+
+## Recipe 11 — Covers & originals (pairs)
+
+Goal: a playlist built from **pairs** — `[a version the user loves] → [the original it
+descends from]`, or `[a song they love] → [a great cover of it]`. Promotes discovery angle 7
+(cover/sample/interpolation chains) to a first-class recipe with a distinctive paired shape.
+
+**Why it's different:** the output is *coupled* — every track earns its place by its
+relationship to its neighbor, so the playlist teaches a lineage rather than just listing
+songs.
+
+**Steps**
+
+1. **Seed from loved tracks.** Pick songs from `top_tracks`/`saved`/now-playing that are
+   either *covers* (point back to an original) or *much-covered originals* (point forward to
+   notable covers).
+2. **Name the partner** for each — the original behind a cover, or a strong cover of an
+   original. Session knowledge generates these; `similar_tracks` can help find cover versions.
+3. **Verify both halves** of every pair (`search_verify`); if one half misses, either fix
+   the title or drop the whole pair (a lone half breaks the concept).
+4. **Build with pairs adjacent** (original immediately before/after its cover) and report
+   each pairing with one line on the lineage (who covered whom, when, why it's interesting).
+
+**Acceptance:** ≥4 verified pairs (≥8 tracks) on a real private playlist, each pair's two
+halves adjacent in the tracklist and its lineage explained.
+
+---
+
+## Recipe 12 — Rotation / re-engagement
+
+Goal: re-surface the user's **own** music they've drifted from — heavy in `long_term` but
+faded from `short_term`. "Songs you forgot you loved." Lowest-risk recipe here: every track
+is already theirs, so there's no hallucination surface and nothing new to learn.
+
+**Why it's different:** it mines the **short_term vs long_term split** the taste dump
+already captures — a signal no other recipe uses — and builds *backward* into the user's
+history instead of outward.
+
+**Steps**
+
+1. **Sense.** Read a fresh `data/taste_*.json`. Compare `long_term` vs `short_term`
+   `top_artists`/`top_tracks` (and optionally `library_scan` for older saves).
+2. **Find the fade.** Artists/tracks strong in `long_term` but absent/declining in
+   `short_term` = drifted-from favorites. Note a few standouts.
+3. **Assemble** mostly from tracks that already carry real `id`/`uri`s in the dump (build
+   `spotify:track:<id>` directly); for an artist who's faded but whose specific track isn't
+   in the dump, name a representative one and `search_verify` it.
+4. **Build** a private `🤖 ` playlist and report the through-line ("heavy in your long-term,
+   quiet lately") so the re-engagement framing is clear.
+
+**Acceptance:** ≥8 tracks that are strong in `long_term` but faded from `short_term`, on a
+real private playlist, with the fade framing reported.
+
+---
+
+## Recipe 13 — Occasion in *your* style
+
+Goal: an occasion/activity set — dinner party, road trip, Sunday morning, **Christmas** —
+but built from the user's *own* taste rather than Spotify's generic editorial set. Since the
+editorial/category endpoints are dead to this app (see guardrails), this is the *only* way
+to get an occasion playlist, and it comes out personal instead of generic.
+
+**Why it's different:** Recipe 5 (time machine) anchors on an *era/vibe*; this anchors on an
+*occasion/function* and explicitly bends it through the user's known clusters (e.g. an
+Americana Christmas, a bluegrass road-trip set — note Christmas is a real top cluster for
+this user, per `discovery_heuristics.md`).
+
+**Steps**
+
+1. **Take the occasion** (dinner, drive, focus, holiday). Translate it into constraints:
+   energy level, foreground/background, lyric density, tempo feel.
+2. **Bend through their clusters.** Pull dominant genres/artists from the taste dump and
+   pick tracks that satisfy *both* the occasion constraints and the user's taste — e.g.
+   "warm, low-foreground, but from your roots/Americana cluster, not generic lounge."
+3. **Propose** ~10–15 tracks (mix owned favorites with a few new-but-fitting picks), one
+   line each on why it fits the occasion *and* the taste.
+4. **Verify** every named track (`search_verify`); log misses.
+5. **Build** a private `🤖 ` playlist and, optionally, **sequence it** (hand off to Recipe 9)
+   since occasion sets benefit from an arc. Report the occasion framing and the taste anchor.
+
+**Acceptance:** ≥10 verified tracks fitting both the named occasion and the user's taste, on
+a real private playlist, with the occasion-through-taste rationale reported.
+
+---
+
 ## Notes & guardrails
 
 - **Knowledge-cutoff guardrail:** the session's music knowledge has a training cutoff.
