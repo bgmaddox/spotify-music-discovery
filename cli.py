@@ -6,6 +6,7 @@ and the *reasoning* stays in the Claude Code session per Mode A). It exists so a
 session can drive each primitive with a single uniform command:
 
     python cli.py dump-taste [--max-age MIN] [--force]
+    python cli.py taste-snapshot   # lean summary + known-artist set (vs reading raw JSON)
     python cli.py search-verify "Radiohead" "Weird Fishes/Arpeggi"
     python cli.py build-playlist "My Playlist" spotify:track:xxx [...] [--uris-file f]
     python cli.py now-playing
@@ -30,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import glob
+import json
 import os
 import sys
 import time
@@ -83,6 +85,72 @@ def _cmd_dump_taste(args) -> int:
     return 0
 
 
+def _track_artist_names(track: dict) -> list[str]:
+    """Artist names on a track, tolerating both {name:...} dicts and plain strings.
+
+    (Same str-vs-dict shape tolerance as mcp_server._artist_names — a dump can carry
+    either, and a mismatch here once crashed taste_snapshot. See tests.)
+    """
+    return [
+        (a if isinstance(a, str) else a.get("name", ""))
+        for a in track.get("artists", [])
+    ]
+
+
+def _cmd_taste_snapshot(args) -> int:
+    """Print a compact taste summary as JSON — the lean alternative to reading the
+    full ~55k-token data/taste_*.json into the session.
+
+    Mirrors mcp_server.taste_snapshot (top long-term artists, top genres, recent
+    plays) and adds `known_artists`: the full deduped set of artist names across
+    every top-artist term, top tracks, and saved tracks. That set is what the
+    discovery filter needs to drop already-known candidates — the bit the bespoke
+    per-session one-liners were recomputing. stdout = the JSON; stderr = notes.
+    """
+    latest = _latest_taste_dump()
+    if latest is None:
+        print("no taste dump found; run `cli.py dump-taste` first", file=sys.stderr)
+        return 1
+    d = json.load(open(latest))
+
+    top = d.get("top_artists", {}).get("long_term", [])[:30]
+    genres: dict[str, int] = {}
+    for a in top:
+        for g in a.get("genres", []):
+            genres[g] = genres.get(g, 0) + 1
+    top_genres = sorted(genres, key=genres.get, reverse=True)[:15]
+
+    recent = [
+        f"{t.get('name')} — {', '.join(n for n in _track_artist_names(t) if n)}"
+        for t in d.get("recently_played", [])[:15]
+    ]
+
+    # Full known-artist set, for filtering candidates down to genuinely-new names.
+    known: set[str] = set()
+    for term in d.get("top_artists", {}).values():
+        known.update(a.get("name", "") for a in term)
+    for term in d.get("top_tracks", {}).values():
+        for t in term:
+            known.update(_track_artist_names(t))
+    for t in d.get("saved_tracks", []):
+        known.update(_track_artist_names(t))
+    known_artists = sorted(n for n in known if n)
+
+    out = {
+        "generated_at": d.get("generated_at"),
+        "top_artists_long_term": [a.get("name") for a in top],
+        "top_genres": top_genres,
+        "recently_played": recent,
+        "known_artists": known_artists,
+    }
+    print(json.dumps(out, ensure_ascii=False, indent=2))
+    print(
+        f"  from {os.path.basename(latest)} · {len(known_artists)} known artists",
+        file=sys.stderr,
+    )
+    return 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser(
         prog="cli.py",
@@ -102,6 +170,12 @@ def main() -> int:
         "--force", action="store_true", help="Always refetch, ignoring --max-age."
     )
     dt.set_defaults(func=_cmd_dump_taste)
+
+    ts = sub.add_parser(
+        "taste-snapshot",
+        help="Print a lean taste summary (+ known-artist filter set) as JSON.",
+    )
+    ts.set_defaults(func=_cmd_taste_snapshot)
 
     sv = sub.add_parser(
         "search-verify", help="Print a track URI if it exists, else MISS."

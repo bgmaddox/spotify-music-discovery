@@ -115,6 +115,11 @@ python cli.py -h                   # one entry point for every primitive (Phase 
   for this app (re-confirm via `probe.py`).
 - Keep Python dumb: it fetches JSON and acts. No recommendation logic in Python —
   that belongs in the Claude session (Mode A). See `claude_initial_plan.md` for phases.
+- **Reading taste data: use `cli.py taste-snapshot`, never `Read` the raw
+  `data/taste_*.json`.** The raw dump is ~55k tokens of mostly-unused metadata; the
+  snapshot is ~2k and carries everything a session needs — top long-term artists, top
+  genres, recent plays, and `known_artists` (the full deduped name set for filtering
+  candidates to genuinely-new artists). Don't hand-write a `python -c` extractor for this.
 - Every track Claude proposes MUST be verified via Spotify `search` before it is
   surfaced or added to a playlist.
 - **When building playlists, never add tracks to Liked Songs** — playlist-add only.
