@@ -5,6 +5,7 @@
 .cache_everynoise/
 __pycache__/
 .venv/
+.DS_Store
 *.json
 data/
 
