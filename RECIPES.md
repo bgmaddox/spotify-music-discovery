@@ -267,6 +267,10 @@ is the product** — track _n_ has to sit between _n−1_ and _n+1_, so a wrong 
 5. **Build in order** — pass the URIs to `build_playlist` in the walked sequence (do **not**
    sort or dedup-reorder). Report the **trail** (A → … → B) so the user sees the path.
 
+**Multi-node morph (A → B → C → …):** each additional node adds ~10 tracks. A two-node
+(A→B) chain targets ~10 tracks; three nodes (A→B→C) targets ~20; four nodes ~30; and so on.
+Treat each segment as its own mini-bridge — same stepping-stone logic, just chained.
+
 **Acceptance:** ≥8 verified tracks in a deliberate A→B order on a real private playlist,
 with the stepping-stone trail reported.
 
