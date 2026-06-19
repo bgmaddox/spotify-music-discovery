@@ -26,12 +26,15 @@ CLI use:
 from __future__ import annotations
 
 import argparse
+import base64
+import io
 import sys
 
 from auth import get_client
 
 # One superset scope set: reads (so a search-only session reuses the Phase 1 cache
-# when widened) plus private-playlist writes. First write triggers one re-auth.
+# when widened) plus private-playlist writes and cover-image upload. First write/upload
+# triggers one re-auth, then everything reuses the widened token.
 SCOPES = [
     "user-top-read",
     "user-read-recently-played",
@@ -39,6 +42,7 @@ SCOPES = [
     "user-read-currently-playing",
     "playlist-modify-private",
     "playlist-modify-public",
+    "ugc-image-upload",
 ]
 
 # Search needs an app token but NO user scope. verify/search default to this empty set
@@ -48,6 +52,7 @@ SCOPES = [
 SEARCH_SCOPES: list[str] = []
 
 ADD_CHUNK = 100  # Spotify caps playlist_add_items at 100 URIs per call
+COVER_MAX_B64 = 256 * 1024  # Spotify caps the base64 cover payload at 256 KB
 
 
 def _best_track(sp, artist: str, title: str) -> dict | None:
@@ -129,6 +134,54 @@ def build_playlist(
     return playlist["external_urls"]["spotify"]
 
 
+def _encode_cover_jpeg(image_path: str) -> str:
+    """Read an image and return a base64 JPEG string within Spotify's 256 KB cap.
+
+    A file that's already a small-enough JPEG is sent as-is. Otherwise (wrong format
+    or too large — e.g. a PNG from an image generator) it's re-encoded via Pillow:
+    converted to RGB, then stepped down in size/quality until the base64 payload fits.
+    """
+    with open(image_path, "rb") as f:
+        raw = f.read()
+    is_jpeg = raw[:3] == b"\xff\xd8\xff"
+    b64 = base64.b64encode(raw).decode("ascii")
+    if is_jpeg and len(b64) <= COVER_MAX_B64:
+        return b64
+
+    try:
+        from PIL import Image
+    except ImportError as e:
+        raise RuntimeError(
+            f"{image_path} is not a JPEG under 256 KB and Pillow isn't installed to "
+            "convert it. Run `pip install Pillow`, or pass a small JPEG."
+        ) from e
+
+    img = Image.open(io.BytesIO(raw)).convert("RGB")
+    for size in (640, 512, 400, 320, 256):
+        img.thumbnail((size, size))  # in place, shrink-only — progressively smaller
+        for quality in (90, 80, 70, 60, 50):
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=quality)
+            b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+            if len(b64) <= COVER_MAX_B64:
+                return b64
+    raise RuntimeError(
+        "Could not compress the image under Spotify's 256 KB cover limit."
+    )
+
+
+def set_playlist_image(playlist: str, image_path: str, sp=None) -> None:
+    """Upload a cover image to an existing playlist.
+
+    `playlist` may be a Spotify playlist ID, URI, or URL (Spotipy normalizes it).
+    The image is encoded/compressed to a JPEG within Spotify's 256 KB base64 cap.
+    Requires the `ugc-image-upload` scope (in SCOPES), so the first use re-auths once.
+    """
+    sp = sp or get_client(SCOPES)
+    b64 = _encode_cover_jpeg(image_path)
+    sp.playlist_upload_cover_image(playlist, b64)
+
+
 # --------------------------------------------------------------------------- CLI
 
 
@@ -161,6 +214,13 @@ def _cmd_build_playlist(args) -> int:
     return 0
 
 
+def _cmd_set_playlist_image(args) -> int:
+    set_playlist_image(args.playlist, args.image)
+    print(args.playlist)
+    print(f"  uploaded cover from {args.image}", file=sys.stderr)
+    return 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Spotify acting tools (Phase 2).")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -177,6 +237,13 @@ def main() -> int:
     bp.add_argument("--description", default="", help="Playlist description.")
     bp.add_argument("--public", action="store_true", help="Make the playlist public.")
     bp.set_defaults(func=_cmd_build_playlist)
+
+    spi = sub.add_parser(
+        "set-playlist-image", help="Upload a cover image to an existing playlist."
+    )
+    spi.add_argument("playlist", help="Playlist ID, URI, or URL.")
+    spi.add_argument("image", help="Path to an image (auto-converted to JPEG ≤256 KB).")
+    spi.set_defaults(func=_cmd_set_playlist_image)
 
     args = p.parse_args()
     return args.func(args)

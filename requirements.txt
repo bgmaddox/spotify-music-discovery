@@ -1,6 +1,7 @@
 spotipy
 python-dotenv
 requests  # Phase 5: Last.fm HTTP calls (already pulled in transitively by spotipy)
+Pillow    # convert/compress generated cover art to JPEG ≤256 KB for set-playlist-image
 mcp       # Phase 6: remote MCP server (FastMCP, streamable-http) for mobile Claude
 pytest    # dev: unit tests for the pure parsing/normalization logic — `pytest -q`
 # anthropic  # add only when/if Mode B (standalone API orchestrator) is built — see plan §8

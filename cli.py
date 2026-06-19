@@ -9,6 +9,8 @@ session can drive each primitive with a single uniform command:
     python cli.py taste-snapshot   # lean summary + known-artist set (vs reading raw JSON)
     python cli.py search-verify "Radiohead" "Weird Fishes/Arpeggi"
     python cli.py build-playlist "My Playlist" spotify:track:xxx [...] [--uris-file f]
+    python cli.py generate-cover "warm americana wheat field at sunset" [--out f --seed N]
+    python cli.py set-playlist-image <playlist-url|uri|id> cover.png
     python cli.py now-playing
     python cli.py library-scan [--cap 500] [--no-write]
     python cli.py similar-artists "Colter Wall" [--limit 30]
@@ -43,11 +45,12 @@ from discovery_log import (
     _cmd_log_artists,
     _cmd_log_recent,
 )
+from cover_art import _cmd_generate_cover
 from genre_map import _cmd_find as _cmd_genre_find
 from genre_map import _cmd_neighbors as _cmd_genre_neighbors
 from lastfm import _cmd_artist_tags, _cmd_similar_artists, _cmd_similar_tracks
 from sensing import _cmd_library_scan, _cmd_now_playing
-from tools import _cmd_build_playlist, _cmd_search_verify
+from tools import _cmd_build_playlist, _cmd_search_verify, _cmd_set_playlist_image
 
 
 def _latest_taste_dump() -> str | None:
@@ -191,6 +194,22 @@ def main() -> int:
     bp.add_argument("--description", default="", help="Playlist description.")
     bp.add_argument("--public", action="store_true", help="Make the playlist public.")
     bp.set_defaults(func=_cmd_build_playlist)
+
+    gc = sub.add_parser(
+        "generate-cover", help="Generate a square cover image via Pollinations (free)."
+    )
+    gc.add_argument("prompt", help="Image description (no text/words render well).")
+    gc.add_argument("--out", help="Output path (default: a temp .jpg).")
+    gc.add_argument("--size", type=int, default=1024, help="Square edge in px.")
+    gc.add_argument("--seed", type=int, default=None, help="Seed for reproducibility.")
+    gc.set_defaults(func=_cmd_generate_cover)
+
+    spi = sub.add_parser(
+        "set-playlist-image", help="Upload a cover image to an existing playlist."
+    )
+    spi.add_argument("playlist", help="Playlist ID, URI, or URL.")
+    spi.add_argument("image", help="Path to an image (auto-converted to JPEG ≤256 KB).")
+    spi.set_defaults(func=_cmd_set_playlist_image)
 
     npc = sub.add_parser("now-playing", help="Print the currently-playing track.")
     npc.set_defaults(func=_cmd_now_playing)
