@@ -240,6 +240,12 @@ def genre_map() -> str:
     return _read("knowledge/genre_map.md")
 
 
+@mcp.resource("knowledge://cover-style")
+def cover_style() -> str:
+    """The "Painterly worlds" playlist-cover visual system (cover_style.md)."""
+    return _read("knowledge/cover_style.md")
+
+
 if __name__ == "__main__":
     if not TRUST_PROXY_AUTH and not os.getenv("MCP_BEARER_TOKEN"):
         raise SystemExit(
