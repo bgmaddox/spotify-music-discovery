@@ -133,6 +133,12 @@ python cli.py -h                   # one entry point for every primitive (Phase 
 - **Playlist descriptions:** write a brief (1–2 sentence) summary of the actual
   playlist — the artists, mood, era, or theme that makes it interesting. Never use a
   generic "Claude curated" label or describe the tooling. Cap ~300 chars.
+- **Playlist covers:** the Claude-built playlists share a "Painterly worlds" visual
+  system so they read as one collection (the visual counterpart to the `🤖 ` prefix).
+  **Read `knowledge/cover_style.md` before generating any cover** — it fixes the style
+  (textured impasto oil, no text) and maps palette→genre and composition→recipe. Flow:
+  `cli.py generate-cover "<prompt>" --out f.jpg` → `cli.py set-playlist-image <id> f.jpg`.
+  Runs from the local CLI or Pi (needs the write token), never the read-only MCP.
 
 ## Mode
 Building Mode A (Claude-Code-native). Mode B (standalone Anthropic API) is a later,
