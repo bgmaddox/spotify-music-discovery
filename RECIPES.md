@@ -462,6 +462,173 @@ from its own musical knowledge; release dates from `verify_detail` are a sanity 
 root→branch lineage) order on a real private playlist, with the era trail and per-era gloss
 reported.
 
+**Variant — single-artist career arc:** the same mechanics aimed at *one artist's*
+discography instead of a genre — early/breakthrough/peak/late phases, one or two tracks each,
+in release order. Same date caveat (order by known album sequence, not Spotify dates); same
+ordered build. Report the career-phase trail instead of an era trail.
+
+---
+
+## Recipe 15 — Samples & sources (origin → sample)
+
+Goal: pair tracks with the **records they sample or interpolate** — the funk/soul/jazz break
+sitting under a hip-hop song, or the old hook a modern track flips. Playing it is hearing the
+DNA: source, then what was built on it.
+
+**Why it's different:** Recipe 11 pairs *covers* (same song, new performer). This pairs a
+song with a *different* song it's **built from** — a production-lineage link, not a
+re-performance. For this user it also bridges the two halves of their taste (the soul/funk
+source and the hip-hop that sampled it).
+
+**Steps**
+
+1. **Pick seeds.** A few hip-hop/electronic tracks (from the taste dump, now-playing, or
+   named) whose samples you're confident about. Favor well-documented flips over obscure ones.
+2. **Name the source for each** from session knowledge — the original record sampled or
+   interpolated (artist + title). Treat every link as a *hypothesis* until both sides verify;
+   sample facts are exactly the kind of thing the cutoff gets wrong.
+3. **Order each pair source-first, then the track that sampled it** (origin → result). For a
+   one-to-many source (a break sampled by several tracks), do source then its descendants.
+4. **Verify both sides** of every pair (`search_verify`/`verify_detail`); log misses. If the
+   *source* is missing, drop the whole pair — a sample track with no origin defeats the point.
+   Watch for re-recordings/compilations that aren't the sampled master; flag if unsure.
+5. **Build in pair order** (don't let `build_playlist` reorder) and **report the lineage** —
+   `source → sampler` for each pair, with a one-line note on what was flipped (the break, the
+   vocal hook, the bassline).
+
+**Acceptance:** ≥5 verified source→sample pairs (≥10 tracks) in deliberate pair order on a
+real private playlist, each pair's lineage and what-was-sampled noted. Low-confidence sample
+claims are dropped, not guessed.
+
+---
+
+## Recipe 16 — Thematic thread (songs about X)
+
+Goal: a playlist anchored on **what the songs are about** — trains, rivers, leaving town, a
+named city, money, outlaws, the road — pulling across genres and eras as long as the lyrical
+subject holds.
+
+**Why it's different:** every other recipe anchors on *sound* (similarity, genre, era,
+texture) or *function* (occasion). This anchors on **lyrical content**, which no audio signal
+or similarity graph captures — it's purely a session-reasoning play, which makes it a clean
+Mode-A fit.
+
+**Steps**
+
+1. **Fix the theme** — a concrete subject, not a mood (mood is Recipe 13). Sharper is better:
+   "songs about leaving a small town" beats "sad songs."
+2. **Range across the user's taste *and* beyond it** for tracks that genuinely treat the
+   theme — span genres/eras deliberately so the thread, not the style, is the through-line.
+   Mix a few owned favorites with new-but-fitting picks; note which are which.
+3. **Justify the fit per track** in one line — *how* the song is about the theme (chorus,
+   narrative, a key image). Drop anything that only fits via a stretch; the thread must be
+   audible to the listener.
+4. **Verify** every track (`search_verify`); log misses. Watch for same-title wrong songs —
+   a title can match the theme by coincidence; confirm it's the song you meant.
+5. **Build** a private `🤖 ` playlist; optionally **sequence** (hand off to Recipe 9) since a
+   thematic set often reads as a loose narrative. **Report the thread** and the per-track
+   justification so the user hears the connection.
+
+**Acceptance:** ≥10 verified tracks that all genuinely treat one named lyrical theme,
+spanning ≥2 genres or eras, on a real private playlist, with the per-track fit reported.
+
+---
+
+## Recipe 17 — Sound of a place (scene / geography)
+
+Goal: a playlist that captures the sound of a **place/scene** — Muscle Shoals, Laurel Canyon,
+Bakersfield, Memphis, Athens GA, Lagos, Bristol — the artists, studios, and styles that a
+specific geography produced.
+
+**Why it's different:** Recipe 7 steps between *genres*; Recipe 14 walks *time*. A scene is
+**neither** — it spans genres and eras but is bound by geography and a shared local lineage
+(the same studio, label, players, or city circuit). The anchor is *where*, not *what* or
+*when*.
+
+**Steps**
+
+1. **Name the place and its window** — the scene and roughly the years it was a scene
+   (Laurel Canyon ≈ late '60s–'70s; Muscle Shoals ≈ the FAME/Swampers era). One line on what
+   *defined* the local sound (the studio band, the label, the venue).
+2. **Populate from the scene's roster** using session knowledge — core artists plus the
+   one-degree players (session musicians, the house band) that make a scene cohere. Optionally
+   confirm an artist's tie with `artist_tags`/`similar_artists`; treat membership as a
+   hypothesis until verified.
+3. **Pick a track per artist that *sounds like the place*** — the one cut where the scene's
+   signature comes through, not necessarily their biggest hit.
+4. **Verify** every track (`search_verify`); log misses. Sanity-check that the recording sits
+   in the scene's window (a later track by the same artist may have left the sound behind).
+5. **Build** a private `🤖 ` playlist (era order is a nice default but not required) and
+   **report the scene framing** — place, window, and the studio/label/players that bind it,
+   plus a line per artist on their role in the scene.
+
+**Acceptance:** ≥10 verified tracks tied to one named place/scene, with the scene's defining
+thread (studio/label/players/venue) reported and each artist's tie to it noted, on a real
+private playlist.
+
+---
+
+## Recipe 18 — Family tree (personnel graph)
+
+Goal: start from one band/artist the user loves and branch out along **who played with whom**
+— members' side projects and solo work, supergroups, the producer's other records, the
+session players' day jobs. A people graph, not a sound graph.
+
+**Why it's different:** every similarity recipe (1, 6, 7) walks a *sonic/co-listening* graph.
+This walks a **personnel** graph — connections that are often sonically *surprising* (a
+metal drummer's jazz side project), which is the whole appeal. It's the recipe most likely to
+land somewhere you'd never reach by "sounds like."
+
+**Steps**
+
+1. **Pick the root** — a band/artist with a real web of personnel (members, frequent
+   producer, notable session players). Single-person acts with no collaborators are poor roots.
+2. **Walk the personnel edges** from session knowledge: each member's other bands/solo work,
+   supergroups they joined, the producer's signature records, recurring session players. Note
+   the *relationship type* for each hop (ex-member, producer, side project).
+3. **One track per node**, chosen to *show the connection* (often deliberately different from
+   the root's sound — that contrast is the point). Treat every personnel claim as a hypothesis
+   until verified — credits are exactly what the cutoff gets wrong.
+4. **Verify** every track (`search_verify`/`verify_detail`); log misses. If a personnel link
+   turns out shaky on reflection, drop it rather than ship a wrong connection.
+5. **Build** a private `🤖 ` playlist and **report the tree** — `root → node (relationship)`
+   for each branch, so the user sees *why* each track is connected, not just that it is.
+
+**Acceptance:** ≥8 verified tracks reached from one root via stated personnel links (≥3
+distinct relationship types), on a real private playlist, with the relationship named for
+each branch and low-confidence links dropped.
+
+---
+
+## Recipe 19 — Far cry (deliberate anti-bubble)
+
+Goal: a deliberate **maximum-distance** stretch — tracks chosen to sit as far from every
+cluster the user owns as possible, while still offering one real handhold so it's a stretch,
+not noise.
+
+**Why it's different:** Recipes 6 and 7 step *one scene over* (adjacent, comfortable). This is
+the anti-recipe — it aims for the parts of the map the taste dump *never* touches (genre,
+language, era, culture). The discipline is that "far" must still be *defensible*, not random.
+
+**Steps**
+
+1. **Map the bubble.** From the taste dump, name the clusters the user lives in (their top
+   genres/regions/eras). The targets are the *negative space* — what's conspicuously absent.
+2. **Pick far targets** — genres/scenes/traditions with little or no overlap with the bubble
+   (e.g. for a roots+hip-hop listener: Carnatic classical, Norwegian black metal, Japanese
+   city pop, Tuvan throat singing). Use `genre-neighbors` *in reverse* (look at the tail/
+   distant entries) or session knowledge of what's genuinely far.
+3. **For each pick, find the one handhold** — the single element that lets *this* listener in
+   (a groove, a melodic hook, a production touch that rhymes with something they love). No
+   handhold, no pick; that's the line between a stretch and noise.
+4. **Verify** every track (`search_verify`); log misses. Cross-check against the taste dump
+   *and* the ledger so "far" is actually far (not something already surfaced).
+5. **Build** a private `🤖 ` playlist and **report the reach** — for each track, name *how far*
+   it is from the user's map *and* the handhold that earns its place.
+
+**Acceptance:** ≥8 verified tracks drawn from genres/scenes with no overlap in the taste dump,
+each with a stated handhold connecting it to the user's taste, on a real private playlist.
+
 ---
 
 ## Notes & guardrails
