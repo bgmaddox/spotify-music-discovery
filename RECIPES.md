@@ -417,6 +417,53 @@ a real private playlist, with the occasion-through-taste rationale reported.
 
 ---
 
+## Recipe 14 — Genre chronology / lineage (history over time)
+
+Goal: a playlist that **teaches a genre by walking it through time** — either *evolution*
+(one genre traced era by era: roots → classic period → modern revival) or *lineage* (a root
+genre branching into the styles it spawned). Playing it top to bottom is a guided tour of how
+the sound developed. Like Recipe 8, the **deliverable is ordered** — chronology *is* the
+product.
+
+**Why it's different:** Recipe 7 walks genre *topology* (what scene sits *next to* this one —
+a spatial axis). This walks the *temporal* axis (how this scene *became* what it is). Recipe 5
+(time machine) anchors on the user's own nostalgia era; this is genre-education, not personal
+memory, and it deliberately includes artists the user may not know. It can sit *outside* the
+taste dump entirely — the goal is a faithful arc of the genre, not strictly-new-to-you
+discovery (though it should still avoid recycling the same picks via the ledger).
+
+**The chronology comes from session knowledge, not scraped dates.** Spotify
+`album.release_date` is unreliable for this — remasters and reissues report the *reissue* year,
+so a 1969 track can show as 2014 and misorder the whole arc. So: Claude orders by *known era*
+from its own musical knowledge; release dates from `verify_detail` are a sanity *cross-check*
+(flag a wild mismatch), never the sort key.
+
+**Steps**
+
+1. **Pick the genre and the shape.** Name the genre and decide *evolution* (one lineage
+   through time) or *lineage* (root → branches). Sketch the **era buckets** up front —
+   e.g. 4–6 phases, each with a 1-line definition and its rough years.
+2. **Populate each era with representative artists/tracks.** Lean on session knowledge for
+   *who defines each phase* (treated as hypothesis until verified). Optionally widen a thin
+   era with `similar_artists` on a known anchor (Recipe 6 step 2) or `genre-neighbors` /
+   `artist_tags` to confirm an artist belongs to that phase. Aim for ~2–3 tracks per era.
+3. **Pick the era-defining track per artist** — the one that *exemplifies that phase's
+   sound*, not necessarily their biggest hit. Name artist + title + era for each.
+4. **Verify** every track (`search_verify`/`verify_detail`); log misses. Cross-check the
+   returned release date against the assigned era — if it's wildly off, suspect a reissue or
+   a wrong match and confirm before keeping. If a track is missing, substitute one that holds
+   the *same era slot* (don't let a gap collapse the timeline).
+5. **Build in chronological order** — pass URIs to `build_playlist` in era sequence (do
+   **not** let it reorder). For lineage shape, order root-first then branch by branch.
+6. **Report the timeline:** the playlist URL plus the **era trail** (`era → years → artists`)
+   so the user reads the arc, with a one-line gloss on what each era contributed to the genre.
+
+**Acceptance:** ≥10 verified tracks spanning ≥3 named eras in deliberate chronological (or
+root→branch lineage) order on a real private playlist, with the era trail and per-era gloss
+reported.
+
+---
+
 ## Notes & guardrails
 
 - **Knowledge-cutoff guardrail:** the session's music knowledge has a training cutoff.
