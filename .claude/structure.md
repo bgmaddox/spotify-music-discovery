@@ -12,6 +12,8 @@ recipes:      RECIPES.md  (1 ladder, 2 now-playing, 3 taste-report, 4 archaeolog
 knowledge:    knowledge/  (discovery_heuristics.md = angles, genre_map.md = curated adjacencies, genres_coords.json = full everynoise map index [machine-only, query via genre-neighbors]; read .md before reasoning)
 tests:        tests/  (pytest; pure parsing/normalization logic — no network/auth — run `pytest -q`)
 data:         data/    (taste_*.json, library_*.json dumps [newest 5 kept], discovery_log.jsonl; gitignored)
+covers:       covers/  (generated playlist cover .jpgs from generate-cover; gitignored — regenerable, already on Spotify. Write new covers here: generate-cover "..." --out covers/<name>.jpg)
+docs:         docs/    (recipes.html = rendered view of RECIPES.md; gitignored, derived)
 config:       .env  (secrets)  ·  .env.example  (template)
 plan:         claude_initial_plan.md
-skip:         .venv/, __pycache__/, .cache, .cache_lastfm/, .cache_everynoise/
+skip:         .venv/, __pycache__/, .cache, .cache_lastfm/, .cache_everynoise/, covers/, docs/recipes.html

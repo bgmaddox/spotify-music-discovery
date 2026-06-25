@@ -137,7 +137,8 @@ python cli.py -h                   # one entry point for every primitive (Phase 
   system so they read as one collection (the visual counterpart to the `🤖 ` prefix).
   **Read `knowledge/cover_style.md` before generating any cover** — it fixes the style
   (textured impasto oil, no text) and maps palette→genre and composition→recipe. Flow:
-  `cli.py generate-cover "<prompt>" --out f.jpg` → `cli.py set-playlist-image <id> f.jpg`.
+  `cli.py generate-cover "<prompt>" --out covers/<name>.jpg` → `cli.py set-playlist-image <id> covers/<name>.jpg`.
+  Generated covers live in the gitignored `covers/` folder (regenerable, already on Spotify).
   Runs from the local CLI or Pi (needs the write token), never the read-only MCP.
 
 ## Mode

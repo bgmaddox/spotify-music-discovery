@@ -9,6 +9,11 @@ __pycache__/
 *.json
 data/
 
+# generated playlist covers (regenerable; already uploaded to Spotify)
+covers/
+# rendered view of RECIPES.md (derived doc)
+docs/recipes.html
+
 # keep the example env tracked
 !.env.example
 # keep the parsed everynoise genre map (static reference data, not a secret/dump)
