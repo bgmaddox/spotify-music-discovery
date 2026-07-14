@@ -133,6 +133,11 @@ python cli.py -h                   # one entry point for every primitive (Phase 
 - **Playlist descriptions:** write a brief (1–2 sentence) summary of the actual
   playlist — the artists, mood, era, or theme that makes it interesting. Never use a
   generic "Claude curated" label or describe the tooling. Cap ~300 chars.
+- **Playlist notes journal:** after building a playlist, append a human-readable
+  summary to `PLAYLIST_NOTES.md` (newest first) — the recipe/angle used, the taste
+  rationale, the sequencing, cover seed, and possible tweaks. This is the story version
+  the user reads later; `data/discovery_log.jsonl` stays the machine record. Mirror the
+  in-chat summary; keep entries to the existing template.
 - **Playlist covers:** the Claude-built playlists share a "Painterly worlds" visual
   system so they read as one collection (the visual counterpart to the `🤖 ` prefix).
   **Read `knowledge/cover_style.md` before generating any cover** — it fixes the style
