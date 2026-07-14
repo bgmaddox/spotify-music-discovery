@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discovery Recipes — Spotify Music Discovery</title>
+<style>
+  :root{
+    --bg:#0a0a0c;
+    --panel:#141418;
+    --panel-2:#1b1b21;
+    --line:#27272e;
+    --text:#e9e9ee;
+    --muted:#9b9ba6;
+    --faint:#6c6c78;
+    --green:#1db954;
+    --green-dim:#1a9648;
+    --amber:#e3a008;
+    --blue:#5b8def;
+    --violet:#a274ff;
+    --radius:16px;
+    --shadow:0 8px 30px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(29,185,84,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(162,116,255,.07), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;
+    padding:0 0 80px;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+
+  /* Header */
+  header{padding:54px 0 26px}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--green);background:rgba(29,185,84,.10);
+    border:1px solid rgba(29,185,84,.25);
+    padding:6px 12px;border-radius:999px;margin-bottom:18px;
+  }
+  h1{font-size:clamp(30px,5vw,46px);line-height:1.05;margin:0 0 12px;letter-spacing:-.02em}
+  h1 .accent{color:var(--green)}
+  .lede{color:var(--muted);font-size:17px;max-width:760px;margin:0}
+  .lede code{background:var(--panel-2);padding:2px 7px;border-radius:6px;font-size:.86em;color:#cfe8d6}
+
+  /* Controls */
+  .controls{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(var(--bg),rgba(10,10,12,.86));
+    backdrop-filter:blur(10px);
+    padding:18px 0 14px;margin:26px 0 6px;
+    border-bottom:1px solid var(--line);
+  }
+  .controls-inner{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .search{
+    flex:1 1 280px;display:flex;align-items:center;gap:10px;
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:11px 14px;
+  }
+  .search:focus-within{border-color:var(--green-dim);box-shadow:0 0 0 3px rgba(29,185,84,.12)}
+  .search input{
+    flex:1;background:transparent;border:0;outline:0;color:var(--text);
+    font-size:15px;
+  }
+  .search svg{flex:none;opacity:.6}
+  .filters{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    cursor:pointer;user-select:none;
+    font-size:13px;font-weight:600;
+    padding:8px 14px;border-radius:999px;
+    background:var(--panel);border:1px solid var(--line);color:var(--muted);
+    transition:.16s ease;
+  }
+  .chip:hover{color:var(--text);border-color:#3a3a44}
+  .chip.active{background:var(--green);border-color:var(--green);color:#06210f}
+  .count{margin-left:auto;color:var(--faint);font-size:13px;white-space:nowrap}
+
+  /* Tools reference */
+  details.tools{
+    margin:22px 0 6px;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden;
+  }
+  details.tools>summary{
+    cursor:pointer;list-style:none;padding:16px 20px;font-weight:700;font-size:15px;
+    display:flex;align-items:center;gap:10px;
+  }
+  details.tools>summary::-webkit-details-marker{display:none}
+  details.tools>summary .tw{
+    margin-left:auto;color:var(--faint);font-weight:500;font-size:13px;transition:.2s
+  }
+  details.tools[open]>summary .tw{transform:rotate(180deg)}
+  .tools-body{padding:0 20px 20px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:680px){.tools-body{grid-template-columns:1fr}}
+  .tools-body h4{margin:6px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--green)}
+  .tool{padding:7px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .tool code{color:#cfe8d6;font-weight:600}
+  .tool span{color:var(--muted)}
+
+  /* Grid */
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));
+    gap:18px;margin-top:24px;
+  }
+  .card{
+    background:linear-gradient(180deg,var(--panel),#101014);
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:0;overflow:hidden;display:flex;flex-direction:column;
+    transition:.18s ease;position:relative;
+  }
+  .card:hover{transform:translateY(-3px);border-color:#3a3a44;box-shadow:var(--shadow)}
+  .card::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--accent,var(--green))}
+  .card-head{padding:18px 20px 14px;cursor:pointer}
+  .card-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .num{
+    flex:none;width:38px;height:38px;border-radius:11px;
+    display:grid;place-items:center;font-weight:800;font-size:16px;
+    background:color-mix(in srgb,var(--accent,var(--green)) 16%,transparent);
+    color:var(--accent,var(--green));
+    border:1px solid color-mix(in srgb,var(--accent,var(--green)) 30%,transparent);
+  }
+  .tag{
+    margin-left:auto;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--accent,var(--green));
+    background:color-mix(in srgb,var(--accent,var(--green)) 12%,transparent);
+    border:1px solid color-mix(in srgb,var(--accent,var(--green)) 26%,transparent);
+    padding:4px 10px;border-radius:999px;
+  }
+  .card h3{margin:0 0 6px;font-size:18px;letter-spacing:-.01em}
+  .goal{color:var(--muted);font-size:14px;margin:0}
+  .toggle{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 20px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;
+    border-top:1px solid var(--line);transition:.16s;
+  }
+  .toggle:hover{color:var(--text)}
+  .toggle .tw{transition:.2s;display:inline-block;margin-left:auto}
+  .toggle.open{color:var(--accent,var(--green))}
+  .toggle.open .tw{transform:rotate(180deg)}
+  .body{
+    display:none;padding:0 20px 20px;
+  }
+  .toggle.open + .body{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .body h5{
+    margin:16px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint)
+  }
+  .why{
+    background:var(--panel-2);border-left:3px solid var(--accent,var(--green));
+    padding:10px 14px;border-radius:0 8px 8px 0;font-size:13.5px;color:#cdd2d8;margin:14px 0 0
+  }
+  ol.steps{margin:8px 0 0;padding-left:0;list-style:none;counter-reset:s}
+  ol.steps li{
+    counter-increment:s;position:relative;padding:7px 0 7px 34px;font-size:14px;
+    color:#d6d6df;border-top:1px solid var(--line);
+  }
+  ol.steps li:first-child{border-top:0}
+  ol.steps li::before{
+    content:counter(s);position:absolute;left:0;top:8px;
+    width:22px;height:22px;border-radius:7px;font-size:12px;font-weight:700;
+    display:grid;place-items:center;
+    background:color-mix(in srgb,var(--accent,var(--green)) 14%,transparent);
+    color:var(--accent,var(--green));
+  }
+  .accept{
+    margin-top:16px;display:flex;gap:10px;align-items:flex-start;
+    background:rgba(29,185,84,.07);border:1px solid rgba(29,185,84,.2);
+    border-radius:10px;padding:12px 14px;font-size:13.5px;color:#cfe8d6;
+  }
+  .accept svg{flex:none;margin-top:2px}
+  .body code{background:var(--panel-2);padding:1px 6px;border-radius:5px;font-size:.85em;color:#cfe8d6}
+
+  /* Example block */
+  .say{
+    display:flex;gap:10px;align-items:flex-start;margin:6px 0 14px;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:11px 14px;
+  }
+  .say .lbl{
+    flex:none;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--accent,var(--green));padding-top:2px;
+  }
+  .say .txt{font-size:14px;color:#e9e9ee;font-style:italic}
+  .got{margin:0;padding-left:0;list-style:none}
+  .got li{
+    position:relative;padding:7px 0 7px 22px;font-size:13.5px;color:#cdd2d8;
+    border-top:1px solid var(--line);
+  }
+  .got li:first-child{border-top:0}
+  .got li::before{
+    content:"";position:absolute;left:4px;top:14px;width:6px;height:6px;border-radius:50%;
+    background:var(--accent,var(--green));
+  }
+  .got li b{color:#fff;font-weight:600}
+  .built{
+    margin-top:14px;display:flex;gap:9px;align-items:center;font-size:13px;color:var(--muted);
+  }
+  .built svg{flex:none;color:var(--accent,var(--green))}
+  .built .pl{color:#cfe8d6;font-weight:600}
+
+  /* Tabs */
+  .tabs{
+    display:inline-flex;gap:4px;background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:4px;margin:20px 0 2px;
+  }
+  .tab{
+    cursor:pointer;user-select:none;font:inherit;font-size:14px;font-weight:700;
+    padding:9px 20px;border-radius:999px;color:var(--muted);
+    border:0;background:transparent;transition:.16s ease;
+  }
+  .tab:hover{color:var(--text)}
+  .tab.active{background:var(--green);color:#06210f}
+
+  /* Playlist card specifics (reuses .card base) */
+  .pcard h3{font-size:17px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+  .prov{
+    font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--amber);background:color-mix(in srgb,var(--amber) 13%,transparent);
+    border:1px solid color-mix(in srgb,var(--amber) 32%,transparent);
+    padding:3px 8px;border-radius:999px;white-space:nowrap;
+  }
+  .meta{color:var(--faint);font-size:12.5px;margin:2px 0 0}
+  .struct{font-size:13.5px;color:#cdd2d8;margin:8px 0 0}
+  .cover-seed{margin-top:12px;font-size:12px;color:var(--faint)}
+  .open-btn{
+    display:inline-flex;align-items:center;gap:8px;margin-top:18px;
+    text-decoration:none;font-size:14px;font-weight:700;color:#06210f;
+    background:var(--green);border-radius:999px;padding:9px 16px;transition:.16s ease;
+  }
+  .open-btn:hover{background:#25d366;transform:translateY(-1px)}
+  .open-btn svg{flex:none}
+
+  .empty{display:none;text-align:center;color:var(--muted);padding:60px 20px;font-size:16px}
+  footer{margin-top:48px;color:var(--faint);font-size:13px;text-align:center}
+  footer code{background:var(--panel-2);padding:2px 6px;border-radius:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">🤖 Spotify Music Discovery · Mode A</span>
+    <h1>Discovery <span class="accent">Recipes</span> &amp; Playlists</h1>
+    <p class="lede">Session-driven workflows where the reasoning happens in the Claude session and Python only senses &amp; acts. Every recipe obeys one hard rule: <strong>no track is surfaced or added until <code>search_verify</code> confirms it exists.</strong> The <strong>Playlists</strong> tab is the journal — every set actually built, with the recipe used and the taste reasoning behind the picks.</p>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-v="recipes">Recipes</button>
+      <button class="tab" data-v="playlists">Playlists</button>
+    </div>
+  </header>
+
+  <details class="tools" id="toolsRef">
+    <summary>🛠️ Tools &amp; knowledge available <span class="tw">▾ show reference</span></summary>
+    <div class="tools-body">
+      <div>
+        <h4>Sense &amp; act</h4>
+        <div class="tool"><code>search_verify(artist, title)</code> <span>→ track URI or None</span></div>
+        <div class="tool"><code>verify_detail(artist, title)</code> <span>→ {uri, name, artists, album}</span></div>
+        <div class="tool"><code>build_playlist(name, uris, …)</code> <span>→ playlist URL (private)</span></div>
+        <div class="tool"><code>now_playing()</code> <span>→ current track or None</span></div>
+        <div class="tool"><code>library_scan(cap=500)</code> <span>→ saved tracks dump</span></div>
+      </div>
+      <div>
+        <h4>Similarity signal (Last.fm + everynoise)</h4>
+        <div class="tool"><code>similar_artists(artist)</code> <span>→ crowd similarity</span></div>
+        <div class="tool"><code>similar_tracks(artist, title)</code> <span>→ track-level matches</span></div>
+        <div class="tool"><code>artist_tags(artist)</code> <span>→ genre/mood tags</span></div>
+        <div class="tool"><code>genre-neighbors "&lt;genre&gt;"</code> <span>→ adjacent scenes</span></div>
+        <h4 style="margin-top:14px">Read before reasoning</h4>
+        <div class="tool"><code>discovery_heuristics.md</code> <span>· the menu of angles</span></div>
+        <div class="tool"><code>genre_map.md</code> <span>· static genre adjacencies</span></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="controls">
+    <div class="controls-inner">
+      <label class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="q" type="text" placeholder="Search recipes — e.g. 'sequence', 'covers', 'new artists'…" autocomplete="off">
+      </label>
+      <div class="filters" id="filters">
+        <span class="chip active" data-f="all">All</span>
+        <span class="chip" data-f="discover">Outward discovery</span>
+        <span class="chip" data-f="inward">Inward / own library</span>
+        <span class="chip" data-f="ordered">Ordered / sequenced</span>
+        <span class="chip" data-f="report">Reports</span>
+      </div>
+      <span class="count" id="count"></span>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty">No recipes match that search. 🎧</div>
+
+  <footer id="foot">
+    Built from <code>RECIPES.md</code> + <code>PLAYLIST_NOTES.md</code> · 19 recipes · 20 playlists · self-contained, no network needed.
+  </footer>
+</div>
+
+<script>
+const RECIPES = [
+  {n:1, accent:"#1db954", cat:["discover"], tag:"Core",
+   title:"Discovery ladder", goal:"A private playlist that starts at the center of taste and walks outward to genuine left-field picks, each with a one-line rationale.",
+   why:"The foundational recipe. ~12 candidates in three rungs — center → one-axis stretch → left-field — every track defensible from something the user loves.",
+   steps:[
+     "Sense — run/reuse a fresh <code>data/taste_*.json</code>. Note dominant artists, genres, eras, popularity band, what's recent.",
+     "Propose a ~12-candidate ladder in 3 rungs: ~4 center-of-taste, ~4 one-axis stretches, ~4 left-field. Name a specific artist + title for each.",
+     "Verify every candidate with <code>search_verify</code>. Collect hits, log every miss (usually a hallucinated/mis-titled track).",
+     "Build a <code>🤖</code>-prefixed private playlist with a thematic 1–2 sentence description.",
+     "Report the URL, verified tracks grouped by rung with rationales, and dropped candidates."],
+   accept:"≥10 verified tracks on a real private playlist, rationales given, dropped candidates reported.",
+   ex:{say:"\"Build me a discovery ladder off my taste.\"",
+       got:["<b>Center</b> — Jason Isbell, \"Cover Me Up\" · Tyler Childers, \"Whitehouse Road\"",
+            "<b>Stretch</b> — Hiss Golden Messenger, \"Standing in the Doorway\" <i>(one axis: looser, more soul)</i>",
+            "<b>Left-field</b> — William Tyler, \"Highway Anxiety\" <i>(instrumental cosmic-americana reach)</i>"],
+       built:"🤖 Ladder — roots, walked outward"}},
+
+  {n:2, accent:"#5b8def", cat:["discover"], tag:"Conversational",
+   title:"Now-playing companion", goal:"Take whatever is playing right now and give the lineage / rabbit hole around it — where it sits, who it descends from, a few verified next steps.",
+   why:"Reads the live track and writes a tight scene/era lineage, then optionally extends the thread. Don't build unprompted — this one is a conversation.",
+   steps:[
+     "Sense — call <code>now_playing()</code>. If None, say nothing's playing and stop.",
+     "Commentary — a short lineage read: scene/era, key influences and contemporaries, where this track fits.",
+     "Propose ~3–5 follow-on tracks that continue the thread (deeper cut, an influence, a descendant).",
+     "Verify each with <code>search_verify</code>; drop and log misses.",
+     "Offer to build a playlist of the verified next-steps — only if the user wants it."],
+   accept:"A lineage read of the current track plus verified next steps; playlist only on request.",
+   ex:{say:"\"What's the rabbit hole around what I'm playing?\" <span style='opacity:.7'>(playing Sturgill Simpson — \"Turtles All the Way Down\")</span>",
+       got:["<b>Lineage</b> — outlaw-country revival in the Waylon/Merle line, run through psych and gospel.",
+            "<b>Next step</b> — Colter Wall, \"Sleeping on the Blacktop\" <i>(deeper, darker baritone)</i>",
+            "<b>Next step</b> — Ian Noe, \"Letter to Madeline\" <i>(same Appalachian story-song thread)</i>"],
+       built:"No build unless you ask — this one's a conversation."}},
+
+  {n:3, accent:"#a274ff", cat:["report"], tag:"Report",
+   title:"Taste report + blind spots", goal:"A narrative read of the user's taste, plus genres/scenes suspiciously absent given what they clearly love.",
+   why:"No playlist required. Names blind-spot genres (unverified is fine for genres) — adjacent scenes a listener like this usually has but is missing.",
+   steps:[
+     "Sense — run/reuse a taste dump; optionally <code>library_scan</code> for a fuller picture.",
+     "Read — summarize dominant artists, genres, eras, popularity band, and how short_term vs long_term differ.",
+     "Blind spots — name 3–6 conspicuously missing genres/scenes/eras, each justified from something they love.",
+     "Report — narrative + bulleted blind spots. Hand off to Recipe 1 or 5 if they want a playlist."],
+   accept:"A narrative taste read plus 3–6 justified blind-spot genres. No tracks named as existing without search_verify.",
+   ex:{say:"\"Read my taste and tell me what I'm missing.\"",
+       got:["<b>Read</b> — Americana core, steady in the long term; short-term leans toward newer alt-country.",
+            "<b>Blind spot</b> — British folk revival (Nick Drake, Pentangle) — adjacent to your acoustic core.",
+            "<b>Blind spot</b> — Texas singer-songwriters (Townes, Guy Clark) — the lineage under your favorites.",
+            "<b>Blind spot</b> — vintage gospel/soul — the root your Americana picks keep gesturing at."],
+       built:"No playlist needed — hand off to Recipe 1 or 5 if you want one."}},
+
+  {n:4, accent:"#e3a008", cat:["inward"], tag:"Own library",
+   title:"Library archaeologist", goal:"Surface patterns in the user's own saved library and propose playlists built entirely from tracks they already own.",
+   why:"Zero hallucination surface — every track already has a real URI in the library dump. Mines clusters: sub-genres, era pockets, mood threads, add-date windows.",
+   steps:[
+     "Sense — <code>library_scan(cap=500)</code>; read <code>data/library_*.json</code>.",
+     "Dig — find clusters (sub-genre, era pocket, mood thread, producer/label run, same add-window). Pick 1–3.",
+     "Assemble directly from the dump's real ids (<code>spotify:track:&lt;id&gt;</code>); sanity-check with verify_detail if unsure.",
+     "Build with build_playlist and report the through-line of each."],
+   accept:"1–3 playlists built entirely from owned tracks, each with its cluster through-line explained.",
+   ex:{say:"\"Find a playlist hiding in my saved songs.\"",
+       got:["<b>Cluster found</b> — 22 saved tracks added Nov–Dec, all warm acoustic with a winter thread.",
+            "<b>Cluster found</b> — a run of late-album deep cuts from your roots artists, never the singles.",
+            "Assembled straight from the library dump's real URIs — zero hallucination surface."],
+       built:"🤖 Saved &amp; forgotten — winter acoustic"}},
+
+  {n:5, accent:"#5b8def", cat:["discover"], tag:"Themed",
+   title:"Time machine", goal:"A playlist for a given vibe / era / theme the user names — anchored against their taste so it still feels personal.",
+   why:"Takes a brief like 'late-90s UK garage' or 'rainy Sunday jazz' and mixes recognizable anchors with deeper cuts, bent toward the user's dump.",
+   steps:[
+     "Take the brief and anchor it against the taste dump so it feels personal.",
+     "Propose ~10–15 tracks fitting the brief, artist + title each, one-line why. Mix anchors with deep cuts.",
+     "Verify every candidate with <code>search_verify</code>; log misses.",
+     "Build with build_playlist; report the verified set and any drops."],
+   accept:"~10–15 verified tracks fitting the named brief on a real private playlist, drops reported.",
+   ex:{say:"\"Make me a 1970s rainy-Sunday-porch set.\"",
+       got:["<b>Anchors</b> — Gram Parsons, \"A Song for You\" · John Prine, \"Souvenirs\"",
+            "<b>Deeper</b> — Emmylou Harris, \"Boulder to Birmingham\" · Townes Van Zandt, \"To Live Is to Fly\"",
+            "Brief honored, but bent toward your Americana lean so it still feels personal."],
+       built:"🤖 Rainy Sunday porch, '73"}},
+
+  {n:6, accent:"#1db954", cat:["discover"], tag:"New artists",
+   title:"Lateral discovery (Last.fm)", goal:"The discovery ladder, but powered by an external similarity signal so picks are genuinely new — artists the user has never touched.",
+   why:"Recipe 1 is a closed loop on the dump; this injects fresh candidates from Last.fm and steers them with the knowledge/ angles. Directly replaces Spotify's dead related-artists.",
+   steps:[
+     "Sense — pick 2–4 seed artists that are central <em>and</em> distinct from each other.",
+     "Gather — <code>similar_artists</code> (split by match: ≥0.5 center, 0.2–0.5 stretch, tail left-field) + <code>artist_tags</code> + optional similar_tracks.",
+     "Filter to genuinely new — drop anything already in the taste dump or saved library.",
+     "Steer with knowledge/ — assign each survivor a rung and a named angle (e.g. 'tag intersection', 'genre_map bridge').",
+     "Pick a concrete entry-point track per artist, verify each (watch for wrong-artist/cover matches).",
+     "Build private; report tracks by rung with match + angle, and the seed→candidate trail."],
+   accept:"≥3 artists absent from the taste dump (genuinely new), each verified, each rationale citing its angle + seed.",
+   ex:{say:"\"Find me genuinely new artists near Isbell + Carlile.\"",
+       got:["<b>Seeds</b> — Isbell, Avett Brothers, Sturgill, Carlile → 58 candidates, filtered vs. your known artists.",
+            "Ian Noe <i>(seed: Sturgill · angle: tag intersection, outlaw × storyteller · match .42)</i>",
+            "Kelsey Waldon <i>(seed: Childers · angle: genre_map bridge, classic country × Americana · .38)</i>",
+            "Erin Rae <i>(seed: Carlile · angle: Last.fm adjacency, dreamy folk · .31)</i>"],
+       built:"🤖 Lateral roots — Last.fm ladder"}},
+
+  {n:7, accent:"#a274ff", cat:["discover"], tag:"New artists",
+   title:"Genre-ladder (everynoise)", goal:"The discovery ladder, but the lateral move is along genre topology instead of artist similarity — step sideways into an adjacent scene.",
+   why:"Last.fm answers 'who sounds like this artist?'; everynoise answers 'what genre sits next to this genre?'. Jump to a neighboring style, then fill it with real artists.",
+   steps:[
+     "Anchor on a genre from the dump (resolve the exact name with <code>genre_map.py find</code> if unsure).",
+     "Step sideways — <code>genre-neighbors '&lt;genre&gt;'</code>. Head = close, tail = left-field. Pick an adjacent but under-represented neighbor.",
+     "Fill with artists — the genre's example seed + similar_artists, cross-referenced with session knowledge (a hypothesis until verified).",
+     "Filter to genuinely new (same bar as Recipe 6).",
+     "Pick a track per artist, verify each, build a private 🤖 playlist.",
+     "Report the genre trail (seed genre → neighbor → artists) and which everynoise rung each came from."],
+   accept:"≥3 verified, genuinely-new artists from a neighboring genre, each naming the seed genre + everynoise neighbor + its rank.",
+   ex:{say:"\"Step me one scene over from outlaw country.\"",
+       got:["<b>Genre trail</b> — outlaw country → <i>cosmic american</i> (everynoise neighbor #3, close head).",
+            "Jonathan Wilson, \"Desert Raven\" <i>(defines the neighbor scene)</i>",
+            "William Tyler, \"Highway Anxiety\" · Steelism, \"Lift Off\" <i>(fill the new scene with verified picks)</i>"],
+       built:"🤖 One scene over — cosmic american"}},
+
+  {n:8, accent:"#e3a008", cat:["discover","ordered"], tag:"Ordered",
+   title:"Bridge / morph (A → B)", goal:"A playlist that is a path, not a bag — it starts at cluster A and audibly morphs into cluster B over the tracklist.",
+   why:"The first recipe whose deliverable is ordered. The sequence IS the product — track n has to sit between n−1 and n+1, so a wrong order breaks it.",
+   steps:[
+     "Pick the endpoints — A central in the dump, B a target (another cluster, new artist, or reach). Name both.",
+     "Walk the graph — find artists whose <code>similar_artists</code> lists overlap; ~8–12 stepping-stone stops.",
+     "One track per stop, chosen so the transition works (shared tempo/key/mood via artist_tags).",
+     "Verify every track; if a miss breaks the chain, substitute to preserve the segue.",
+     "Build in order — pass URIs in the walked sequence (do not sort). Report the A → … → B trail."],
+   accept:"≥8 verified tracks in a deliberate A→B order on a real private playlist, stepping-stone trail reported.",
+   ex:{say:"\"Bridge Daft Punk into Outkast.\"",
+       got:["<b>Trail</b> — Daft Punk → Justice → Chromeo → Breakbot → … → Gnarls Barkley → Outkast.",
+            "11 verified stops, each more like its neighbors than the far endpoint.",
+            "<b>Built in walked order</b> — playing it start-to-finish is a guided segue, not a shuffle."],
+       built:"🤖 Daft Punk → Outkast (a path)"}},
+
+  {n:9, accent:"#1db954", cat:["ordered"], tag:"Finishing pass",
+   title:"Sequenced set / energy arc", goal:"Take a candidate set and deliver it sequenced into an arc — warm-up → build → peak → comedown — instead of a flat bag.",
+   why:"Audio-features are dead to this app, so there's no tempo column to sort on. The arc is built from artist_tags + the session's read of each track. A finishing pass any 'collect URIs' recipe can hand off to.",
+   steps:[
+     "Gather candidates (or accept a user list). Verify them first.",
+     "Score each for energy/mood — artist_tags for coarse signal (mellow, anthemic, driving) + session knowledge. A rough 1–5 is enough.",
+     "Lay the arc — open low-medium, climb to one or two peaks, ease down to a closer. Avoid hard whiplash.",
+     "Build in that exact order (don't let build_playlist reorder); report the arc shape."],
+   accept:"A verified set delivered in a deliberate energy arc (not source order), warm-up/peak/comedown named.",
+   ex:{say:"\"Sequence these 12 tracks into an arc.\"",
+       got:["<b>Warm-up</b> — Iron &amp; Wine, \"Naked As We Came\" <i>(energy 2)</i>",
+            "<b>Build → peak</b> — Sturgill Simpson, \"Make Art Not Friends\" <i>(energy 5, the apex)</i>",
+            "<b>Comedown</b> — Gregory Alan Isakov, \"Big Black Car\" <i>(energy 2, the landing)</i>"],
+       built:"Same tracks, re-ordered into a shape — no whiplash between neighbors."}},
+
+  {n:10, accent:"#e3a008", cat:["inward"], tag:"Deep catalog",
+   title:"Deep cuts (anti-hits)", goal:"Inward discovery — take artists the user already loves and surface their non-single, deep-catalog tracks they probably skipped.",
+   why:"Recipes 1/6/7 push outward to new artists; this pushes inward — same artists, deeper catalog — using the popularity band the taste dump already records.",
+   steps:[
+     "Sense — pick ~4–6 prolific artists from top_artists (real catalogs, not single-album acts).",
+     "Propose deep cuts — 2–3 album tracks each that aren't the obvious singles; skip anything in top_tracks/recently_played.",
+     "Verify with <code>verify_detail</code> — confirm right artist AND check the album/name; treat a popular-single match as a miss.",
+     "Build a private 🤖 playlist; report each track with its source album."],
+   accept:"≥8 verified non-single tracks from artists already in top_artists, each with its source album, none existing top_tracks.",
+   ex:{say:"\"Give me deep cuts from artists I already love.\"",
+       got:["Jason Isbell, \"Chaos and Clothes\" <i>(from <b>The Nashville Sound</b> — not a single)</i>",
+            "Sturgill Simpson, \"Breakers Roar\" <i>(from <b>A Sailor's Guide to Earth</b>)</i>",
+            "verify_detail confirmed each is the album cut, not the radio edit or a re-record."],
+       built:"🤖 Deep catalog — the albums, not the hits"}},
+
+  {n:11, accent:"#a274ff", cat:["ordered","discover"], tag:"Paired",
+   title:"Covers & originals (pairs)", goal:"A playlist built from pairs — a loved version → the original it descends from, or a loved song → a great cover of it.",
+   why:"The output is coupled — every track earns its place by its relationship to its neighbor, so the playlist teaches a lineage rather than just listing songs.",
+   steps:[
+     "Seed from loved tracks — covers (point back to originals) or much-covered originals (point forward to covers).",
+     "Name the partner for each; session knowledge generates these, similar_tracks helps find cover versions.",
+     "Verify both halves; if one misses, fix the title or drop the whole pair (a lone half breaks the concept).",
+     "Build with pairs adjacent and report each pairing's lineage in one line."],
+   accept:"≥4 verified pairs (≥8 tracks), each pair's two halves adjacent, lineage explained.",
+   ex:{say:"\"Make me a covers-and-originals pairs playlist.\"",
+       got:["<b>Pair</b> — Sturgill Simpson, \"In Bloom\" ↔ Nirvana, \"In Bloom\" <i>(country reinvention of the grunge original)</i>",
+            "<b>Pair</b> — Tyler Childers, \"House Fire\"… ↔ the trad it nods to <i>(loved version → its source)</i>",
+            "Both halves verified; halves kept adjacent so the playlist teaches the lineage."],
+       built:"🤖 Covers &amp; originals — side by side"}},
+
+  {n:12, accent:"#5b8def", cat:["inward"], tag:"Re-engage",
+   title:"Rotation / re-engagement", goal:"Re-surface the user's own music they've drifted from — heavy in long_term but faded from short_term. 'Songs you forgot you loved.'",
+   why:"Lowest-risk recipe — every track is already theirs. Mines the short_term vs long_term split (a signal no other recipe uses), building backward into their history.",
+   steps:[
+     "Sense — read a fresh dump; compare long_term vs short_term top_artists/top_tracks.",
+     "Find the fade — artists/tracks strong in long_term but absent/declining in short_term.",
+     "Assemble mostly from real ids in the dump (<code>spotify:track:&lt;id&gt;</code>); search_verify any faded artist not in the dump.",
+     "Build a private 🤖 playlist; report the 'heavy long-term, quiet lately' framing."],
+   accept:"≥8 tracks strong in long_term but faded from short_term, with the fade framing reported.",
+   ex:{say:"\"What did I used to love that I've stopped playing?\"",
+       got:["<b>The fade</b> — heavy in your long-term, gone quiet in your short-term:",
+            "The Avett Brothers, \"Murder in the City\" · Ray LaMontagne, \"Trouble\"",
+            "Built straight from real URIs in the dump — every track is already yours."],
+       built:"🤖 Songs you forgot you loved"}},
+
+  {n:13, accent:"#1db954", cat:["discover"], tag:"Occasion",
+   title:"Occasion in your style", goal:"An occasion/activity set — dinner, road trip, Christmas — built from the user's own taste rather than Spotify's generic editorial set.",
+   why:"Editorial/category endpoints are dead to this app, so this is the only way to get an occasion playlist — and it comes out personal. Bends the function through the user's known clusters.",
+   steps:[
+     "Take the occasion and translate it into constraints: energy level, fore/background, lyric density, tempo feel.",
+     "Bend through their clusters — pick tracks satisfying both the occasion and the user's taste (e.g. an Americana Christmas).",
+     "Propose ~10–15 tracks (owned favorites + a few new-but-fitting), one line each on why it fits.",
+     "Verify every named track; log misses.",
+     "Build a private 🤖 playlist; optionally sequence it (hand off to Recipe 9). Report the occasion-through-taste rationale."],
+   accept:"≥10 verified tracks fitting both the named occasion and the user's taste, rationale reported.",
+   ex:{say:"\"I need a Christmas playlist that actually sounds like me.\"",
+       got:["<b>Occasion → constraints</b> — warm, low-foreground, acoustic, holiday lyric content.",
+            "<b>Bent through your clusters</b> — an Americana Christmas, not generic lounge.",
+            "Sufjan Stevens, \"Sister Winter\" · Brandi Carlile, \"Have Yourself a Merry Little Christmas\" · Andrew Bird holiday cuts."],
+       built:"🤖 Americana Christmas — your roots, in December"}},
+
+  {n:14, accent:"#e0a458", cat:["ordered","discover"], tag:"Chronology",
+   title:"Genre chronology / lineage", goal:"A playlist that teaches a genre by walking it through time — evolution (era by era) or lineage (root → the styles it spawned).",
+   why:"Recipe 7 walks genre topology (what sits next to this scene); this walks the temporal axis (how the scene became what it is). Chronology comes from session knowledge, not Spotify dates — reissues misreport years.",
+   steps:[
+     "Pick the genre and the shape — evolution (one lineage through time) or lineage (root → branches). Sketch 4–6 era buckets with rough years.",
+     "Populate each era with representative artists/tracks; widen thin eras with <code>similar_artists</code> or <code>artist_tags</code>.",
+     "Pick the era-defining track per artist — the one that exemplifies that phase's sound, not the biggest hit.",
+     "Verify every track; cross-check the release date against the assigned era (suspect reissues / wrong matches). Substitute to hold an era slot if one's missing.",
+     "Build in chronological (or root→branch) order — don't let build_playlist reorder. Report the era trail with a per-era gloss."],
+   accept:"≥10 verified tracks spanning ≥3 named eras in chronological/lineage order, era trail + per-era gloss reported.",
+   ex:{say:"\"Make me a history of outlaw country.\"",
+       got:["<b>Bakersfield roots ('60s)</b> — Buck Owens \"Act Naturally\" · Merle Haggard \"Mama Tried\"",
+            "<b>Founders ('70–75)</b> — Waylon, Willie, Kristofferson, Billy Joe Shaver",
+            "<b>Modern revival ('08–17)</b> — Sturgill, Stapleton, Colter Wall, Childers"],
+       built:"🤖 Outlaw Country: A History"}},
+
+  {n:15, accent:"#c9a227", cat:["ordered"], tag:"Lineage",
+   title:"Samples & sources", goal:"Pair tracks with the records they sample or interpolate — the funk/soul/jazz break under a hip-hop song, source first.",
+   why:"Recipe 11 pairs covers (same song, new performer); this pairs a song with a different song it's built from — a production-lineage link. Sample facts are hypothesis-until-verified.",
+   steps:[
+     "Pick hip-hop/electronic seeds whose samples you're confident about.",
+     "Name the source for each from session knowledge (artist + title) — treat every link as a hypothesis.",
+     "Order each pair source-first, then the track that sampled it.",
+     "Verify both sides; if the source is missing, drop the whole pair. Watch for re-recordings that aren't the sampled master.",
+     "Build in pair order; report the lineage and what was flipped (break, vocal hook, bassline)."],
+   accept:"≥5 verified source→sample pairs (≥10 tracks) in pair order, lineage noted, low-confidence claims dropped.",
+   ex:{say:"\"Show me where my hip-hop comes from.\"",
+       got:["Lou Reed \"Walk on the Wild Side\" → A Tribe Called Quest \"Can I Kick It?\" <i>(bassline)</i>",
+            "Mtume \"Juicy Fruit\" → The Notorious B.I.G. \"Juicy\" <i>(hook)</i>",
+            "Daft Punk \"Harder, Better…\" → Kanye West \"Stronger\" <i>(vocoder)</i>"],
+       built:"🤖 Samples & Sources: Hip-Hop DNA"}},
+
+  {n:16, accent:"#e06c75", cat:["discover"], tag:"Lyrical",
+   title:"Thematic thread", goal:"A playlist anchored on what the songs are about — trains, rivers, leaving town, a city — pulling across genres and eras as long as the subject holds.",
+   why:"Every other recipe anchors on sound or function; this anchors on lyrical content, which no audio signal captures — a pure session-reasoning, Mode-A fit.",
+   steps:[
+     "Fix the theme — a concrete subject, not a mood. Sharper is better ('leaving a small town' beats 'sad songs').",
+     "Range across the user's taste and beyond it for tracks that genuinely treat the theme; span genres/eras so the thread is the through-line.",
+     "Justify the fit per track in one line — how the song is about the theme. Drop anything that only fits via a stretch.",
+     "Verify every track; watch for same-title wrong songs.",
+     "Build; optionally sequence (Recipe 9). Report the thread and per-track justification."],
+   accept:"≥10 verified tracks all genuinely treating one named theme, spanning ≥2 genres/eras, per-track fit reported.",
+   ex:{say:"\"Songs about leaving a small town.\"",
+       got:["<b>Theme</b> — the pull and cost of getting out.",
+            "Spans folk, rock, country — the thread, not the style, is the link.",
+            "Each pick justified by chorus / narrative / a key image."],
+       built:"🤖 Leaving Town — the long way out"}},
+
+  {n:17, accent:"#2dd4bf", cat:["discover"], tag:"Scene",
+   title:"Sound of a place", goal:"Capture the sound of a place/scene — Muscle Shoals, Laurel Canyon, Memphis — the artists, studios, and styles a geography produced.",
+   why:"Recipe 7 steps between genres, Recipe 14 walks time; a scene is neither — it spans genres and eras but is bound by geography and a shared local lineage (studio, label, players).",
+   steps:[
+     "Name the place and its window, plus what defined the local sound (house band, label, venue).",
+     "Populate from the scene's roster — core artists plus the one-degree session players that make a scene cohere.",
+     "Pick a track per artist that sounds like the place, not necessarily their biggest hit.",
+     "Verify every track; sanity-check it sits in the scene's window.",
+     "Build; report the scene framing (place, window, binding thread) and each artist's role."],
+   accept:"≥10 verified tracks tied to one named scene, defining thread + each artist's tie reported.",
+   ex:{say:"\"Give me the Muscle Shoals sound.\"",
+       got:["<b>Place</b> — FAME / the Swampers, late '60s–'70s.",
+            "<b>Bound by</b> — the same rhythm section across soul, R&B, rock cuts.",
+            "Picks chosen where that studio signature comes through."],
+       built:"🤖 Muscle Shoals — the Swampers' room"}},
+
+  {n:18, accent:"#8b5cf6", cat:["discover"], tag:"Personnel",
+   title:"Family tree", goal:"Start from one band the user loves and branch along who played with whom — side projects, supergroups, the producer's other records, the session players.",
+   why:"Every similarity recipe walks a sonic graph; this walks a personnel graph — connections that are often sonically surprising, which is the appeal. Credits are hypothesis-until-verified.",
+   steps:[
+     "Pick a root with a real web of personnel (members, producer, session players).",
+     "Walk the personnel edges from session knowledge; note the relationship type for each hop (ex-member, producer, side project).",
+     "One track per node, chosen to show the connection (often a deliberate contrast).",
+     "Verify every track; drop any link that turns out shaky.",
+     "Build; report the tree — root → node (relationship) per branch."],
+   accept:"≥8 verified tracks via stated personnel links (≥3 relationship types), relationship named per branch.",
+   ex:{say:"\"Branch out from a band by who played in it.\"",
+       got:["<b>Root</b> — a band with members in other projects.",
+            "<b>Edges</b> — solo work, a supergroup, the producer's signature records.",
+            "Each track labelled with how it's connected, not just that it is."],
+       built:"🤖 Family Tree — who played with whom"}},
+
+  {n:19, accent:"#ec4899", cat:["discover"], tag:"Stretch",
+   title:"Far cry", goal:"A deliberate maximum-distance stretch — tracks as far from every cluster the user owns as possible, each with one real handhold so it's a stretch, not noise.",
+   why:"Recipes 6 and 7 step one scene over (comfortable); this is the anti-recipe — it aims for the parts of the map the taste dump never touches. 'Far' must still be defensible.",
+   steps:[
+     "Map the bubble — name the clusters the user lives in. Targets are the negative space.",
+     "Pick far targets with little/no overlap (use <code>genre-neighbors</code> in reverse, or session knowledge of what's genuinely far).",
+     "For each pick, find the one handhold that lets this listener in. No handhold, no pick.",
+     "Verify every track; cross-check against the taste dump AND the ledger so 'far' is actually far.",
+     "Build; report the reach — how far each track is, and the handhold that earns its place."],
+   accept:"≥8 verified tracks from genres with no taste-dump overlap, each with a stated handhold.",
+   ex:{say:"\"Get me as far out of my lane as you can.\"",
+       got:["<b>Bubble</b> — roots + hip-hop.",
+            "<b>Far targets</b> — Tuvan throat singing, Japanese city pop, Carnatic classical.",
+            "Each pick carries one handhold — a groove or hook that rhymes with what you love."],
+       built:"🤖 Far Cry — out of your lane"}},
+];
+
+// Hand-transcribed from PLAYLIST_NOTES.md (newest first). `reconstructed` marks the
+// backlog entries rebuilt from the ledger + live Spotify descriptions — their "why" is
+// inferred, not captured live. `cat` reuses the recipe filter taxonomy so the chips work
+// on both tabs.
+const PLAYLISTS = [
+  {name:"🤖 Neon Disco — house & lofi", url:"https://open.spotify.com/playlist/4inZqjEH4MPU7nK7iQBEB0",
+   date:"2026-07-14", recipe:"house/nu-disco energy arc (Last.fm adjacency)", tag:"Energy arc",
+   tracks:23, cat:["discover","ordered"], accent:"#5b8def", reconstructed:false,
+   why:`Pulled the electronic thread running quietly under a mostly Americana/hip-hop library — Daft Punk, ODESZA, Chromeo, Breakbot, Alan Braxe, Röisín Murphy — and grew it via Last.fm adjacency into a full French-touch / nu-disco / house set. Fun-beat house with lofi/downtempo breathers.`,
+   structure:`Energy arc — dancefloor front, sunset comedown back. Fun-beat front half: Chromeo → Breakbot → Tuxedo → Franc Moody → Miami Horror → Cut Copy → Holy Ghost! → Justice → SebastiAn → Cassius → Braxe + Falcon → DJ Mehdi → Flight Facilities. Lofi wind-down: Poolside → Parra for Cuva → Lane 8 → Tourist → Tycho.`,
+   tweaks:`Lean harder into four-on-the-floor house, stretch toward lofi hip-hop beats, or add a peak-time French-touch banger block.`,
+   cover:`neon-dusk dancefloor easing to violet twilight (energy-arc composition), seed 704`},
+
+  {name:"🤖 Miles' children — a jazz family tree", url:"https://open.spotify.com/playlist/0Ebv1IHPv67sB52LbllFVc",
+   date:"2026-06-29", recipe:"sideman / lineage trail", tag:"Family tree",
+   tracks:12, cat:["discover"], accent:"#8b5cf6", reconstructed:true,
+   why:`A jazz playlist built as a genealogy rather than a mood — start at Miles Davis and branch out by who played in his bands, feeding a Keith Jarrett / modal-jazz leaning. Every pick is one hop from Miles.`,
+   structure:`Lineage tree — the Miles alumni first (Coltrane, Cannonball, Bill Evans, Wayne Shorter, Herbie Hancock, Tony Williams), then the fusion empires those sidemen built — Weather Report, Return to Forever, Mahavishnu Orchestra — closing on the solo-piano vastness of Jarrett's Köln Concert.`},
+
+  {name:"🤖 Wheels Up: 11 Hours to Greece", url:"https://open.spotify.com/playlist/4Zjo3ig17ngBz8qIjrZSpc",
+   date:"2026-06-27", recipe:"occasion / energy arc", tag:"Occasion arc",
+   tracks:49, cat:["ordered","discover"], accent:"#e3a008", reconstructed:true,
+   why:`Purpose-built for a specific occasion — an 11-hour flight to Greece — so the sequencing is the point. Anchored in a soul/roots/Americana core, then drifting geographically toward the destination.`,
+   structure:`A full travel arc — soul/roots takeoff (St. Paul & The Broken Bones, Vulfpeck) → Americana cruising → indie-folk daydream → a hip-hop stretch (Anderson .Paak, Phonte) → funk-soul groove (Curtis Mayfield, Charles Bradley) → sunshine reggae (Desmond Dekker) → a Mediterranean/Greek approach (Vangelis, Theodorakis, Manu Chao, Gipsy Kings) → quiet jazz & folk (Iron & Wine, Novo Amor) for the descent.`},
+
+  {name:"🤖 Samples & Sources: Hip-Hop DNA", url:"https://open.spotify.com/playlist/1FOMDGuAHWPGHOomAur4gP",
+   date:"2026-06-24", recipe:"sample lineage (source→song pairs)", tag:"Sample lineage",
+   tracks:16, cat:["ordered","discover"], accent:"#c9a227", reconstructed:true,
+   why:`Feeds the hip-hop half of the taste by revealing where it came from — eight classics paired with the record each one sampled, source first. An ear-training exercise disguised as a playlist.`,
+   structure:`Paired A→B (source then song): Lou Reed→Tribe, Mtume→Biggie, Chaka Khan→Kanye, Daft Punk→Kanye ("Stronger"), Ahmad Jamal→Nas, Isley Brothers→Kendrick, Bobby Caldwell→Common, Joe Cocker→2Pac. Play it in order and you hear the seam each time.`},
+
+  {name:"🤖 Outlaw Country: A History", url:"https://open.spotify.com/playlist/1ZDa4xRhLvte7IMJJrCpxV",
+   date:"2026-06-24", recipe:"genre chronology", tag:"Chronology",
+   tracks:19, cat:["ordered","discover"], accent:"#e0a458", reconstructed:true,
+   why:`Dead center of the taste (Childers, Sturgill, Cody Jinks, Colter Wall) — so instead of just picking favorites, this traces the whole lineage of outlaw country as a timeline, so the deep roots explain the modern artists already loved.`,
+   structure:`Chronological — Bakersfield roots (Buck Owens, Haggard) → the '70s founders (Waylon, Willie, Kristofferson, Billy Joe Shaver) → the Highwaymen-era peak → '80s–90s torchbearers (Steve Earle, Dwight Yoakam) → the modern revival (Stapleton, Sturgill, Colter Wall, Childers). A straight line from Bakersfield to today.`},
+
+  {name:"🤖 Deep cuts — the songs you skipped to", url:"https://open.spotify.com/playlist/0JkCnWdBNRUYxf59NEMEPQ",
+   date:"~2026-06-23", recipe:"deep cuts (anti-hits)", tag:"Deep cuts",
+   tracks:21, cat:["inward"], accent:"#e3a008", reconstructed:true,
+   why:`No new artists at all — the twist is depth. Buried album tracks from artists already dead-center in the library, deliberately avoiding the singles. The songs you'd hit "next" to get to.`,
+   structure:`By artist cluster — Childers, Isbell, Sturgill, the Avetts, Stevie Wonder's Songs in the Key of Life (three cuts), Outkast's Aquemini, Brandi Carlile, and Rateliff. Album deep-enders, live takes, and the tracks between the hits.`},
+
+  {name:"🤖 Alt rock around the world", url:"https://open.spotify.com/playlist/3RoWXoQDURWt3PhnbkBKhr",
+   date:"2026-06-23", recipe:"genre ladder, global (region shift)", tag:"Global ladder",
+   tracks:15, cat:["discover"], accent:"#a274ff", reconstructed:true,
+   why:`A deliberate stretch — alternative rock from 15 different countries, one defining act each, none already in the library. Pure discovery, using the genre already known as the passport.`,
+   structure:`One country per track — Fontaines D.C. (IE), The Hives (SE), Måneskin (IT), Tame Impala (AU), Metric (CA), Phoenix (FR), Asian Kung-Fu Generation (JP), Hyukoh (KR), Café Tacvba (MX), Soda Stereo (AR), Os Mutantes (BR), Vetusta Morla (ES), Sigur Rós (IS), Mogwai (UK).`},
+
+  {name:"🤖 Worldwide Bars — global hip-hop", url:"https://open.spotify.com/playlist/6uJ4Q8b6jjYjH3uYCemJ6d",
+   date:"2026-06-23", recipe:"genre ladder, global (region shift)", tag:"Global ladder",
+   tracks:16, cat:["discover"], accent:"#a274ff", reconstructed:true,
+   why:`The hip-hop companion to Alt rock around the world — rap from 14 countries, extending the Kendrick/Outkast/Tribe axis outward across languages and scenes.`,
+   structure:`One country per track — Little Simz & Loyle Carner (UK), Sampa the Great (AU), Stogie T (ZA), DIVINE (IN), Awich (JP), Epik High (KR), Oxxxymiron (RU), MC Solaar (FR), Ghali (IT), C. Tangana (ES), Ana Tijoux (CL), Criolo (BR), Orishas (CU), Daara J Family (SN).`},
+
+  {name:"🤖 Reggae Roots: Covers & Originals", url:"https://open.spotify.com/playlist/0z18B89muuuHVRniFtpEWc",
+   date:"2026-06-21", recipe:"cross-version pairs (bridge)", tag:"Covers & originals",
+   tracks:22, cat:["ordered","discover"], accent:"#a274ff", reconstructed:true,
+   why:`An on-ramp into roots reggae through songs already known — each reggae cut is set next to its "other life" as a pop/rock hit, so the familiar version pulls you into the original.`,
+   structure:`Paired versions — Marley vs Clapton ("I Shot the Sheriff"), the Paragons vs Blondie ("The Tide Is High"), Toots vs the Clash ("Pressure Drop"), the Melodians vs Boney M. ("Rivers of Babylon"), plus "Red Red Wine" (Diamond/UB40) and more. Reggae is the thread between every pair.`},
+
+  {name:"🤖 Lukas Nelson → The Killers → Taj Mahal", url:"https://open.spotify.com/playlist/6BHSYpbI6C9NvzxG3ejFuW",
+   date:"~2026-06-19", recipe:"Morph (A→B→C)", tag:"Morph A→B→C",
+   tracks:20, cat:["ordered","discover"], accent:"#e3a008", reconstructed:true,
+   why:`A three-stop Morph across worlds you'd never think to connect — Americana roots, anthemic indie rock, and delta blues — with each track a stepping stone so the seams don't show.`,
+   structure:`A→B→C journey — Lukas Nelson's Americana (Marcus King, Tedeschi Trucks, Gov't Mule) → a Tom Petty / Arcade Fire / War on Drugs hinge into anthemic indie rock (Kings of Leon, The Killers, The National) → guitar-forward crossover (Black Keys, Jack White, Gary Clark Jr.) → classic blues (Robert Cray, Bonnie Raitt, Buddy Guy) landing on Taj Mahal.`},
+
+  {name:"🤖 Sparkle Pop Party", url:"https://open.spotify.com/playlist/5PQgQHV3kwk3U9LGfwsgJ4",
+   date:"~2026-06-16", recipe:"occasion (for a specific listener)", tag:"Occasion",
+   tracks:20, cat:["discover"], accent:"#1db954", reconstructed:true,
+   why:`Off-taste on purpose — built for a young KPop Demon Hunters fan, not the owner's profile. Bright, bouncy, sing-along, and all clean.`,
+   structure:`Bubbly K-pop meets clean pop hooks — NewJeans, TWICE, aespa, ITZY, LE SSERAFIM, Red Velvet on the K-pop side; Chappell Roan, Katy Perry, Dua Lipa, Taylor Swift, Sabrina Carpenter, Carly Rae Jepsen on the big-hook pop side. All upbeat, all family-safe.`},
+
+  {name:"🤖 Dinnertime Bossa — warm & easy", url:"https://open.spotify.com/playlist/4VXADXu7rzPG56fzanpXbU",
+   date:"~2026-06-16", recipe:"occasion / mood set", tag:"Occasion / mood",
+   tracks:20, cat:["discover"], accent:"#5b8def", reconstructed:true,
+   why:`A single-mood set for family dinners on shuffle — warm, mostly-instrumental bossa nova and cool jazz that sits in the background without demanding attention.`,
+   structure:`One immersive mood — Jobim, Stan Getz & João Gilberto, Wes Montgomery, Bill Evans, Cal Tjader, Baden Powell, João Donato, George Benson. No sequencing arc by design — it's built to shuffle.`},
+
+  {name:"🤖 Songs you forgot you loved", url:"https://open.spotify.com/playlist/3VZmLrJfH8FVzct6aX8kq8",
+   date:"~2026-06-16", recipe:"time machine (long-term vs. recent)", tag:"Time machine",
+   tracks:16, cat:["inward"], accent:"#5b8def", reconstructed:true,
+   why:`Mines the gap between long-term favorites and recent rotation — artists that rank high all-time but have gone quiet lately. All familiar, none new; the pleasure is rediscovery.`,
+   structure:`Cross-genre reunion — Chappell Roan, The Shins, Future Islands, M83, Bear's Den, Lake Street Dive, Paul Cauthen, the Stringdusters, The Mountain Goats, Greta Van Fleet. Stuff you forgot you loved.`},
+
+  {name:"🤖 Jazz, your way", url:"https://open.spotify.com/playlist/0z4qdLplaGAalBa0YF85jx",
+   date:"2026-06-15", recipe:"occasion / genre in the user's style", tag:"Occasion",
+   tracks:15, cat:["discover"], accent:"#1db954", reconstructed:true,
+   why:`A personal jazz set anchored on specific leanings — Keith Jarrett, Christmas-jazz, Bing Crosby — rather than a generic "jazz 101." Warm and vocal-forward, with a bridge back to the hip-hop side.`,
+   structure:`Mood clusters — warm piano (Evans, Brubeck, Monk) → vocal standards (Chet Baker, Nat Cole, Ella, Nina) → bossa & soul-jazz (Getz, Cannonball) → a jazz-rap bridge (A Tribe Called Quest, Robert Glasper) linking to the Outkast/Kendrick side.`},
+
+  {name:"🤖 Daft Punk → Outkast (a bridge)", url:"https://open.spotify.com/playlist/5Eg84FoPynQDLzx7Gib1u9",
+   date:"2026-06-15", recipe:"Bridge (A↔B)", tag:"Bridge A↔B",
+   tracks:11, cat:["ordered","discover"], accent:"#e3a008", reconstructed:true,
+   why:`A guided segue between two loves — French house and Atlanta hip-hop — with funk as the connective tissue. The classic Bridge recipe: start at A, end at B, make every step feel inevitable.`,
+   structure:`A→B segue — French house (Stardust, Breakbot, Chromeo) → disco DNA (Jamiroquai, Chic's "Good Times") → funk-rock crossover (N.E.R.D, Gnarls Barkley) → Atlanta hip-hop (The Roots, Big Boi). Funk is the throughline the whole way across.`},
+
+  {name:"🤖 Roots & Hollers — library dig", url:"https://open.spotify.com/playlist/7Cm8sdHTDtobUBYrnFhbjW",
+   date:"2026-06-14", recipe:"library archaeologist", tag:"Library dig",
+   tracks:25, cat:["inward"], accent:"#e3a008", reconstructed:true,
+   why:`Not discovery — excavation. A dig through the owner's own saved tracks to pull the Americana / roots-revival thread into one place. Everything here is already in the library; the value is the curation.`,
+   structure:`The roots thread — the TurtleDuhks, the Avetts (four from Emotionalism), Childers live cuts, Sturgill's A Sailor's Guide, Rateliff, Lake Street Dive, the Wood Brothers, Watchhouse, the Steeldrivers.`},
+
+  {name:"🤖 Discovery Ladder — 2026-06-14", url:"https://open.spotify.com/playlist/2XvfNUHbB9Ty3djjGIIqi8",
+   date:"2026-06-14", recipe:"Discovery ladder (the core recipe)", tag:"Discovery ladder",
+   tracks:9, cat:["discover"], accent:"#1db954", reconstructed:true,
+   why:`The canonical recipe — start at the center of taste and walk outward in rungs, each pick one measured step further out than the last.`,
+   structure:`Center → stretch → left-field — center (Common, Punch Brothers, Colter Wall) → one-axis stretches (Chris Thile & Brad Mehldau, Khruangbin, Shakey Graves) → left-field reaches still defensible from what you love (Robert Glasper, BADBADNOTGOOD, and Fela Kuti as the far edge).`},
+
+  {name:"🤖 Lateral roots — Last.fm ladder (Jun 2026)", url:"https://open.spotify.com/playlist/64y4IEXrNF8ku0Y5UbtwIx",
+   date:"2026-06-14", recipe:"Last.fm-seeded lateral ladder (Recipe 6)", tag:"Last.fm ladder",
+   tracks:10, cat:["discover"], accent:"#1db954", reconstructed:true,
+   why:`Uses Last.fm crowd-similarity to restore the "related artists" signal Spotify killed. Seeded from Isbell / Avett / Sturgill / Carlile, filtered to 10 artists new to the taste, then walked center → left-field.`,
+   structure:`Center → left-field — Amanda Shires, Justin Townes Earle, Sarah Jarosz, the Milk Carton Kids (near-in) → Ray LaMontagne, John Moreland, Courtney Marie Andrews → the Carolina Chocolate Drops and Blitzen Trapper at the edge.`},
+
+  {name:"🤖 Lateral hip-hop — Last.fm ladder (Jun 2026)", url:"https://open.spotify.com/playlist/75pWaypKhFCUPo6zh0Ko6l",
+   date:"2026-06-14", recipe:"Last.fm-seeded lateral ladder (Recipe 6)", tag:"Last.fm ladder",
+   tracks:10, cat:["discover"], accent:"#1db954", reconstructed:true,
+   why:`The hip-hop twin of the roots ladder — seeded from Outkast / Kendrick / Eminem / Gambino, steered toward a lyric-forward + soul + live-energy lean, with the left-field rung bridging into the soul & jazz clusters.`,
+   structure:`Center → bridge-out — The Roots (w/ Badu & Eve), Common, Black Star (lyric-forward core) → Freddie Gibbs, JID, Denzel Curry, Vince Staples → Anderson .Paak, Smino, and Glasper's "Afro Blue" bridging into jazz.`},
+
+  {name:"🤖 Blacktop rabbit hole", url:"https://open.spotify.com/playlist/66n6yXVSKD1uVxFavWWkxo",
+   date:"2026-06-14", recipe:"single-song rabbit hole (lineage + contemporaries)", tag:"Rabbit hole",
+   tracks:5, cat:["discover"], accent:"#1db954", reconstructed:true,
+   why:`A tight dig off one song — Colter Wall's "Sleeping on the Blacktop" — tracing both its Western/outlaw lineage and its modern peers. Small and focused by design.`,
+   structure:`Lineage + contemporaries — the forebears (Townes Van Zandt, Marty Robbins, Blaze Foley) alongside present-day kin (Charley Crockett, Ian Noe).`},
+];
+
+const CATLABEL = {discover:"Outward", inward:"Inward", ordered:"Ordered", report:"Report"};
+const grid = document.getElementById('grid');
+const empty = document.getElementById('empty');
+const countEl = document.getElementById('count');
+const q = document.getElementById('q');
+const foot = document.getElementById('foot');
+const toolsRef = document.getElementById('toolsRef');
+let activeFilter = "all";
+let activeView = "recipes";
+
+const spotifyGlyph = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.59 14.42a.62.62 0 0 1-.86.21c-2.35-1.44-5.31-1.76-8.79-.96a.62.62 0 1 1-.28-1.22c3.81-.87 7.09-.5 9.72 1.11.3.18.39.57.21.86Zm1.22-2.72a.78.78 0 0 1-1.07.26c-2.69-1.65-6.79-2.14-9.98-1.17a.78.78 0 1 1-.45-1.49c3.64-1.1 8.16-.56 11.24 1.33.36.22.48.7.26 1.07Zm.11-2.84C14.69 8.97 9.5 8.79 6.4 9.73a.94.94 0 1 1-.55-1.8c3.56-1.08 9.32-.87 12.99 1.31a.94.94 0 0 1-.96 1.61Z"/></svg>`;
+
+function buildRecipeCard(r,i){
+  const card = document.createElement('div');
+  card.className='card';
+  card.dataset.i=i; card.dataset.view='recipes';
+  card.style.setProperty('--accent', r.accent);
+  card.innerHTML = `
+    <div class="card-head">
+      <div class="card-top">
+        <div class="num">${r.n}</div>
+        <span class="tag">${r.tag}</span>
+      </div>
+      <h3>${r.title}</h3>
+      <p class="goal">${r.goal}</p>
+    </div>
+    <div class="toggle" data-t="steps">⚙️ Steps &amp; acceptance <span class="tw">▾</span></div>
+    <div class="body">
+      <div class="why">${r.why}</div>
+      <h5>Steps</h5>
+      <ol class="steps">${r.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
+      <div class="accept">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1db954" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+        <div><strong>Acceptance · </strong>${r.accept}</div>
+      </div>
+    </div>
+    <div class="toggle" data-t="example">💬 Example in action <span class="tw">▾</span></div>
+    <div class="body">
+      <div class="say"><span class="lbl">You</span><span class="txt">${r.ex.say}</span></div>
+      <h5>What comes back</h5>
+      <ul class="got">${r.ex.got.map(g=>`<li>${g}</li>`).join("")}</ul>
+      <div class="built">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <span class="pl">${r.ex.built}</span>
+      </div>
+    </div>`;
+  wireToggles(card);
+  return card;
+}
+
+function buildPlaylistCard(p,i){
+  const card = document.createElement('div');
+  card.className='card pcard';
+  card.dataset.i=i; card.dataset.view='playlists';
+  card.style.setProperty('--accent', p.accent);
+  const prov = p.reconstructed ? `<span class="prov" title="Rebuilt from the ledger + live Spotify description — the reasoning is inferred, not captured live">reconstructed</span>` : "";
+  const tweaks = p.tweaks ? `<h5>Possible tweaks</h5><p class="struct">${p.tweaks}</p>` : "";
+  const cover = p.cover ? `<div class="cover-seed">🎨 Cover — ${p.cover}</div>` : "";
+  card.innerHTML = `
+    <div class="card-head">
+      <div class="card-top">
+        <div class="num">${p.tracks}</div>
+        <span class="tag">${p.tag}</span>
+      </div>
+      <h3>${p.name} ${prov}</h3>
+      <p class="meta">${p.date} · ${p.recipe} · ${p.tracks} tracks</p>
+    </div>
+    <div class="toggle" data-t="why">🎧 Why &amp; structure <span class="tw">▾</span></div>
+    <div class="body">
+      <div class="why">${p.why}</div>
+      <h5>Structure</h5>
+      <p class="struct">${p.structure}</p>
+      ${tweaks}
+      ${cover}
+      <a class="open-btn" href="${p.url}" target="_blank" rel="noopener">${spotifyGlyph} Open on Spotify</a>
+    </div>`;
+  wireToggles(card);
+  return card;
+}
+
+function wireToggles(card){
+  const toggles = card.querySelectorAll('.toggle');
+  toggles.forEach(t=> t.addEventListener('click', ()=> t.classList.toggle('open')));
+  card.querySelector('.card-head').addEventListener('click', ()=> toggles[0].classList.toggle('open'));
+}
+
+RECIPES.forEach((r,i)=> grid.appendChild(buildRecipeCard(r,i)));
+PLAYLISTS.forEach((p,i)=> grid.appendChild(buildPlaylistCard(p,i)));
+
+function render(){
+  const term = q.value.trim().toLowerCase();
+  const ds = activeView==="recipes" ? RECIPES : PLAYLISTS;
+  let shown = 0;
+  grid.querySelectorAll('.card').forEach(card=>{
+    if(card.dataset.view!==activeView){ card.style.display="none"; return; }
+    const o = ds[+card.dataset.i];
+    const matchF = activeFilter==="all" || o.cat.includes(activeFilter);
+    const hay = (activeView==="recipes"
+      ? o.title+" "+o.goal+" "+o.why+" "+o.steps.join(" ")+" "+o.tag
+      : o.name+" "+o.recipe+" "+o.why+" "+o.structure+" "+(o.tweaks||"")+" "+o.tag).toLowerCase();
+    const vis = matchF && (!term || hay.includes(term));
+    card.style.display = vis ? "" : "none";
+    if(vis) shown++;
+  });
+  empty.style.display = shown ? "none" : "block";
+  grid.style.display = shown ? "grid" : "none";
+  countEl.textContent = shown + " / " + ds.length + " " + activeView;
+}
+
+document.getElementById('tabs').addEventListener('click', e=>{
+  const t = e.target.closest('.tab'); if(!t) return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  activeView = t.dataset.v;
+  toolsRef.style.display = activeView==="recipes" ? "" : "none";
+  q.placeholder = activeView==="recipes"
+    ? "Search recipes — e.g. 'sequence', 'covers', 'new artists'…"
+    : "Search playlists — e.g. 'jazz', 'reggae', 'chronology'…";
+  render();
+});
+
+document.getElementById('filters').addEventListener('click', e=>{
+  const chip = e.target.closest('.chip'); if(!chip) return;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  activeFilter = chip.dataset.f;
+  render();
+});
+q.addEventListener('input', render);
+render();
+</script>
+</body>
+</html>

@@ -11,8 +11,6 @@ data/
 
 # generated playlist covers (regenerable; already uploaded to Spotify)
 covers/
-# rendered view of RECIPES.md (derived doc)
-docs/recipes.html
 
 # keep the example env tracked
 !.env.example

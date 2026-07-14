@@ -131,6 +131,34 @@ curl -s -X POST "https://rachett.tail504ae5.ts.net/$(ssh rachett 'grep ^MCP_PATH
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"t","version":"1"}}}'
 ```
 
+## Static showcase page (`/discovery`)
+
+The playlist journal + recipe book is served as a single self-contained HTML page at
+`https://rachett.tail504ae5.ts.net/discovery` (public over the same Funnel, no auth — it's a
+portfolio piece). Source of truth is `docs/recipes.html` in the repo; on the Pi it lives at
+`/var/www/discovery/index.html`, served by Caddy `file_server`.
+
+- **Why `/var/www`, not the app dir:** `/home/bgmaddox` is `drwx------`, so the `caddy`
+  user can't traverse into it (file_server 403). `/var/www/discovery` is world-traversable
+  and owned by `bgmaddox`, so redeploys need no sudo and Caddy can still read it.
+- **Caddy route** (in `/etc/caddy/Caddyfile`): an **exact-match** named matcher so it can
+  never shadow the MCP capability path (`/discovery-mcp-<secret>*`) — order-independent:
+  ```
+  @discovery path /discovery /discovery/
+  handle @discovery {
+      root * /var/www/discovery
+      rewrite * /index.html
+      file_server
+  }
+  ```
+
+```bash
+# redeploy the page after editing docs/recipes.html (no Caddy change, no restart)
+scp docs/recipes.html rachett:/var/www/discovery/index.html
+# verify over the Funnel
+curl -s -o /dev/null -w "%{http_code}\n" https://rachett.tail504ae5.ts.net/discovery   # 200
+```
+
 ## Using it on the phone
 Ask naturally — e.g. *"What's playing? Give me three new artists like it, check they're
 real."* Mobile-me will call `now_playing` → `lastfm_similar_artists` → `search_verify`,

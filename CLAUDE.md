@@ -97,6 +97,17 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   commands verified clean.
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
+- **Showcase page — done, 2026-07-14.** `docs/recipes.html` is now a tabbed
+  `[ Recipes ] [ Playlists ]` page: the recipe book plus the full playlist journal
+  (20 playlists hand-transcribed from `PLAYLIST_NOTES.md` into a `PLAYLISTS` JS array,
+  sharing the same search/filter/visual system; reconstructed entries carry a badge).
+  Deployed public over the Pi Funnel at `https://rachett.tail504ae5.ts.net/discovery`
+  (served from `/var/www/discovery/index.html` via a Caddy `file_server` route). Redeploy =
+  `scp docs/recipes.html rachett:/var/www/discovery/index.html`. Runbook in `DEPLOY_MCP.md`.
+  When you add a playlist to `PLAYLIST_NOTES.md`, also add its object to the `PLAYLISTS`
+  array in `docs/recipes.html` and redeploy. **Note:** the Spotify Web API cannot flip a
+  playlist's public/private flag (PUT returns 200 but no-ops — a known platform limitation);
+  making a playlist public is a client-only toggle, like moving playlists into folders.
 
 ## Run
 ```bash
