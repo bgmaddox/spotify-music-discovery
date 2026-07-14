@@ -40,6 +40,7 @@ SCOPES = [
     "user-read-recently-played",
     "user-library-read",
     "user-read-currently-playing",
+    "playlist-read-private",
     "playlist-modify-private",
     "playlist-modify-public",
     "ugc-image-upload",

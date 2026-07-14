@@ -93,6 +93,18 @@ a timeline, so the deep roots explain the modern artists you already love.
 torchbearers (Steve Earle, Dwight Yoakam) → the modern revival (Stapleton, Sturgill,
 Colter Wall, Childers). A straight line from Bakersfield to today.
 
+## 🤖 Deep cuts — the songs you skipped to
+**Link:** https://open.spotify.com/playlist/0JkCnWdBNRUYxf59NEMEPQ
+**Built:** ~2026-06-23 · **Recipe:** deep cuts (anti-hits) · **21 tracks**
+
+**Why these:** No new artists at all — the twist is *depth*. Buried album tracks from
+artists already dead-center in your library, deliberately avoiding the singles. The songs
+you'd hit "next" to get to.
+
+**Structure — by artist cluster:** Childers, Isbell, Sturgill, the Avetts, Stevie Wonder's
+*Songs in the Key of Life* (three cuts), Outkast's *Aquemini*, Brandi Carlile, and Rateliff.
+Album deep-enders, live takes, and the tracks between the hits.
+
 ## 🤖 Alt rock around the world
 **Link:** https://open.spotify.com/playlist/3RoWXoQDURWt3PhnbkBKhr
 **Built:** 2026-06-23 · **Recipe:** genre ladder, global (region shift) · **15 tracks**
@@ -131,6 +143,54 @@ Blondie ("The Tide Is High"), Toots vs the Clash ("Pressure Drop"), the Melodian
 ("Rivers of Babylon"), plus "Red Red Wine" (Diamond/UB40) and more. Reggae is the thread
 between every pair.
 
+## 🤖 Lukas Nelson → The Killers → Taj Mahal
+**Link:** https://open.spotify.com/playlist/6BHSYpbI6C9NvzxG3ejFuW
+**Built:** ~2026-06-19 · **Recipe:** Morph (A→B→C) · **20 tracks**
+
+**Why these:** A three-stop Morph across worlds you'd never think to connect — Americana
+roots, anthemic indie rock, and delta blues — with each track a stepping stone so the
+seams don't show.
+
+**Structure — A→B→C journey:** Lukas Nelson's Americana (Marcus King, Tedeschi Trucks,
+Gov't Mule, Blackberry Smoke) → a Tom Petty / Arcade Fire / War on Drugs hinge into
+anthemic indie rock (Kings of Leon, The Killers, The National) → guitar-forward crossover
+(Black Keys, Jack White, Gary Clark Jr.) → classic blues (Robert Cray, Bonnie Raitt,
+Keb' Mo', Buddy Guy) landing on Taj Mahal. You never feel the jump.
+
+## 🤖 Sparkle Pop Party
+**Link:** https://open.spotify.com/playlist/5PQgQHV3kwk3U9LGfwsgJ4
+**Built:** ~2026-06-16 · **Recipe:** occasion (for a specific listener) · **20 tracks**
+
+**Why these:** Off-taste on purpose — built for a young *KPop Demon Hunters* fan, not your
+own profile. Bright, bouncy, sing-along, and all clean.
+
+**Structure — bubbly K-pop meets clean pop hooks:** NewJeans, TWICE, aespa, ITZY, LE
+SSERAFIM, Red Velvet on the K-pop side; Chappell Roan, Katy Perry, Dua Lipa, Taylor Swift,
+Sabrina Carpenter, Carly Rae Jepsen on the big-hook pop side. All upbeat, all family-safe.
+
+## 🤖 Dinnertime Bossa — warm & easy
+**Link:** https://open.spotify.com/playlist/4VXADXu7rzPG56fzanpXbU
+**Built:** ~2026-06-16 · **Recipe:** occasion / mood set · **20 tracks**
+
+**Why these:** A single-mood set for family dinners on shuffle — warm, mostly-instrumental
+bossa nova and cool jazz that sits in the background without demanding attention.
+
+**Structure — one immersive mood:** Jobim, Stan Getz & João Gilberto, Wes Montgomery, Bill
+Evans, Cal Tjader, Baden Powell, João Donato, George Benson. No sequencing arc by design —
+it's built to shuffle.
+
+## 🤖 Songs you forgot you loved
+**Link:** https://open.spotify.com/playlist/3VZmLrJfH8FVzct6aX8kq8
+**Built:** ~2026-06-16 · **Recipe:** time machine (long-term vs. recent) · **16 tracks**
+
+**Why these:** Mines the gap between your *long-term* favorites and your *recent* rotation —
+artists that rank high all-time but have gone quiet lately. All familiar, none new; the
+pleasure is rediscovery.
+
+**Structure — cross-genre reunion:** Chappell Roan, The Shins, Future Islands, M83, Bear's
+Den, Lake Street Dive, Paul Cauthen, the Stringdusters, The Mountain Goats, Greta Van Fleet.
+Stuff you forgot you loved.
+
 ## 🤖 Jazz, your way
 **Link:** https://open.spotify.com/playlist/0z4qdLplaGAalBa0YF85jx
 **Built:** 2026-06-15 · **Recipe:** occasion / genre in the user's style · **15 tracks**
@@ -155,3 +215,61 @@ end at B, make every step feel inevitable.
 (Jamiroquai, Chic's "Good Times" — the bassline that birthed hip-hop) → funk-rock
 crossover (N.E.R.D, Gnarls Barkley) → Atlanta hip-hop (The Roots, Big Boi). Funk is the
 throughline the whole way across.
+
+## 🤖 Roots & Hollers — library dig
+**Link:** https://open.spotify.com/playlist/7Cm8sdHTDtobUBYrnFhbjW
+**Built:** 2026-06-14 · **Recipe:** library archaeologist · **25 tracks**
+
+**Why these:** Not discovery — excavation. A dig through your *own saved tracks* to pull the
+Americana / roots-revival thread into one place. Everything here is already in your library;
+the value is the curation.
+
+**Structure — the roots thread:** the TurtleDuhks, the Avetts (four from *Emotionalism*),
+Childers live cuts, Sturgill's *A Sailor's Guide*, Rateliff, Lake Street Dive, the Wood
+Brothers, Watchhouse, the Steeldrivers. A cross-section of your roots collection.
+
+## 🤖 Discovery Ladder — 2026-06-14
+**Link:** https://open.spotify.com/playlist/2XvfNUHbB9Ty3djjGIIqi8
+**Built:** 2026-06-14 · **Recipe:** Discovery ladder (the core recipe) · **9 tracks**
+
+**Why these:** The canonical recipe — start at the center of your taste and walk outward in
+rungs, each pick one measured step further out than the last.
+
+**Structure — center → stretch → left-field:** center (Common, Punch Brothers, Colter Wall)
+→ one-axis stretches (Chris Thile & Brad Mehldau, Khruangbin, Shakey Graves) → left-field
+reaches still defensible from what you love (Robert Glasper, BADBADNOTGOOD, and Fela Kuti as
+the far edge).
+
+## 🤖 Lateral roots — Last.fm ladder (Jun 2026)
+**Link:** https://open.spotify.com/playlist/64y4IEXrNF8ku0Y5UbtwIx
+**Built:** 2026-06-14 · **Recipe:** Last.fm-seeded lateral ladder (Recipe 6) · **10 tracks**
+
+**Why these:** Uses Last.fm crowd-similarity to restore the "related artists" signal Spotify
+killed. Seeded from Isbell / Avett / Sturgill / Carlile, filtered to **10 artists new to your
+taste**, then walked center → left-field.
+
+**Structure — center → left-field:** Amanda Shires, Justin Townes Earle, Sarah Jarosz, the
+Milk Carton Kids (near-in) → Ray LaMontagne, John Moreland, Courtney Marie Andrews → the
+Carolina Chocolate Drops and Blitzen Trapper at the edge.
+
+## 🤖 Lateral hip-hop — Last.fm ladder (Jun 2026)
+**Link:** https://open.spotify.com/playlist/75pWaypKhFCUPo6zh0Ko6l
+**Built:** 2026-06-14 · **Recipe:** Last.fm-seeded lateral ladder (Recipe 6) · **10 tracks**
+
+**Why these:** The hip-hop twin of the roots ladder — seeded from Outkast / Kendrick /
+Eminem / Gambino, steered toward your lyric-forward + soul + live-energy lean, with the
+left-field rung bridging into your soul & jazz clusters.
+
+**Structure — center → bridge-out:** The Roots (w/ Badu & Eve), Common, Black Star
+(lyric-forward core) → Freddie Gibbs, JID, Denzel Curry, Vince Staples → Anderson .Paak,
+Smino, and Glasper's "Afro Blue" bridging into jazz.
+
+## 🤖 Blacktop rabbit hole
+**Link:** https://open.spotify.com/playlist/66n6yXVSKD1uVxFavWWkxo
+**Built:** 2026-06-14 · **Recipe:** single-song rabbit hole (lineage + contemporaries) · **5 tracks**
+
+**Why these:** A tight dig off one song — Colter Wall's "Sleeping on the Blacktop" — tracing
+both its Western/outlaw lineage and its modern peers. Small and focused by design.
+
+**Structure — lineage + contemporaries:** the forebears (Townes Van Zandt, Marty Robbins,
+Blaze Foley) alongside present-day kin (Charley Crockett, Ian Noe).
