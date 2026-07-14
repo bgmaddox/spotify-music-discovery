@@ -235,6 +235,55 @@
   .open-btn:hover{background:#25d366;transform:translateY(-1px)}
   .open-btn svg{flex:none}
 
+  /* Stats panel */
+  #statsPanel{display:none;margin-top:24px}
+  .stat-note{color:var(--muted);font-size:14px;max-width:760px;margin:0 0 4px}
+  .stat-note code{background:var(--panel-2);padding:2px 7px;border-radius:6px;font-size:.86em;color:#cfe8d6}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;margin-top:20px}
+  .panel{
+    background:linear-gradient(180deg,var(--panel),#101014);
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 22px;position:relative;overflow:hidden;
+  }
+  .panel::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--accent,var(--green))}
+  .panel.wide{grid-column:1/-1}
+  .panel h3{margin:0 0 3px;font-size:16px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+  .panel .sub{margin:0 0 16px;font-size:13px;color:var(--faint)}
+  .panel .sub b{color:#cfe8d6;font-weight:600}
+
+  /* horizontal bars (genre) */
+  .hbar{display:grid;grid-template-columns:130px 1fr 34px;align-items:center;gap:10px;margin:9px 0;font-size:13px}
+  .hbar .lbl{color:#d6d6df;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hbar .track{height:11px;background:var(--panel-2);border-radius:6px;overflow:hidden}
+  .hbar .fill{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent,var(--green)),color-mix(in srgb,var(--accent,var(--green)) 55%,#101014))}
+  .hbar .val{color:var(--faint);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+
+  /* two-column chips (evolution) */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:520px){.cols{grid-template-columns:1fr}}
+  .col h4{margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint)}
+  .artist-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px;color:#d6d6df}
+  .artist-row:first-of-type{border-top:0}
+  .artist-row .rk{flex:none;width:18px;color:var(--faint);font-size:11px;font-variant-numeric:tabular-nums}
+  .artist-row .flag{margin-left:auto;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:999px;white-space:nowrap}
+  .flag.up{color:var(--green);background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.28)}
+  .flag.rest{color:var(--blue);background:rgba(91,141,239,.1);border:1px solid rgba(91,141,239,.26)}
+
+  /* vertical bars (era + obscurity) */
+  .vbars{display:flex;align-items:flex-end;gap:6px;height:140px;margin-top:6px}
+  .vbars .vb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%}
+  .vbars .col-fill{width:100%;border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--accent,var(--green)),color-mix(in srgb,var(--accent,var(--green)) 45%,#101014));min-height:2px;transition:.2s}
+  .vbars .vb:hover .col-fill{filter:brightness(1.15)}
+  .vbars .xl{font-size:10.5px;color:var(--faint);white-space:nowrap}
+  .vbars .vv{font-size:10.5px;color:#cfe8d6;font-variant-numeric:tabular-nums}
+
+  /* big number tiles (discovery) */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px}
+  @media(max-width:560px){.tiles{grid-template-columns:repeat(2,1fr)}}
+  .tile{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px 12px;text-align:center}
+  .tile .big{font-size:28px;font-weight:800;letter-spacing:-.02em;color:var(--accent,var(--green));line-height:1;font-variant-numeric:tabular-nums}
+  .tile .cap{margin-top:6px;font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+
   .empty{display:none;text-align:center;color:var(--muted);padding:60px 20px;font-size:16px}
   footer{margin-top:48px;color:var(--faint);font-size:13px;text-align:center}
   footer code{background:var(--panel-2);padding:2px 6px;border-radius:5px}
@@ -249,6 +298,7 @@
     <div class="tabs" id="tabs">
       <button class="tab active" data-v="recipes">Recipes</button>
       <button class="tab" data-v="playlists">Playlists</button>
+      <button class="tab" data-v="stats">Stats</button>
     </div>
   </header>
 
@@ -295,9 +345,10 @@
 
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty">No recipes match that search. 🎧</div>
+  <div id="statsPanel"></div>
 
   <footer id="foot">
-    Built from <code>RECIPES.md</code> + <code>PLAYLIST_NOTES.md</code> · 19 recipes · 20 playlists · self-contained, no network needed.
+    Built from <code>RECIPES.md</code> + <code>PLAYLIST_NOTES.md</code> + the taste dump · 19 recipes · 20 playlists · stats · self-contained, no network needed.
   </footer>
 </div>
 
@@ -740,6 +791,8 @@ const countEl = document.getElementById('count');
 const q = document.getElementById('q');
 const foot = document.getElementById('foot');
 const toolsRef = document.getElementById('toolsRef');
+const statsPanel = document.getElementById('statsPanel');
+const controlsEl = document.querySelector('.controls');
 let activeFilter = "all";
 let activeView = "recipes";
 
@@ -822,7 +875,94 @@ function wireToggles(card){
 RECIPES.forEach((r,i)=> grid.appendChild(buildRecipeCard(r,i)));
 PLAYLISTS.forEach((p,i)=> grid.appendChild(buildPlaylistCard(p,i)));
 
+// ── Stats tab ──────────────────────────────────────────────────────────
+// Baked from the daily taste dump (data/taste_*.json) + discovery_log.jsonl.
+// Refresh: python cli.py dump-taste, recompute, paste the object below.
+const STATS = {"generated":"2026-06-23","genres":[{"g":"americana","c":8},{"g":"alt country","c":7},{"g":"bluegrass","c":6},{"g":"indie folk","c":4},{"g":"folk","c":4},{"g":"newgrass","c":4},{"g":"musicals","c":4},{"g":"outlaw country","c":3},{"g":"red dirt","c":3},{"g":"hip hop","c":3},{"g":"christmas","c":3},{"g":"country","c":2}],"now":[{"n":"David Grisman","new":true},{"n":"Eminem","new":false},{"n":"Nas","new":true},{"n":"Kendrick Lamar","new":false},{"n":"HUNTR/X","new":true},{"n":"Nickel Creek","new":true},{"n":"Black Thought","new":true},{"n":"J. Cole","new":true},{"n":"TWICE","new":true},{"n":"PAW Patrol","new":true}],"allTime":[{"n":"Tyler Childers","cool":true},{"n":"Eminem","cool":false},{"n":"Jason Isbell","cool":true},{"n":"Mark Mancina","cool":true},{"n":"Christmas Jazz","cool":true},{"n":"Bing Crosby","cool":true},{"n":"Childish Gambino","cool":true},{"n":"Taylor Swift","cool":true},{"n":"Nathaniel Rateliff & The Night Sweats","cool":true},{"n":"Kristen Bell","cool":true}],"obscurity":{"hist":[86,6,17,25,27,35,36,19,8,0],"savedMed":38,"savedMean":35,"topMed":63,"n":259},"eras":[{"d":"1960s","c":2},{"d":"1970s","c":2},{"d":"1980s","c":3},{"d":"1990s","c":6},{"d":"2000s","c":66},{"d":"2010s","c":140},{"d":"2020s","c":40}],"discovery":{"tracks":166,"artists":153,"logged_playlists":10,"recipes":[{"r":"house/nu-disco energy arc","c":23},{"r":"11","c":22},{"r":"14","c":19},{"r":"9","c":19},{"r":"genre-ladder-global-hiphop","c":16},{"r":"15","c":16},{"r":"5","c":15},{"r":"genre-ladder-global-altrock","c":15}]},"knownArtists":236};
+
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// Numeric recipe ids in the log map to RECIPES[n].title; named ones display as-is.
+function recipeLabel(r){
+  const num = /^\d+$/.test(r) ? RECIPES.find(x=>x.n===+r) : null;
+  return num ? num.title : r.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+}
+function hbars(items, key, valKey, unit=""){
+  const max = Math.max(...items.map(i=>i[valKey]));
+  return items.map(i=>`<div class="hbar"><span class="lbl">${esc(i[key])}</span>`
+    +`<span class="track"><span class="fill" style="width:${(i[valKey]/max*100).toFixed(1)}%"></span></span>`
+    +`<span class="val">${i[valKey]}${unit}</span></div>`).join("");
+}
+function vbars(items, labelKey, valKey){
+  const max = Math.max(...items.map(i=>i[valKey]));
+  return `<div class="vbars">`+items.map(i=>
+    `<div class="vb"><span class="vv">${i[valKey]}</span>`
+    +`<div class="col-fill" style="height:${max?(i[valKey]/max*100).toFixed(1):0}%"></div>`
+    +`<span class="xl">${esc(i[labelKey])}</span></div>`).join("")+`</div>`;
+}
+function renderStats(){
+  const S = STATS;
+  const nowRows = S.now.map((a,i)=>`<div class="artist-row"><span class="rk">${i+1}</span>${esc(a.n)}`
+    +(a.new?`<span class="flag up">fresh</span>`:``)+`</div>`).join("");
+  const allRows = S.allTime.map((a,i)=>`<div class="artist-row"><span class="rk">${i+1}</span>${esc(a.n)}`
+    +(a.cool?`<span class="flag rest">at rest</span>`:``)+`</div>`).join("");
+  const obscBuckets = S.obscurity.hist.map((c,i)=>({lab:i===9?"90+":`${i*10}s`,c}));
+  const dpl = Math.max(PLAYLISTS.length, S.discovery.logged_playlists);
+  statsPanel.innerHTML = `
+    <p class="stat-note">A read of my own listening, baked from the daily taste dump
+      (<code>data/taste_${S.generated.replace(/-/g,"")}…json</code>) and the discovery ledger.
+      No play counts or audio-features — Spotify killed those endpoints for this app — so these
+      lean on what's still exposed: top artists, saved-track popularity &amp; release dates, and the engine's own log.</p>
+    <div class="stat-grid">
+
+      <div class="panel wide" style="--accent:var(--green)">
+        <h3>🧬 Genre fingerprint</h3>
+        <p class="sub">How many of my all-time top artists carry each tag — an americana/bluegrass spine with a deep hip-hop seam and, yes, a stubborn <b>musicals</b> streak.</p>
+        ${hbars(S.genres,"g","c")}
+      </div>
+
+      <div class="panel" style="--accent:var(--violet)">
+        <h3>📈 Taste evolution</h3>
+        <p class="sub"><b>Now</b> = recent heavy rotation · <b>All-time</b> = the bedrock. Artists on one list but not the other tell the story.</p>
+        <div class="cols">
+          <div class="col"><h4>On rotation now</h4>${nowRows}</div>
+          <div class="col"><h4>All-time bedrock</h4>${allRows}</div>
+        </div>
+      </div>
+
+      <div class="panel" style="--accent:var(--amber)">
+        <h3>🔦 Obscurity index</h3>
+        <p class="sub">Popularity of my <b>${S.obscurity.n} saved tracks</b> (0–100). Median <b>${S.obscurity.savedMed}</b> vs. a mainstream-leaning <b>${S.obscurity.topMed}</b> for my top tracks — the saved library is where the deep cuts hide.</p>
+        ${vbars(obscBuckets,"lab","c")}
+      </div>
+
+      <div class="panel" style="--accent:var(--blue)">
+        <h3>📀 Era spread</h3>
+        <p class="sub">Release decade of saved tracks — modern-leaning (<b>2010s</b> dominant) but with a real catalog tail back to the '60s.</p>
+        ${vbars(S.eras,"d","c")}
+      </div>
+
+      <div class="panel wide" style="--accent:var(--green)">
+        <h3>🤖 The discovery engine</h3>
+        <p class="sub">What this project has actually done, from <code>discovery_log.jsonl</code>.</p>
+        <div class="tiles">
+          <div class="tile"><div class="big">${dpl}+</div><div class="cap">Playlists</div></div>
+          <div class="tile"><div class="big">${S.discovery.tracks}</div><div class="cap">Tracks surfaced</div></div>
+          <div class="tile"><div class="big">${S.discovery.artists}</div><div class="cap">Unique artists</div></div>
+          <div class="tile"><div class="big">${S.knownArtists}</div><div class="cap">In taste map</div></div>
+        </div>
+        <p class="sub" style="margin:16px 0 8px">Most-used recipes</p>
+        ${hbars(S.discovery.recipes.map(x=>({r:recipeLabel(x.r),c:x.c})),"r","c")}
+      </div>
+
+    </div>`;
+}
+renderStats();
+
 function render(){
+  const isStats = activeView==="stats";
+  controlsEl.style.display = isStats ? "none" : "";
+  statsPanel.style.display = isStats ? "block" : "none";
+  if(isStats){ grid.style.display="none"; empty.style.display="none"; return; }
   const term = q.value.trim().toLowerCase();
   const ds = activeView==="recipes" ? RECIPES : PLAYLISTS;
   let shown = 0;
@@ -848,6 +988,7 @@ document.getElementById('tabs').addEventListener('click', e=>{
   t.classList.add('active');
   activeView = t.dataset.v;
   toolsRef.style.display = activeView==="recipes" ? "" : "none";
+  if(activeView==="stats"){ render(); return; }
   q.placeholder = activeView==="recipes"
     ? "Search recipes — e.g. 'sequence', 'covers', 'new artists'…"
     : "Search playlists — e.g. 'jazz', 'reggae', 'chronology'…";
