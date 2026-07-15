@@ -631,6 +631,271 @@ each with a stated handhold connecting it to the user's taste, on a real private
 
 ---
 
+## Recipe 20 — Rediscovery (abandoned-lane revival)
+
+Goal: mine a **historical listening record** — an old iTunes library export
+(`data/itunes_history.json`), and eventually the GDPR extended-history export — for a whole
+*lane* the user once lived in and later abandoned, then reopen it: a few genuine drifted
+favorites as **anchors**, extended with era-neighbors they never dug into.
+
+**Why it's different:** Recipe 12 re-surfaces fades within the API's shallow window
+(`long_term` vs `short_term` — months). This reaches *years* further back, to taste the
+current profile has no memory of at all, and it doesn't just resurface — it uses the old
+lane as a **seed for new discovery** (nostalgia as the handhold).
+
+**Steps**
+
+1. **Sense the history.** Read the historical layer (`data/itunes_history.json` — play-count
+   weighted). Compare against the current taste dump: which heavy old clusters have *no*
+   presence in today's `known_artists`? That's an abandoned lane.
+2. **Pick the lane and its anchors** — 3–5 tracks the user demonstrably loved (high play
+   counts), now absent from current taste. These are resurfaced on purpose (the nostalgia
+   hook), so the usual "no known artists" filter is deliberately waived *for anchors only*.
+3. **Extend with era-neighbors.** `similar_artists` off the anchors; filter candidates
+   against BOTH current `known_artists` and the discovery ledger — the *extensions* must be
+   genuinely new. Aim for roughly 1 anchor : 3 new neighbors.
+4. **Verify** everything (`search_verify`); log misses (old catalog gaps are real — some
+   2010-era acts are thin on Spotify).
+5. **Build with anchors interleaved** — alternate a known anchor with a cluster of new
+   neighbors so the familiar keeps vouching for the unfamiliar. Report which tracks are
+   anchors (yours, drifted) vs. neighbors (new), and the play-count evidence for the lane.
+
+**Acceptance:** ≥3 anchors with historical play-count evidence + ≥8 verified genuinely-new
+era-neighbors, interleaved on a real private playlist, with the abandoned-lane story reported.
+
+---
+
+## Recipe 21 — New-release radar
+
+Goal: surface **music released in the last ~6 months** that fits the user's lanes — the one
+axis no other recipe touches. A personal replacement for Spotify's dead editorial Release
+Radar, reasoned from *your* clusters instead of a black box.
+
+**Why it's different:** every other recipe is era-agnostic or backward-looking. This one is
+pinned to *now* — and since the session's music knowledge has a training cutoff, it's the
+recipe where Spotify search does the most work: the session proposes **lanes and artists to
+check**, and search (with `year:` filters and artist-album lookups) is the ground truth for
+what actually just dropped.
+
+**Steps**
+
+1. **Sense.** From the taste dump, list the top ~10 artists plus 5–10 Last.fm-adjacent
+   artists (Recipe 6 filtering) worth watching.
+2. **Check for fresh releases.** For each, query Spotify search with a year filter (e.g.
+   `artist:"X" year:2026`) or pull the artist's latest album/single via the API. **Do not
+   name a "new release" from session knowledge alone** — post-cutoff releases are exactly
+   what the session can't know; search results are the only source of truth here.
+3. **Filter to genuinely fresh:** released inside the window (~6 months), not already in
+   `recently_played`/saved, not in the ledger.
+4. **Pick per artist** the strongest fresh track (lead single or a standout album cut) and
+   **verify** normally.
+5. **Build** a private `🤖 ` playlist, dated in the name (e.g. "New lanes — Jul 2026") so
+   re-runs become a series. Report each track's release date and why that artist was watched.
+
+**Acceptance:** ≥8 verified tracks all released inside the stated window, each tied to a
+watched artist (owned or adjacent), release dates reported. Re-runnable monthly.
+
+---
+
+## Recipe 22 — Alive (definitive live cuts)
+
+Goal: for songs the user already loves, find the **superior live recording** — the version
+where the song became what it was meant to be. Zero-risk discovery (same songs, new skin)
+aimed straight at a stated preference: *live / raw energy over studio polish*.
+
+**Why it's different:** Recipes 10/12 go deeper or backward in the catalog; Recipe 11 pairs
+different performers. This keeps the same artist *and* song and swaps the **recording** —
+an axis nothing else uses, and the only recipe built on a documented user preference from
+`discovery_heuristics.md`.
+
+**Steps**
+
+1. **Seed from loved tracks** (taste dump / library scan), favoring artists known as live
+   acts (jam-adjacent roots, soul revues, harmony bands).
+2. **Name the live version** from session knowledge — the specific live album or famous
+   recording (venue/year), not "any live take." Treat each as a hypothesis.
+3. **Verify with `verify_detail`** and check the returned *album*: it must be a real live
+   release, not the studio cut, a re-master, or a random "Live" playlist edit. Wrong album =
+   miss.
+4. **Build** a private `🤖 ` playlist; sequencing like a set list (openers → peak → encore)
+   is a natural fit (hand off to Recipe 9). Report each track's live source (album, venue,
+   year) and what the live take adds.
+
+**Acceptance:** ≥8 verified tracks that are genuine live recordings of songs the user
+already loves, each with its live source named, none of them studio versions.
+
+---
+
+## Recipe 23 — Answer songs & feuds (musical dialogues)
+
+Goal: pairs of songs **in conversation** — one written in response to the other. Answer
+songs, diss tracks, rebuttals, tributes-with-teeth ("Southern Man" → "Sweet Home Alabama").
+Playing the pair is hearing both sides of an argument.
+
+**Why it's different:** Recipe 11 pairs re-performances; Recipe 15 pairs production lineage.
+This pairs **dialogue** — the link is what the lyrics *say to each other*, not shared audio.
+It also bridges the user's roots and hip-hop halves naturally (both traditions run on
+answer records).
+
+**Steps**
+
+1. **Collect dialogues** from session knowledge: classic answer-song pairs, hip-hop
+   beef exchanges, country/rock rebuttals. Favor well-documented exchanges; treat every
+   claimed link as a hypothesis (this is exactly the kind of lore the cutoff garbles).
+2. **Anchor at least a few pairs in the user's taste** (one side by an artist they know);
+   the rest can be canon-famous exchanges worth knowing.
+3. **Order each pair statement-first, answer-second.** For multi-round feuds, keep the
+   volley order.
+4. **Verify both sides**; if either side misses or the link feels shaky on reflection,
+   drop the whole pair — half a conversation is worse than none.
+5. **Build in pair order** (no reordering) and **report each dialogue** — who fired first,
+   what the answer answers, one line of the backstory.
+
+**Acceptance:** ≥4 verified pairs (≥8 tracks) in statement→answer order on a real private
+playlist, each exchange's backstory told, low-confidence links dropped.
+
+---
+
+## Recipe 24 — Class of 19XX (single-year cross-section)
+
+Goal: freeze **one year** and cut across *all* the user's clusters — what country, soul,
+hip-hop, jazz, and indie folk each sounded like in, say, 1972 or 1997. A vertical slice of
+music history filtered through their map.
+
+**Why it's different:** Recipe 14 walks time *longitudinally* (one genre, many years); this
+holds the year fixed and walks *sideways* across genres. Recipe 5 anchors on the user's own
+nostalgia; this can pick any year — including one suggested by the iTunes historical layer
+("your 2010, across every lane").
+
+**Steps**
+
+1. **Pick the year** (user-named, or propose one that was strong across several of their
+   clusters). State it up front.
+2. **One or two tracks per cluster**, each actually *released* that year — session
+   knowledge proposes, but year-claims are hypothesis until checked.
+3. **Cross-check the year** via `verify_detail`'s album/release info, with the Recipe 14
+   caveat: reissues report reissue dates, so a mismatch means *investigate*, not
+   auto-drop — confirm the original release year before keeping or cutting.
+4. **Verify** everything; **build** a private `🤖 ` playlist (grouping by cluster reads
+   well). **Report the slice:** the year, and per cluster what that scene was doing that
+   year in one line.
+
+**Acceptance:** ≥10 verified tracks all originally released in the named year, spanning ≥4
+of the user's clusters, with the per-cluster year-story reported.
+
+---
+
+## Recipe 25 — Title chain (the wordplay game)
+
+Goal: a playlist that is a **puzzle** — each track's title connects to the next by a stated
+rule (shared word; last word → first word; or the titles read as a sentence). The listener
+can spot the game from the tracklist alone.
+
+**Why it's different:** the constraint is **textual, not musical** — pure session reasoning,
+which makes it the most Mode-A recipe in the book. Musical coherence is the *secondary*
+constraint: the chain must still play well, filtered through the user's taste.
+
+**Steps**
+
+1. **Fix the rule** and say it in the description (subtly — half the fun is spotting it).
+2. **Draft the chain** ~10–15 titles long, drawing mostly from the user's clusters so it
+   sounds like their playlist, not a gimmick reel. Every link must satisfy the rule
+   *exactly* (no "close enough" — a broken link kills the game).
+3. **Verify** every track; a miss breaks the chain, so re-solve from the broken link (find
+   a substitute title that satisfies both neighbors) rather than just dropping.
+4. **Build in chain order** (order *is* the puzzle) and **report the rule + the chain**
+   with the linking word highlighted per hop.
+
+**Acceptance:** ≥10 verified tracks in an unbroken chain under one stated rule, in chain
+order on a real private playlist, the rule and every link reported.
+
+---
+
+## Recipe 26 — The concept album (narrative sequence)
+
+Goal: sequence tracks from *different* artists so the **lyrics tell one continuous story**
+— meet → fall → fracture → leave → look back. A concept album assembled from other people's
+songs, aimed at the user's storyteller spine.
+
+**Why it's different:** Recipe 16 is one static lyrical subject, unordered. This is a
+**narrative with an arc** — each track is a *chapter*, and order is load-bearing (like
+Recipes 8/14, but the through-line is story, not sound or time).
+
+**Steps**
+
+1. **Outline the story** first: 5–7 named chapters, one line each ("the leaving," "the
+   first doubt," "the return"). The outline is the spec the tracks must fit.
+2. **Cast each chapter** with a track whose lyrics genuinely carry that beat — lean on the
+   user's lyric-forward clusters (narrative songwriters are the natural casting pool). One
+   line per track on *how* its lyrics tell that chapter.
+3. **Check the seams:** adjacent tracks should also work musically (no mood whiplash that
+   breaks immersion) — Recipe 9's arc thinking applies inside the narrative order.
+4. **Verify** everything; a missed track means re-casting that chapter, not skipping it (a
+   missing chapter breaks the story).
+5. **Build in chapter order** and **report the story** — the chapter outline with each
+   track's casting rationale, so the user can read the album like liner notes.
+
+**Acceptance:** ≥8 verified tracks in deliberate chapter order telling one stated story
+arc, with the chapter outline and per-track casting reported.
+
+---
+
+## Recipe 27 — Cross-cluster duets
+
+Goal: collaborations where the artists on **one track** come from *different* corners of
+the user's taste — roots × hip-hop, jazz × indie, soul × country. The bridge isn't inferred;
+it's literally recorded.
+
+**Why it's different:** angle 11 (left-field bridge) finds a third artist *plausibly*
+downstream of two clusters. Here the connection is **on the record** — a feature credit or
+duet — so every pick is self-evidencing. The rarest shape in the book: one track, two
+anchors.
+
+**Steps**
+
+1. **Name the cluster pairs** worth bridging from the taste dump (pick 2–4 pairings).
+2. **Collect collab tracks** from session knowledge: features, duets, one-off pairings
+   where each side maps to one of the user's clusters. At least one side should be an
+   artist they know; both sides is even better.
+3. **Verify with `verify_detail`** and confirm the *credited artists* on the returned track
+   actually include both names (features are exactly where search matches drift — a solo
+   version or a cover of the duet is a miss).
+4. **Build** a private `🤖 ` playlist and **report each pairing** — which two clusters it
+   bridges and which side is the user's anchor.
+
+**Acceptance:** ≥8 verified tracks, each with both credited artists confirmed and mapped to
+two different clusters of the user's taste, pairings reported.
+
+---
+
+## Recipe 28 — Before they were them (debuts & first recordings)
+
+Goal: the **earliest recordings** of artists the user loves — debut singles, first-album
+deep openers, pre-fame bands — back when they sounded different. The hook is *origin*: hear
+the artist before the sound the user fell for existed.
+
+**Why it's different:** Recipe 10 digs for *obscure* tracks anywhere in the catalog; the
+career-arc variant of Recipe 14 spans a whole discography. This takes exactly **one slice —
+the beginning** — and the payoff is contrast with the version of the artist the user knows.
+
+**Steps**
+
+1. **Pick ~6–8 loved artists** with real history (a debut that predates their known sound;
+   artists whose first record *is* their sound are poor picks — no contrast, no story).
+2. **Name the earliest recording** from session knowledge — debut single, first-album cut,
+   or the pre-fame band (which adds a Recipe 18 personnel flavor). Hypothesis until
+   verified.
+3. **Verify with `verify_detail`** and sanity-check the album: early catalog is rife with
+   re-recordings and anthology masters — prefer the original release; flag it if only a
+   re-record exists.
+4. **Build** a private `🤖 ` playlist and **report the then-vs-now** per artist: what year,
+   what they sounded like then, and what changed on the way to the artist the user loves.
+
+**Acceptance:** ≥6 verified early recordings of artists in the user's taste, each with its
+year and a then-vs-now line reported, re-recordings flagged.
+
+---
+
 ## Notes & guardrails
 
 - **Knowledge-cutoff guardrail:** the session's music knowledge has a training cutoff.

@@ -348,7 +348,7 @@
   <div id="statsPanel"></div>
 
   <footer id="foot">
-    Built from <code>RECIPES.md</code> + <code>PLAYLIST_NOTES.md</code> + the taste dump · 19 recipes · 21 playlists · stats · self-contained, no network needed.
+    Built from <code>RECIPES.md</code> + <code>PLAYLIST_NOTES.md</code> + the taste dump · 28 recipes · 21 playlists · stats · self-contained, no network needed.
   </footer>
 </div>
 
@@ -654,6 +654,148 @@ const RECIPES = [
             "<b>Far targets</b> — Tuvan throat singing, Japanese city pop, Carnatic classical.",
             "Each pick carries one handhold — a groove or hook that rhymes with what you love."],
        built:"🤖 Far Cry — out of your lane"}},
+
+  {n:20, accent:"#e3a008", cat:["inward","discover"], tag:"History",
+   title:"Rediscovery (abandoned-lane revival)", goal:"Mine a historical listening record (old iTunes export, eventually the GDPR history) for a whole lane the user once lived in and later abandoned — then reopen it.",
+   why:"Recipe 12 re-surfaces fades within the API's shallow window (months). This reaches years back, to taste the current profile has no memory of — and uses the old lane as a seed for new discovery, with nostalgia as the handhold.",
+   steps:[
+     "Sense the history — read <code>data/itunes_history.json</code> (play-count weighted). Heavy old clusters with no presence in today's <code>known_artists</code> = an abandoned lane.",
+     "Pick 3–5 anchors — tracks the user demonstrably loved (high play counts), now gone from current taste. Resurfaced on purpose.",
+     "Extend with era-neighbors via <code>similar_artists</code> off the anchors; extensions filtered against known artists AND the ledger. ~1 anchor : 3 new neighbors.",
+     "Verify everything; old-catalog gaps are real, so log misses.",
+     "Build with anchors interleaved — the familiar keeps vouching for the unfamiliar. Report anchors vs. neighbors with play-count evidence."],
+   accept:"≥3 anchors with historical play-count evidence + ≥8 verified genuinely-new era-neighbors, interleaved.",
+   ex:{say:"\"What did I love in 2010 that I've lost track of?\"",
+       got:["<b>Lane found</b> — the 2010–12 synth-indie-pop bloom: Passion Pit (127 plays), MGMT (384), gone from today's profile.",
+            "<b>Anchors</b> — \"Sleepyhead\", \"Electric Feel\", \"Sweet Disposition\".",
+            "<b>New neighbors</b> — STRFKR, Miike Snow, Cut Copy — the era-mates you never dug into."],
+       built:"🤖 Rediscovery — the 2010 indie-pop bloom"}},
+
+  {n:21, accent:"#1db954", cat:["discover"], tag:"Fresh",
+   title:"New-release radar", goal:"Surface music released in the last ~6 months that fits the user's lanes — the one axis no other recipe touches.",
+   why:"Every other recipe is era-agnostic or backward-looking. Post-cutoff releases are exactly what the session can't know, so search (year filters, latest-album lookups) is the only source of truth — never session knowledge alone.",
+   steps:[
+     "Sense — list ~10 top artists plus 5–10 Last.fm-adjacent artists worth watching.",
+     "Check for fresh releases via Spotify search with a year filter (<code>artist:\"X\" year:2026</code>) or the artist's latest album — never from memory.",
+     "Filter to genuinely fresh: inside the window, not in recently-played/saved, not in the ledger.",
+     "Pick the strongest fresh track per artist; verify normally.",
+     "Build with a dated name so re-runs become a series; report release dates and why each artist was watched."],
+   accept:"≥8 verified tracks all released inside the stated window, each tied to a watched artist. Re-runnable monthly.",
+   ex:{say:"\"What's dropped in my lanes lately?\"",
+       got:["<b>Watched</b> — your top 10 + the Last.fm-adjacent ring.",
+            "<b>Fresh hit</b> — a lead single from a watched artist, released 6 weeks ago, confirmed by search.",
+            "Every release date verified — the session's memory is never trusted for 'new'."],
+       built:"🤖 New lanes — Jul 2026"}},
+
+  {n:22, accent:"#e3a008", cat:["inward"], tag:"Live",
+   title:"Alive (definitive live cuts)", goal:"For songs the user already loves, find the superior live recording — the version where the song became what it was meant to be.",
+   why:"Zero-risk discovery: same songs, new skin. The only recipe built on a documented user preference (live / raw energy over studio polish, per discovery_heuristics.md).",
+   steps:[
+     "Seed from loved tracks, favoring known live acts (jam-adjacent roots, soul revues, harmony bands).",
+     "Name the specific live version — the live album or famous recording (venue/year), not 'any live take'.",
+     "Verify with <code>verify_detail</code> and check the album: must be a real live release, not the studio cut or a re-master. Wrong album = miss.",
+     "Build; sequencing like a set list (openers → peak → encore) is a natural Recipe 9 handoff.",
+     "Report each track's live source and what the live take adds."],
+   accept:"≥8 verified genuine live recordings of songs the user already loves, each with its live source named.",
+   ex:{say:"\"Give me the live versions that beat the studio cuts.\"",
+       got:["<b>Swap</b> — the album cut you love, traded for the night it caught fire.",
+            "<b>Source named</b> — album, venue, year for every take.",
+            "Sequenced like a set list — openers, peak, encore."],
+       built:"🤖 Alive — the definitive takes"}},
+
+  {n:23, accent:"#ec4899", cat:["discover","ordered"], tag:"Pairs",
+   title:"Answer songs & feuds", goal:"Pairs of songs in conversation — one written in response to the other. Answer songs, diss tracks, rebuttals. Playing the pair is hearing both sides of an argument.",
+   why:"Recipe 11 pairs re-performances; Recipe 15 pairs production lineage. This pairs dialogue — what the lyrics say to each other. Both roots and hip-hop run on answer records, so it bridges the user's two halves naturally.",
+   steps:[
+     "Collect well-documented dialogues from session knowledge — every claimed link is a hypothesis (this is exactly the lore the cutoff garbles).",
+     "Anchor at least a few pairs in the user's taste; the rest can be canon-famous exchanges.",
+     "Order statement-first, answer-second; keep volley order for multi-round feuds.",
+     "Verify both sides; if either misses or the link feels shaky, drop the whole pair.",
+     "Build in pair order and report each dialogue — who fired first, what the answer answers."],
+   accept:"≥4 verified pairs (≥8 tracks) in statement→answer order, each exchange's backstory told.",
+   ex:{say:"\"Build me the great musical arguments.\"",
+       got:["<b>Round 1</b> — Neil Young, \"Southern Man\" → Lynyrd Skynyrd, \"Sweet Home Alabama\".",
+            "<b>Backstory</b> — one line per exchange on who fired first and why.",
+            "Half a conversation is worse than none — shaky links dropped whole."],
+       built:"🤖 Answer songs — both sides"}},
+
+  {n:24, accent:"#5b8def", cat:["discover"], tag:"Themed",
+   title:"Class of 19XX", goal:"Freeze one year and cut across all the user's clusters — what country, soul, hip-hop, jazz, and indie folk each sounded like that year.",
+   why:"Recipe 14 walks time longitudinally (one genre, many years); this holds the year fixed and walks sideways across genres. Pairs well with the iTunes historical layer ('your 2010, across every lane').",
+   steps:[
+     "Pick the year — user-named, or one that was strong across several clusters.",
+     "One or two tracks per cluster, each actually released that year — year-claims are hypothesis until checked.",
+     "Cross-check via <code>verify_detail</code>, with the reissue caveat: a date mismatch means investigate, not auto-drop.",
+     "Verify everything; build (grouping by cluster reads well).",
+     "Report the slice — per cluster, what that scene was doing that year in one line."],
+   accept:"≥10 verified tracks all originally released in the named year, spanning ≥4 clusters.",
+   ex:{say:"\"What did all my lanes sound like in 1972?\"",
+       got:["<b>Country</b> — the outlaw movement finding its feet.",
+            "<b>Soul</b> — the year the orchestration got political.",
+            "<b>Jazz</b> — electric experiments splitting the scene."],
+       built:"🤖 Class of 1972"}},
+
+  {n:25, accent:"#a274ff", cat:["ordered"], tag:"Game",
+   title:"Title chain", goal:"A playlist that is a puzzle — each track's title connects to the next by a stated rule (shared word, last-word→first-word, or titles reading as a sentence).",
+   why:"The constraint is textual, not musical — pure session reasoning, the most Mode-A recipe in the book. Musical coherence is the secondary constraint: the chain must still play well.",
+   steps:[
+     "Fix the rule; hint at it in the description (half the fun is spotting it).",
+     "Draft a ~10–15 title chain, drawn mostly from the user's clusters. Every link must satisfy the rule exactly.",
+     "Verify every track; a miss breaks the chain — re-solve from the broken link, don't just drop.",
+     "Build in chain order (order is the puzzle).",
+     "Report the rule + the chain with the linking word highlighted per hop."],
+   accept:"≥10 verified tracks in an unbroken chain under one stated rule, in chain order.",
+   ex:{say:"\"Make me a playlist that's secretly a word game.\"",
+       got:["<b>Rule</b> — last word of each title is the first word of the next.",
+            "<b>Chain</b> — \"…Road\" → \"Road to Nowhere\" → \"Nowhere Man\" → …",
+            "A miss means re-solving the link, not skipping it."],
+       built:"🤖 Chain letters — spot the rule"}},
+
+  {n:26, accent:"#ec4899", cat:["ordered"], tag:"Narrative",
+   title:"The concept album", goal:"Sequence tracks from different artists so the lyrics tell one continuous story — meet → fall → fracture → leave → look back.",
+   why:"Recipe 16 is one static lyrical subject, unordered. This is a narrative with an arc — each track is a chapter, and order is load-bearing. Aimed straight at the user's storyteller spine.",
+   steps:[
+     "Outline the story first: 5–7 named chapters, one line each. The outline is the spec.",
+     "Cast each chapter with a track whose lyrics genuinely carry that beat — narrative songwriters are the casting pool.",
+     "Check the seams — adjacent tracks should also work musically (Recipe 9 thinking inside the narrative order).",
+     "Verify; a missed track means re-casting the chapter, not skipping it.",
+     "Build in chapter order; report the story like liner notes — outline plus per-track casting rationale."],
+   accept:"≥8 verified tracks in deliberate chapter order telling one stated story arc.",
+   ex:{say:"\"Build me a breakup album out of other people's songs.\"",
+       got:["<b>Ch. 1, the meeting</b> — a first-spark song opens the record.",
+            "<b>Ch. 4, the leaving</b> — the door-slam track, cast for its lyrics, not its fame.",
+            "<b>Ch. 7, years later</b> — a look-back closer lands the arc."],
+       built:"🤖 A story in nine songs"}},
+
+  {n:27, accent:"#1db954", cat:["discover"], tag:"Bridges",
+   title:"Cross-cluster duets", goal:"Collaborations where the artists on one track come from different corners of the user's taste — roots × hip-hop, jazz × indie, soul × country.",
+   why:"Angle 11 finds a third artist plausibly downstream of two clusters. Here the connection is on the record — a feature credit or duet — so every pick is self-evidencing. One track, two anchors.",
+   steps:[
+     "Name 2–4 cluster pairs worth bridging from the taste dump.",
+     "Collect collab tracks where each side maps to one cluster; at least one side should be an artist the user knows.",
+     "Verify with <code>verify_detail</code> and confirm the credited artists include both names — solo versions and covers of the duet are misses.",
+     "Build and report each pairing — which two clusters it bridges, which side is the anchor."],
+   accept:"≥8 verified tracks, each with both credited artists confirmed and mapped to two different clusters.",
+   ex:{say:"\"Find the songs where my worlds collide.\"",
+       got:["<b>roots × hip-hop</b> — a country voice trading verses with a rapper, on one track.",
+            "<b>jazz × indie</b> — the horn section that wandered onto an indie record.",
+            "Feature credits confirmed on the returned track — no solo-version drift."],
+       built:"🤖 Collisions — where your lanes cross"}},
+
+  {n:28, accent:"#5b8def", cat:["inward","discover"], tag:"Origins",
+   title:"Before they were them", goal:"The earliest recordings of artists the user loves — debut singles, first-album cuts, pre-fame bands — back when they sounded different.",
+   why:"Recipe 10 digs for obscure tracks anywhere in the catalog. This takes exactly one slice — the beginning — and the payoff is contrast with the version of the artist the user knows.",
+   steps:[
+     "Pick ~6–8 loved artists with real history — a debut that predates their known sound. No contrast, no story.",
+     "Name the earliest recording — debut single, first-album cut, or the pre-fame band (a Recipe 18 flavor).",
+     "Verify with <code>verify_detail</code>; early catalog is rife with re-recordings and anthology masters — prefer the original, flag re-records.",
+     "Build and report the then-vs-now per artist: what year, what they sounded like, what changed."],
+   accept:"≥6 verified early recordings of loved artists, each with its year and a then-vs-now line, re-recordings flagged.",
+   ex:{say:"\"What did my favorites sound like before they were famous?\"",
+       got:["<b>Then</b> — the punk band your favorite songwriter fronted at 19.",
+            "<b>Then</b> — the debut single with none of the polish and all of the hunger.",
+            "Re-recordings flagged — the original master or it's noted."],
+       built:"🤖 Origin stories — before they were them"}},
 ];
 
 // Hand-transcribed from PLAYLIST_NOTES.md (newest first). `reconstructed` marks the
