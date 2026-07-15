@@ -10,6 +10,48 @@ the structure, and anything to tweak.
 
 ---
 
+## 🤖 Rediscovery — the 2010 indie-pop bloom
+**Link:** https://open.spotify.com/playlist/2UEAFzIRFcH2TCdfHGtwii
+**Built:** 2026-07-15 · **Recipe:** 20 — Rediscovery (abandoned-lane revival) · **18 tracks**
+
+**Why these:** First playlist seeded from the *historical* layer — your 2013 Windows iTunes
+library (`data/itunes_history_2013.json`), a play-count-weighted record of late-2000s→2013
+listening that Spotify's API can't reconstruct. The library showed a whole **abandoned lane**:
+the 2010–2012 synth-and-festival indie-pop moment — Passion Pit ("Sleepyhead" was your #1 track,
+127 plays), MGMT (378 plays), Foster the People, The Temper Trap, Edward Sharpe — none of which
+survive in your current Americana-narrowed taste. The move: reopen that lane. A few genuine
+drifted-favorite **anchors** for the nostalgia hook, extended with era-neighbors you never dug
+into (Last.fm-seeded off the anchors, filtered against both current `known_artists` and the
+discovery ledger, so every new artist is genuinely new).
+
+**The anchors (yours, drifted):** Passion Pit — Sleepyhead · MGMT — Electric Feel ·
+Foster the People — Helena Beat · The Temper Trap — Sweet Disposition.
+
+**The new-to-you neighbors (14):** STRFKR — Julius · Two Door Cinema Club — What You Know ·
+Miike Snow — Animal · Cut Copy — Lights & Music · Capital Cities — Safe and Sound ·
+Matt & Kim — Daylight · Grouplove — Colours · Young the Giant — Cough Syrup ·
+Walk the Moon — Anna Sun · Saint Motel — My Type · Atlas Genius — Trojans ·
+The Naked and Famous — Young Blood · Ra Ra Riot — Boy · Electric Guest — This Head I Hold.
+
+**Structure — nostalgia into discovery:** open on the strongest anchor (Sleepyhead) to hook the
+memory, then alternate a known anchor with a cluster of new neighbors so the familiar keeps
+vouching for the unfamiliar. Energy builds through the synth-pop middle (Capital Cities →
+Grouplove → Cough Syrup → Anna Sun → My Type) and lands soft on The Temper Trap's soaring
+"Sweet Disposition" — the anchor that feels most like an ending.
+
+**Verify:** all 18 passed `search_verify`, 0 misses.
+
+**Cover:** a winding path leading to a glowing outdoor festival stage under strings of warm
+bulbs, neon-blue/violet dusk with a warm center-glow — the "discovery ladder" composition
+(a path radiating out from a warm, remembered center), impasto oil, no text. Seed 20100.
+
+**Possible tweaks:** a second historical playlist could reopen the *other* abandoned lane —
+the mashup / party-DJ streak (Girl Talk 711 plays, Super Mash Bros., Pretty Lights, RJD2,
+3LAU), though that lane is thin on Spotify (Girl Talk/Super Mash Bros. aren't fully available).
+Or a blue-eyed-soul revival off the Amy Winehouse / Cee-Lo / Aloe Blacc thread.
+
+---
+
 ## 🤖 Far cry — the anti-bubble
 **Link:** https://open.spotify.com/playlist/4Mu3S92nGdiWGGIqP72Qpm
 **Built:** 2026-07-15 · **Recipe:** 19 — Far cry (deliberate anti-bubble) · **11 tracks**
