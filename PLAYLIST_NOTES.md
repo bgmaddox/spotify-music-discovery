@@ -14,11 +14,11 @@ the structure, and anything to tweak.
 **Link:** https://open.spotify.com/playlist/2UEAFzIRFcH2TCdfHGtwii
 **Built:** 2026-07-15 · **Recipe:** 20 — Rediscovery (abandoned-lane revival) · **18 tracks**
 
-**Why these:** First playlist seeded from the *historical* layer — your 2013 Windows iTunes
-library (`data/itunes_history_2013.json`), a play-count-weighted record of late-2000s→2013
-listening that Spotify's API can't reconstruct. The library showed a whole **abandoned lane**:
+**Why these:** First playlist seeded from the *historical* layer — an old Windows iTunes
+library (`data/itunes_history.json`, merged from 2013 + 2014 snapshots), a play-count-weighted
+record of late-2000s→2014 listening that Spotify's API can't reconstruct. The library showed a whole **abandoned lane**:
 the 2010–2012 synth-and-festival indie-pop moment — Passion Pit ("Sleepyhead" was your #1 track,
-127 plays), MGMT (378 plays), Foster the People, The Temper Trap, Edward Sharpe — none of which
+127 plays), MGMT (384 plays), Foster the People, The Temper Trap, Edward Sharpe — none of which
 survive in your current Americana-narrowed taste. The move: reopen that lane. A few genuine
 drifted-favorite **anchors** for the nostalgia hook, extended with era-neighbors you never dug
 into (Last.fm-seeded off the anchors, filtered against both current `known_artists` and the
