@@ -841,7 +841,6 @@ function buildPlaylistCard(p,i){
   card.className='card pcard';
   card.dataset.i=i; card.dataset.view='playlists';
   card.style.setProperty('--accent', p.accent);
-  const prov = p.reconstructed ? `<span class="prov" title="Rebuilt from the ledger + live Spotify description — the reasoning is inferred, not captured live">reconstructed</span>` : "";
   const tweaks = p.tweaks ? `<h5>Possible tweaks</h5><p class="struct">${p.tweaks}</p>` : "";
   const cover = p.cover ? `<div class="cover-seed">🎨 Cover — ${p.cover}</div>` : "";
   card.innerHTML = `
@@ -850,7 +849,7 @@ function buildPlaylistCard(p,i){
         <div class="num">${p.tracks}</div>
         <span class="tag">${p.tag}</span>
       </div>
-      <h3>${p.name} ${prov}</h3>
+      <h3>${p.name}</h3>
       <p class="meta">${p.date} · ${p.recipe} · ${p.tracks} tracks</p>
     </div>
     <div class="toggle" data-t="why">🎧 Why &amp; structure <span class="tw">▾</span></div>
