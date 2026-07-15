@@ -10,6 +10,58 @@ the structure, and anything to tweak.
 
 ---
 
+## 🤖 Far cry — the anti-bubble
+**Link:** https://open.spotify.com/playlist/4Mu3S92nGdiWGGIqP72Qpm
+**Built:** 2026-07-15 · **Recipe:** 19 — Far cry (deliberate anti-bubble) · **11 tracks**
+
+**Why these:** The anti-recipe. Instead of stepping one scene over (Recipes 6/7), this aims
+for the parts of the map your taste dump *never* touches — non-Western scales, ritual/choral
+traditions, languages you don't listen in. The discipline: "far" must stay *defensible*, so
+every pick carries one real handhold into your Americana/roots/soul/hip-hop world. The ledger
+already covered a lot of lateral ground (French touch, reggae, Latin, K-hip-hop, city-pop-
+adjacent Bobby Caldwell), so these are chosen to be far from *both* the library and the ledger.
+
+**The reach + handhold, per track:**
+- **Mariya Takeuchi — Plastic Love** (Japanese city pop): the easiest door in — pure funk/disco/
+  Stevie DNA, just in Japanese.
+- **Mulatu Astatke — Yekermo Sew** (Ethio-jazz): you already own **The Budos Band**, literal
+  Ethio-soul disciples; this is the source.
+- **Innov Gnawa — Toura Toura** (Moroccan Gnawa trance): hypnotic bass-ostinato groove = jam/funk
+  repetition.
+- **Mdou Moctar — Afrique Victime** (Tuareg desert blues): it's the *blues* — hypnotic electric
+  guitar (Gary Clark Jr., Kingfish, Taj Mahal).
+- **The HU — Yuve Yuve Yu** (Mongolian folk-metal): throat singing + gallop, rock-backed — the
+  energy peak.
+- **Huun-Huur-Tu — Orphan's Lament** (Tuvan throat singing): acoustic string-drone + horse-gait
+  rhythm = bluegrass drive (Grisman / "Tom Bombadil").
+- **Ravi Shankar — Raga Jogeshwari: Alap** (Hindustani raga): long-form improvisational unspooling
+  = jam-band exploration (Trey, Grisman).
+- **Nusrat Fateh Ali Khan — Mustt Mustt** (Qawwali): ecstatic call-and-response vocal build =
+  soul-revival fervor (Rateliff, St. Paul & The Broken Bones).
+- **Wardruna — Helvegen** (Nordic ritual folk): folk at the root — drums, drone, nature, harmony.
+- **Le Mystère des Voix Bulgares — Kalimankou Denkou** (Bulgarian choral): close vocal harmony
+  (Secret Sisters, CSNY, Punch Brothers).
+- **Mariza — Ó Gente da Minha Terra** (Portuguese fado): solo lament + guitar storytelling =
+  Townes / outlaw ballad.
+
+**Structure — an outward-and-back arc:** groove entry (city pop → Ethio-jazz → Gnawa) → energy
+peak (desert blues → Mongolian gallop) → meditative deep middle (Tuvan drone → Hindustani raga)
+→ ecstatic climb (Qawwali) → ritual/choral cool-down (Wardruna → Bulgarian choir) → intimate fado
+lament to bring it home to *song*.
+
+**Verify:** all 11 passed `search_verify`, 0 misses; cover-prone picks (Plastic Love, the Bulgarian
+choir, Ravi Shankar) confirmed authentic via `verify_detail` — no karaoke/covers.
+
+**Cover:** a warm campfire glow in the foreground dissolving into cold distant mountains and a
+starlit horizon — the "home cluster left far behind, cool unknown ahead" made literal (impasto
+oil, no text).
+
+**Possible tweaks:** push even further out (Carnatic vocal, Tenores di Bitti Sardinian polyphony,
+harsh noise, gamelan) at the cost of thinner handholds; or split into two shorter sets — a
+"groove-forward far" and a "vocal/ritual far."
+
+---
+
 ## 🤖 Neon Disco — house & lofi
 **Link:** https://open.spotify.com/playlist/4inZqjEH4MPU7nK7iQBEB0
 **Built:** 2026-07-14 · **Recipe:** house/nu-disco energy arc (Last.fm adjacency) · **23 tracks**
