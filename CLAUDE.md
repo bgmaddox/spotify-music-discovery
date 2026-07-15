@@ -5,6 +5,8 @@ deprecated for this app, so the recommendation reasoning lives in the Claude Cod
 session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
 
 ## Progress (see claude_initial_plan.md for full phase specs)
+> Open backlog / deferred ideas live in `IMPROVEMENTS.md` (e.g. GDPR extended-history import, waiting on Spotify's export).
+
 - **Phase 0 — done.** Scaffolding + auth complete. OAuth works (user: bgmaddox).
   Probe confirmed deprecated endpoints are dead: `audio-features` → 403,
   `recommendations` → 404. The hard constraint holds.
