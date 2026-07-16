@@ -10,6 +10,46 @@ the structure, and anything to tweak.
 
 ---
 
+## 🤖 Back in Action — a recovery story
+**Link:** https://open.spotify.com/playlist/3aHHEs8tQB3V46PyTzFAEM
+**Built:** 2026-07-16 · **Recipe:** 26 — The concept album (narrative sequence) · **10 tracks**
+
+**Why these:** A get-well gift for your brother after spinal surgery — the first Recipe 26
+run, and the first playlist cast for someone *else*: broad crowd-pleasers instead of your
+clusters, per your call, with a mixed tone (sincere spine, pun chapters placed where they
+lift). The story is the surgery itself, diagnosis → comeback, and order is load-bearing.
+
+**The chapters, in order:**
+1. **The diagnosis — Robert Palmer, Bad Case of Loving You (Doctor, Doctor)**: the comic
+   opener — "doctor, doctor, gimme the news."
+2. **The incision — Cat Stevens, The First Cut Is the Deepest**: the gag only a surgery
+   playlist gets to make.
+3. **Going under — Pink Floyd, Comfortably Numb**: anesthesia, half wink half sincere —
+   "just a little pinprick."
+4. **Waking up — The Beatles, Here Comes the Sun**: relief; it's over.
+5. **Flat on his back — The Band, The Weight**: "take a load off" — doctor's orders.
+6. **Leaning on people — Bill Withers, Lean on Me**: the sincere heart of the album.
+7. **First steps — Katrina & The Waves, Walking on Sunshine**: pun + pure joy.
+8. **Rehab montage — Kanye West, Stronger**: "that that don't kill me…"
+9. **Standing tall — Elton John, I'm Still Standing**: the pun payoff.
+10. **Back in action — AC/DC, Back in Black**: the triumphant closer.
+
+**Seams:** the two comic openers ride the same bar-band rock energy before Floyd slows it
+down; the middle sag (Beatles → Band → Withers) is the gentle convalescent stretch; then
+energy climbs monotonically from Katrina & The Waves through AC/DC — a recovery-shaped arc.
+
+**Verify:** 10/10 passed `search_verify`, 0 misses — every one resolved to the canonical
+album version (Abbey Road, The Wall, Big Pink, Still Bill, Graduation…).
+
+**Cover:** a winding road climbing out of a dark indigo valley into golden sunrise —
+left-to-right narrative-journey composition, impasto oil, no text. Seed 2607.
+
+**Possible tweaks:** it's private under your account — share the link, or make it public
+in the app (client-only toggle) so he can follow it. Easy swaps if a chapter doesn't land:
+"Fix You" (Coldplay) for chapter 6, "Ain't No Mountain High Enough" as an alternate closer.
+
+---
+
 ## 🤖 Back in rotation — forgotten favorites
 **Link:** https://open.spotify.com/playlist/6WpUgwby2tB6NUfVzOcv0S
 **Built:** 2026-07-16 · **Recipe:** 29 — Forgotten-favorites revival (deep history) · **13 tracks**
