@@ -348,7 +348,7 @@
   <div id="statsPanel"></div>
 
   <footer id="foot">
-    Built from <code>RECIPES.md</code> + <code>PLAYLIST_NOTES.md</code> + the taste dump · 28 recipes · 22 playlists · stats · self-contained, no network needed.
+    Built from <code>RECIPES.md</code> + <code>PLAYLIST_NOTES.md</code> + the taste dump · 29 recipes · 23 playlists · stats · self-contained, no network needed.
   </footer>
 </div>
 
@@ -796,6 +796,23 @@ const RECIPES = [
             "<b>Then</b> — the debut single with none of the polish and all of the hunger.",
             "Re-recordings flagged — the original master or it's noted."],
        built:"🤖 Origin stories — before they were them"}},
+
+  {n:29, accent:"#e3a008", cat:["inward","discover"], tag:"History",
+   title:"Forgotten-favorites revival (deep history)", goal:"Bring back tracks the user provably loved and then dropped — seeded from the GDPR extended streaming history (real per-play counts, 2015→present), not the API's recency-weighted windows.",
+   why:"Recipe 20 revives an abandoned lane reconstructed from the old iTunes library — inferred, pre-Spotify. This works from measured Spotify plays: the history digest names the artists, peak years, and exact tracks with counts. Zero hypothesis about what the user liked; the only judgment is curation.",
+   steps:[
+     "Read <code>cli.py history-snapshot</code> — its <code>forgotten_favorites</code> block lists artists with ≥40 lifetime plays and none in the last 2 calendar years.",
+     "Filter non-taste plays — white noise, kids' music, film scores, Christmas. The household layer is heavy (CoComelon is the #1 all-time artist).",
+     "Pick each artist's signature track — their most-played in the export, not a session guess.",
+     "Verify every URI via <code>search_verify</code> even though the export carries URIs — old events can point at delisted editions.",
+     "Build, sequence by mood arc (not play count), and report each track's lifetime plays + peak year — the receipts are the story.",
+     "Log to the ledger with the recipe tag so re-runs don't repeat an edition."],
+   accept:"≥10 verified tracks, each a genuine past favorite with real play counts cited, none played in the quiet window, household plays excluded.",
+   ex:{say:"\"What did I used to have on repeat that I've forgotten?\"",
+       got:["<b>Receipt</b> — Action Bronson's \"Baby Blue\": 51 plays, peak 2019, silent since.",
+            "<b>Receipt</b> — UGK's \"Int'l Players Anthem\": 60 plays, peak 2022.",
+            "Household noise filtered — the white-noise and Frozen-score \"favorites\" never make the cut."],
+       built:"🤖 Back in rotation — forgotten favorites"}},
 ];
 
 // Hand-transcribed from PLAYLIST_NOTES.md (newest first). `reconstructed` marks the
@@ -803,6 +820,14 @@ const RECIPES = [
 // inferred, not captured live. `cat` reuses the recipe filter taxonomy so the chips work
 // on both tabs.
 const PLAYLISTS = [
+  {name:"🤖 Back in rotation — forgotten favorites", url:"https://open.spotify.com/playlist/6WpUgwby2tB6NUfVzOcv0S",
+   date:"2026-07-16", recipe:"29 — Forgotten-favorites revival (deep history)", tag:"History",
+   tracks:13, cat:["inward","ordered"], accent:"#e3a008", reconstructed:false,
+   why:`First playlist seeded from the GDPR extended streaming history (2015→2026, ~44k real plays) rather than the API's shallow windows. The new history digest surfaced forgotten favorites — artists with ≥40 lifetime plays but zero plays in 2025–26 — with real peak years and real per-track counts. Every track is the user's own most-played song by that artist, from the year it was worn out: Action Bronson's "Baby Blue" (51 plays), UGK's "Int'l Players Anthem" (60), Robyn's "Dancing On My Own" (40), OK Go, Sister Sparrow, The Teskey Brothers, Big Grams, Amy Winehouse and more. White noise and the Frozen score were filtered as household plays, not taste.`,
+   structure:`Soul block up front (Teskey Brothers → Sister Sparrow → Winehouse → Earl St. Clair), a trumpet bridge into the hip-hop stretch (Nico Segal → Big Grams → Action Bronson → UGK), a pop peak (OK Go → Robyn), then the Springsteen comedown into a roots landing (Gillian Welch → "Wagon Wheel").`,
+   tweaks:`Re-runnable — the forgotten list recomputes as taste drifts, and the ledger keeps editions from repeating. Natural follow-up dives: the Teskey Brothers and Big Grams catalogs, Earl St. Clair's lone album. Threshold knobs live in streaming_history.py.`,
+   cover:`a dusty crate of vinyl records in a dim attic, one warm sunbeam through a small window waking the records in glowing gold — warm amber/gold against deep indigo shadow, impasto oil, no text, seed 2207`},
+
   {name:"🤖 New lanes — Jul 2026", url:"https://open.spotify.com/playlist/4MxBBqBRZ3OHomNAOr1Te9",
    date:"2026-07-16", recipe:"21 — New-release radar", tag:"New releases",
    tracks:11, cat:["discover","ordered"], accent:"#22c55e", reconstructed:false,

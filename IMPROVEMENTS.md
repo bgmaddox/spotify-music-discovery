@@ -38,7 +38,8 @@ multi-year, per-play history (timestamped stream events back to account creation
 - [x] Wired into `cli.py` as `history-build` / `history-snapshot [--year YYYY]`.
 
 **Still open (parking lot):**
-- [ ] A deep-history discovery recipe (e.g. era-revival or forgotten-favorites seed) in RECIPES.md.
+- [x] A deep-history discovery recipe — Recipe 29 (forgotten-favorites revival) shipped
+      2026-07-16 with the "🤖 Back in rotation" playlist.
 - [ ] Decide whether the history digest reaches the MCP server / Stats tab, or stays local-only
       (leaning local-only; the digest is small but still personal).
 

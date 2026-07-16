@@ -896,6 +896,40 @@ year and a then-vs-now line reported, re-recordings flagged.
 
 ---
 
+## Recipe 29 — Forgotten-favorites revival (deep history)
+
+Goal: bring back tracks the user **provably loved and then dropped** — seeded from the
+GDPR extended streaming history (real per-play counts, 2015→present), not the API's
+recency-weighted windows or session guesses. The hook is *evidence*: every pick is the
+user's own most-played track by an artist they've gone silent on.
+
+**Why it's different:** Recipe 20 revives an *abandoned lane* reconstructed from the old
+iTunes library (pre-Spotify, inferred); this works from **measured Spotify plays** — the
+`history-snapshot` digest names the artists, the peak years, and the exact tracks with
+counts. Zero hypothesis about what the user liked; the only judgment is curation.
+
+**Steps**
+
+1. **Refresh the layer** if a newer export landed: `cli.py history-build`; then read
+   `cli.py history-snapshot` — its `forgotten_favorites` block lists artists with ≥40
+   lifetime plays and no plays in the last 2 calendar years (knobs in
+   `streaming_history.py`).
+2. **Filter non-taste plays:** white noise, kids' music, film scores, Christmas — the
+   household layer is heavy in this history (CoComelon is the #1 all-time artist).
+3. **Pick each artist's signature track** — their most-played in the export (a targeted
+   pass over `_iter_events` gets per-artist track counts; the summary's top-150 won't
+   cover the tail artists).
+4. **Verify every URI via `search_verify`** even though the export carries URIs — old
+   events can point at delisted/re-released editions; the search result is canonical.
+5. **Build** a private `🤖 ` playlist, sequence by mood arc (not by play count), and
+   report each track's lifetime plays + peak year — the receipts are the story.
+6. **Log to the ledger** with the recipe tag so later re-runs don't repeat an edition.
+
+**Acceptance:** ≥10 verified tracks, each a genuine past favorite (real play counts cited),
+none played in the quiet window, non-taste household plays excluded.
+
+---
+
 ## Notes & guardrails
 
 - **Knowledge-cutoff guardrail:** the session's music knowledge has a training cutoff.

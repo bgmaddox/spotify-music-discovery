@@ -10,6 +10,49 @@ the structure, and anything to tweak.
 
 ---
 
+## 🤖 Back in rotation — forgotten favorites
+**Link:** https://open.spotify.com/playlist/6WpUgwby2tB6NUfVzOcv0S
+**Built:** 2026-07-16 · **Recipe:** 29 — Forgotten-favorites revival (deep history) · **13 tracks**
+
+**Why these:** First playlist seeded from the GDPR extended streaming history (2015→2026,
+~44k real plays) rather than the API's shallow windows. The new `history-snapshot` surfaced
+**forgotten favorites** — artists with ≥40 lifetime plays but zero plays in 2025–26 — with
+real peak years and real per-track counts. Every track here is *your own* most-played song
+by that artist, from the year you wore it out. Filtered out: Bruce Brus (white noise) and
+Christophe Beck (Frozen score) — household plays, not taste.
+
+**The revivals, per track** (lifetime plays · peak year):
+- **The Teskey Brothers — Crying Shame** (26 · 2022): the Aussie soul lane, opener.
+- **Sister Sparrow — Mama Knows** (41 · 2021): brass-funk stomp.
+- **Amy Winehouse — Back To Black** (17 · 2021): 162 lifetime plays across the catalog.
+- **Earl St. Clair — Is It Real** (9 · 2021): one-era soul-rock voice, gone since 2021.
+- **Nico Segal — Pass the Vibes** (19 · 2019): the Donnie Trumpet sunshine cut.
+- **Big Grams — Fell In the Sun** (25 · 2021): Big Boi × Phantogram, the hip-hop pivot.
+- **Action Bronson — Baby Blue** (51 · 2019): your single most-played forgotten track.
+- **UGK — Int'l Players Anthem** (60 · 2022): the Outkast tie-in classic.
+- **OK Go — Get Over It** (41 · 2019): power-pop jolt.
+- **Robyn — Dancing On My Own** (40 · 2022): the dance-floor cry, energy peak.
+- **Bruce Springsteen — I'm On Fire** (13 · 2021): the comedown turn.
+- **Gillian Welch — Everything Is Free** (4 · 2020): quiet roots landing.
+- **Old Crow Medicine Show — Wagon Wheel** (15 · 2024): the singalong send-off.
+
+**Structure:** soul block up front (Teskey → Sparrow → Winehouse → St. Clair), the trumpet
+bridge into a hip-hop stretch (Segal → Big Grams → Bronson → UGK), a pop peak (OK Go →
+Robyn), then the Springsteen comedown into a roots landing (Welch → Wagon Wheel).
+
+**Verify:** 13/13 passed `search_verify`, 0 misses (Winehouse and Welch resolved to newer
+canonical URIs than the historical play events — verified ones used).
+
+**Cover:** a dusty crate of vinyl in a dim attic, one sunbeam waking the records in gold —
+warm amber/gold against deep indigo shadow, impasto oil, no text. Seed 2207.
+
+**Possible tweaks:** re-runnable — the forgotten list recomputes as taste drifts, and the
+ledger keeps editions from repeating. The deeper catalogs flagged here (Teskey Brothers,
+Big Grams, Earl St. Clair's lone album) are natural follow-up dives. Threshold knobs live
+in `streaming_history.py` (`FORGOTTEN_MIN_PLAYS`, `FORGOTTEN_QUIET_YEARS`).
+
+---
+
 ## 🤖 New lanes — Jul 2026
 **Link:** https://open.spotify.com/playlist/4MxBBqBRZ3OHomNAOr1Te9
 **Built:** 2026-07-16 · **Recipe:** 21 — New-release radar · **11 tracks**
