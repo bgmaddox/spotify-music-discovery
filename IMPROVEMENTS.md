@@ -8,10 +8,15 @@ Status legend: 🔜 planned · 🚧 in progress · ⏳ blocked/waiting · 💡 i
 
 ---
 
-## ⏳ Extended streaming history (GDPR data export)
+## ✅ Extended streaming history (GDPR data export) — landed 2026-07-16
 
-**Status:** waiting on Spotify — user requested the export ~2026-07-15, delivery can
-take up to ~30 days.
+**Status:** done. The full Extended tier arrived 2026-07-15 (11 audio files,
+2015→2026, ~40 MB, ~49k events), gitignored at
+`data/Spotify Extended Streaming History/`. `streaming_history.py` collapses it
+into `data/history_summary.json` (~88 KB) in one pass; sessions read only the
+lean digest via `cli.py history-snapshot [--year YYYY]` — never the raw files
+(they carry IPs/device strings). Covered by `tests/test_streaming_history.py`.
+Follow-ups promoted to the parking lot below.
 
 **Why:** the Web API has no true lifetime-history endpoint. Everything the toolkit
 pulls today is a rolling/recency-weighted window:
@@ -23,23 +28,28 @@ pulls today is a rolling/recency-weighted window:
 The GDPR **Extended Streaming History** export is the only source of genuine
 multi-year, per-play history (timestamped stream events back to account creation).
 
-**Plan when the data arrives:**
-- [ ] Land the export files somewhere gitignored (they're personal data — never commit).
-- [ ] Write a loader (`streaming_history.py`?) that parses the `Streaming_History_Audio_*.json`
-      files into a normalized play-event table (ts, artist, track, ms_played, reason_start/end).
-- [ ] New primitives on top of it, e.g.:
-      - true all-time top artists/tracks (real counts, real dates — not the API's weighted guess)
-      - listening timeline / "on this day" / era detection (what was I into in year X)
-      - skip-rate and completion signals (ms_played vs track length) as a real taste signal
-      - "forgotten favorites" — heavy past plays that dropped off recently (revival angle)
-- [ ] Consider a new discovery recipe seeded from deep history rather than the shallow API window.
-- [ ] Decide whether any of this reaches the MCP server / Stats tab, or stays local-only
-      (the export is bulky and private — lean toward local-only unless there's a clear win).
+**Delivered (2026-07-16):**
+- [x] Export landed gitignored (covered by the existing `data/` ignore; verified with `git check-ignore`).
+- [x] `streaming_history.py` loader — parses all `Streaming_History_Audio_*.json`, music-only
+      (podcast/audiobook rows dropped), ≥30s = play / <30s = skip (Spotify's own threshold).
+- [x] Primitives in the summary: true all-time top artists/tracks with real counts + per-year
+      play curves (era detection), per-year leaderboards, skip rates, forgotten favorites
+      (≥40 lifetime plays, silent in the last 2 calendar years).
+- [x] Wired into `cli.py` as `history-build` / `history-snapshot [--year YYYY]`.
 
-**Notes / open questions:**
-- Two export tiers exist: the standard "Account data" (short, ~1yr) vs. the fuller
-  "Extended streaming history" (all-time, requested separately). Confirm which one arrives.
-- Format is per-year JSON arrays; schema is stable but verify field names on arrival.
+**Still open (parking lot):**
+- [ ] A deep-history discovery recipe (e.g. era-revival or forgotten-favorites seed) in RECIPES.md.
+- [ ] Decide whether the history digest reaches the MCP server / Stats tab, or stays local-only
+      (leaning local-only; the digest is small but still personal).
+
+**Notes (confirmed on arrival):**
+- The full Extended tier arrived; schema matched expectations (`ts`, `ms_played`,
+  `master_metadata_*`, `spotify_track_uri`, `skipped`, `reason_*`).
+- Gaps: 2017 missing entirely; 2015–2016 nearly empty (15 plays total) — Spotify use
+  didn't really start until 2018. The 2013–2014 iTunes layer covers the pre-Spotify era.
+- Caveat discovered: a heavy kids-music layer (CoComelon is the #1 all-time artist,
+  plus Pinkfong/Disney soundtracks) — discovery reasoning should treat these as
+  household plays, not taste signal.
 
 ---
 

@@ -18,6 +18,8 @@ session can drive each primitive with a single uniform command:
     python cli.py artist-tags "Colter Wall" [--limit 10]
     python cli.py genre-neighbors "indie folk" [--limit 15]
     python cli.py genre-find "americana"
+    python cli.py history-build          # GDPR export -> data/history_summary.json
+    python cli.py history-snapshot [--year YYYY]   # lean multi-year history digest
     python cli.py log-add --artist "Tyler Childers" [--title T --uri U --recipe 6 --playlist URL]
     python cli.py log-artists          # artists already surfaced (cross-session dedup)
     python cli.py log-recent [--limit 20]
@@ -50,6 +52,8 @@ from genre_map import _cmd_find as _cmd_genre_find
 from genre_map import _cmd_neighbors as _cmd_genre_neighbors
 from lastfm import _cmd_artist_tags, _cmd_similar_artists, _cmd_similar_tracks
 from sensing import _cmd_library_scan, _cmd_now_playing
+from streaming_history import _cmd_history_build, _cmd_history_snapshot
+import streaming_history
 from tools import _cmd_build_playlist, _cmd_search_verify, _cmd_set_playlist_image
 
 
@@ -255,6 +259,20 @@ def main() -> int:
     gf.add_argument("query")
     gf.add_argument("--limit", type=int, default=20)
     gf.set_defaults(func=_cmd_genre_find)
+
+    hb = sub.add_parser(
+        "history-build",
+        help="Aggregate the GDPR extended streaming export into data/history_summary.json.",
+    )
+    hb.add_argument("--src", default=streaming_history.EXPORT_DIR)
+    hb.set_defaults(func=_cmd_history_build)
+
+    hs = sub.add_parser(
+        "history-snapshot",
+        help="Print a lean multi-year listening-history digest (or one year via --year).",
+    )
+    hs.add_argument("--year", default=None, help="Zoom into a single year (YYYY).")
+    hs.set_defaults(func=_cmd_history_snapshot)
 
     la = sub.add_parser(
         "log-add", help="Record surfaced artist(s)/track(s) in the discovery ledger."

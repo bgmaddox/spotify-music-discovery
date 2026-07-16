@@ -97,6 +97,16 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   **Hygiene** — dumps self-prune to newest 5 (`prune_dumps`), Last.fm CLI prints clean errors
   instead of tracebacks, `import html` hoisted in `genre_map.py`. All five primitives + new
   commands verified clean.
+- **Extended history layer — done, 2026-07-16.** The GDPR Extended Streaming History
+  export arrived (2015→2026, ~49k events, ~40 MB, gitignored under `data/`).
+  `streaming_history.py` aggregates it once into `data/history_summary.json` (~88 KB);
+  sessions read only `cli.py history-snapshot [--year YYYY]` (~2k tokens: per-year top
+  artists, true all-time counts, forgotten favorites). **Never read the raw export
+  files** — 40 MB and they contain IPs/device strings; re-run `history-build` if a
+  newer export lands. Known gaps: 2017 absent, 2015–16 nearly empty (the pre-Spotify
+  era is the iTunes 2013–14 layer). Caveat: a heavy kids-music layer (CoComelon = #1
+  all-time artist) is household plays, not taste signal — filter it out when reasoning.
+  Tests in `tests/test_streaming_history.py`.
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 - **Showcase page — done, 2026-07-14.** `docs/recipes.html` is now a tabbed
