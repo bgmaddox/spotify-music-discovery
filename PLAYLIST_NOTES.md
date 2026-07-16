@@ -10,6 +10,48 @@ the structure, and anything to tweak.
 
 ---
 
+## 🤖 New lanes — Jul 2026
+**Link:** https://open.spotify.com/playlist/4MxBBqBRZ3OHomNAOr1Te9
+**Built:** 2026-07-16 · **Recipe:** 21 — New-release radar · **11 tracks**
+
+**Why these:** First run of the recipe pinned to *now* — a personal Release Radar reasoned
+from your lanes instead of a black box. A 26-artist watchlist (16 owned cores + 10 Last.fm-
+adjacent laterals) was swept against Spotify's artist-album feeds; 12 had dropped something
+inside the 6-month window (since ~Jan 16). One strongest cut per artist, release dates
+verified from the API, not from memory — post-cutoff releases are exactly what a session
+can't know. Notably quiet: Childers, Isbell, Sturgill, Avetts, Rateliff, Zach Bryan.
+
+**The fresh drops, per track:**
+- **Billy Strings — Burn the Other End** (single, Jun 30): adjacent bluegrass flagship, opener.
+- **Sierra Hull — Feelin' Good Again** (single, Jun 26): the mandolinist from your recent plays.
+- **Molly Tuttle — My Side of the Mountain** (single, Apr 23): adjacent flatpicking star.
+- **Charley Crockett — The Hallelujah Trail** (from *Clovis*, Jul 3 — his *second* album of 2026
+  after April's *Age of the Ram*).
+- **Marcus King — Honky Tonk Hell** (from the double LP *Darling Blue / No Room For Blue*, May 1).
+- **The Red Clay Strays — Demons In Your Choir** (lead single + opener of *Grateful*, Jun 5).
+- **Shakey Graves — Time Flies** (from *Fondness, Etc.*, May 15).
+- **Margo Price — Deportee (Plane Wreck At Los Gatos)** (from *Days Of Unrest*, Jul 3): the Woody
+  Guthrie song, feat. Joan Baez & Memphis Mariachi.
+- **Waxahatchee — Six O'Clock News** (single, Mar 24): adjacent Americana-indie lane.
+- **Brandi Carlile — Life On The Run** (single, May 22).
+- **Gregory Alan Isakov — Fade Into You** (single, Apr 16): the Mazzy Star song, dreamy closer.
+
+**Structure:** bluegrass barn-burners up front (Strings → Hull → Tuttle), through the honky-tonk
+/ southern-soul middle (Crockett → King → Red Clay Strays), then the songwriter back half
+(Shakey → Margo → Waxahatchee → Brandi) landing on Isakov's hushed "Fade Into You."
+
+**Verify:** all 11 passed `search_verify`, 0 misses; every release date pulled from the API
+inside the Jan–Jul 2026 window.
+
+**Cover:** green shoots along a country fence line at first light, sun rays sweeping the sky
+like a radar beam — warm amber/gold with fresh spring green, impasto oil, no text. Seed 2126.
+
+**Possible tweaks:** dated name makes this a series — re-run monthly and the ledger keeps
+each edition from repeating picks. Deep-dive candidates for future sessions: the two 2026
+Crockett albums, the Marcus King double LP, and Red Clay Strays' *Grateful* in full.
+
+---
+
 ## 🤖 Rediscovery — the 2010 indie-pop bloom
 **Link:** https://open.spotify.com/playlist/2UEAFzIRFcH2TCdfHGtwii
 **Built:** 2026-07-15 · **Recipe:** 20 — Rediscovery (abandoned-lane revival) · **18 tracks**
