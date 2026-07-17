@@ -55,6 +55,7 @@ from sensing import _cmd_library_scan, _cmd_now_playing
 from streaming_history import _cmd_history_build, _cmd_history_snapshot
 import streaming_history
 from build_timeline_data import _cmd_timeline_build
+from build_similarity_data import _cmd_similarity_build
 from tools import _cmd_build_playlist, _cmd_search_verify, _cmd_set_playlist_image
 
 
@@ -283,6 +284,15 @@ def main() -> int:
         "--verbose", "-v", action="store_true", help="Print per-artist bucket resolution."
     )
     tb.set_defaults(func=_cmd_timeline_build)
+
+    sb = sub.add_parser(
+        "similarity-build",
+        help="Fetch Last.fm similarity edges → data/similarity_edges.json.",
+    )
+    sb.add_argument(
+        "--verbose", "-v", action="store_true", help="Print per-artist fetch progress."
+    )
+    sb.set_defaults(func=_cmd_similarity_build)
 
     la = sub.add_parser(
         "log-add", help="Record surfaced artist(s)/track(s) in the discovery ledger."

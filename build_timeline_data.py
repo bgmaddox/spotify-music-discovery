@@ -32,6 +32,7 @@ HISTORY_SUMMARY_PATH = os.path.join(DATA_DIR, "history_summary.json")
 ITUNES_PATH = os.path.join(DATA_DIR, "itunes_history.json")
 TIMELINE_PATH = os.path.join(DATA_DIR, "taste_timeline.json")
 DISCOVERY_LOG_PATH = os.path.join(DATA_DIR, "discovery_log.jsonl")
+SIMILARITY_EDGES_PATH = os.path.join(DATA_DIR, "similarity_edges.json")
 
 # ------------------------------------------------------------------ genre buckets
 
@@ -629,6 +630,29 @@ def _build_discovery(
 # ------------------------------------------------------------------ build entry point
 
 
+def _load_network(edges_path: str) -> dict:
+    """Load the Phase 5 similarity edge list into the timeline's `network` key.
+
+    Returns an "absent" stub (nodes/edges empty + note) when similarity-build
+    hasn't been run, so the front-end can degrade gracefully.
+    """
+    if not os.path.exists(edges_path):
+        return {
+            "note": "No similarity edges built yet — run `cli.py similarity-build`.",
+            "nodes": [],
+            "edges": [],
+            "outside": {},
+        }
+    with open(edges_path) as f:
+        sim = json.load(f)
+    return {
+        "generated_at": sim.get("generated_at"),
+        "nodes": sim.get("nodes", []),
+        "edges": sim.get("edges", []),
+        "outside": sim.get("outside", {}),
+    }
+
+
 def build_timeline(
     fetch_tags_fn=None,
     *,
@@ -828,6 +852,9 @@ def build_timeline(
         artist_buckets,
     )
 
+    # --- v4: similarity network (Phase 5; optional — built by similarity-build) ---
+    network = _load_network(SIMILARITY_EDGES_PATH)
+
     # --- assemble output ---
     out = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -850,10 +877,13 @@ def build_timeline(
         "behavior": behavior,
         "loyalty": loyalty,
         "discovery": discovery,
+        "network": network,
     }
 
+    # compact separators: this file is machine-read only (inlined into the page),
+    # and indent=1 puts every edge/grid number on its own line (~35% bloat)
     with open(TIMELINE_PATH, "w") as f:
-        json.dump(out, f, ensure_ascii=False, indent=1)
+        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
 
     return out
 

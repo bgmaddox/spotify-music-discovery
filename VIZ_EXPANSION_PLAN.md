@@ -16,9 +16,23 @@
 | 3b. Front-end batch 2 — "Artist stories" | ✅ built 2026-07-18 | 5 views (loyalty gantt + search, rediscovery cards, obsession dots, skip lists, Claude-era panel) + 🤖 river marker; Playwright: 0 errors, mobile clean, regression pass |
 | — checkpoint: user preview | ✅ done 2026-07-18 | user approved; deploy authorized |
 | 4. Verify, deploy, document | ✅ done 2026-07-18 | live at `/discovery/history` (200; `/discovery` unaffected); 112 tests green; docs updated; committed |
-| 5. Similarity network (deferred) | ⬜ deferred | separate mini-project; do not start unprompted |
+| 5. Similarity network | ✅ done 2026-07-18 | "The shape of your taste" force graph live at `/discovery/history`; 187 nodes / 864 Last.fm edges via new `cli.py similarity-build`; 125 tests green; 0 console errors, mobile clean; user approved preview |
 
 Decisions log (append as they happen):
+- 2026-07-18 — Phase 5 as-built notes: kept it a **section on the existing page** (not its
+  own page) — zero Caddy changes, inherits the visual system; the force simulation
+  lazy-inits via IntersectionObserver so the rest of the page pays nothing. Data:
+  `build_similarity_data.py` fetches `similar_artists` (limit 100) for the 187
+  non-household timeline artists → in-set edges (match ≥ 0.05, undirected, mutual flag)
+  + top-5 outside-library neighbors (match ≥ 0.3) per artist → `data/similarity_edges.json`
+  (63 KB); `_load_network` merges it into the timeline's `network` key (graceful stub when
+  absent). Timeline dump switched to compact JSON separators — 315 KB (indent=1 put every
+  edge number on its own line) → 204 KB, *smaller than v3's 215 KB despite the new data*.
+  Graph: one giant 162-node component + an 11-node cluster + 12 isolated ("float free" in
+  the caption); wheel-zoom requires ⌘/ctrl and touch-zoom two fingers so the map never
+  hijacks page scroll; auto-fit on simulation end (critical on mobile); 🤖-stuck artists get
+  dashed green rings; node click also feeds the existing trajectory panel. Known quirk:
+  `Florence + The Machine` returns no Last.fm neighbors (name form). Page: 549 KB.
 - 2026-07-18 — Phase 3b as-built notes: the plan's per-year skip-rate sparkline was dropped —
   the only per-year skip series available (`TIMELINE.years`) includes household plays, which
   would contradict the section's household-excluded promise; the skip card is the two lists.

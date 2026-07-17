@@ -138,6 +138,20 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   (215 KB JSON, clock grids compacted to 7×24 arrays). Page is ~485 KB self-contained;
   112 tests green. Working doc: `VIZ_EXPANSION_PLAN.md` (Phase 5 similarity network
   deferred). Redeploy unchanged: rebuild → re-inject `__TIMELINE_JSON__` → `scp`.
+- **Similarity network ("The shape of your taste") — DEPLOYED, 2026-07-18.** Phase 5 of
+  `VIZ_EXPANSION_PLAN.md`: a lazy-initialized D3 force-directed map on `/discovery/history`
+  of all 187 non-household artists linked by 864 Last.fm similarity edges — clusters read
+  as scenes (americana mass, hip-hop island, soul corridor; 12 artists float free). Click a
+  node → in-library neighbors ranked by match **and** a "Just beyond the edge" card of
+  similar artists NOT in the library (the discovery frontier, linked to Spotify search);
+  search, genre chips, node drag, pinch/⌘-scroll zoom (never hijacks page scroll), auto-fit
+  on settle, 🤖 dashed rings for discovery-stuck artists. Data: `build_similarity_data.py`
+  + `cli.py similarity-build` batch `lastfm.similar_artists` over the timeline roster
+  (cached `.cache_lastfm/`) → `data/similarity_edges.json` (63 KB); `timeline-build` merges
+  it as the timeline's `network` key (graceful stub when absent). Timeline JSON now dumps
+  compact — 204 KB, smaller than v3's 215 despite the new data; page 549 KB self-contained;
+  125 tests green (13 new in `tests/test_similarity_data.py`). After a taste shift:
+  `similarity-build` → `timeline-build` → re-inject → scp (runbook unchanged).
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 - **Showcase page — done, 2026-07-14.** `docs/recipes.html` is now a tabbed
