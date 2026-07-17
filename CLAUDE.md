@@ -122,6 +122,22 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   toggle, hidden by default). Design explored via Google Stitch (3 concepts, user picked a
   hybrid; reference PNGs in `docs/stitch_concepts/`). Working doc: `TASTE_TIMELINE_PLAN.md`;
   redeploy runbook in `DEPLOY_MCP.md`. Tests in `tests/test_timeline_data.py` (25).
+- **Taste timeline v3 ("How you listen" expansion) — DEPLOYED, 2026-07-18.** Two new
+  sections on `/discovery/history` built from previously-unused GDPR export fields
+  (timestamps, `skipped`, `shuffle`, `platform`, `reason_start`). **"How you listen"**:
+  hour×weekday listening clock with era chips (peak: Saturdays ~4 pm), autopilot-vs-intent
+  stacked bars (only 8% of plays are deliberately chosen), device share per year, and a
+  genre×month seasonality heatmap. **"Artist stories"**: loyalty-span gantt (all 120 top
+  artists, searchable), rediscovery cards (left/came-back), obsession-episode dot timeline
+  (top: OK Go "Get Over It", 35 plays in 30 days), never-skip/quick-to-skip lists, and a
+  "Claude era" panel from the discovery ledger (194 surfaced, 20% take rate) plus a 🤖
+  marker on the river. Data side: `streaming_history.py` v2 emits 7 behavioral sections
+  (all **household-excluded at aggregation**; shared `household.py` module;
+  `reason_start` map: remote=deliberate, appload=passive; `OBSESSION_MIN_PLAYS=15`);
+  `build_timeline_data.py` merges them into `behavior`/`loyalty`/`discovery` keys
+  (215 KB JSON, clock grids compacted to 7×24 arrays). Page is ~485 KB self-contained;
+  112 tests green. Working doc: `VIZ_EXPANSION_PLAN.md` (Phase 5 similarity network
+  deferred). Redeploy unchanged: rebuild → re-inject `__TIMELINE_JSON__` → `scp`.
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 - **Showcase page — done, 2026-07-14.** `docs/recipes.html` is now a tabbed

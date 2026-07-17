@@ -31,6 +31,7 @@ DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 HISTORY_SUMMARY_PATH = os.path.join(DATA_DIR, "history_summary.json")
 ITUNES_PATH = os.path.join(DATA_DIR, "itunes_history.json")
 TIMELINE_PATH = os.path.join(DATA_DIR, "taste_timeline.json")
+DISCOVERY_LOG_PATH = os.path.join(DATA_DIR, "discovery_log.jsonl")
 
 # ------------------------------------------------------------------ genre buckets
 
@@ -177,34 +178,18 @@ ITUNES_GENRE_MAP: dict[str, str] = {
     "unknown genre": "other",
 }
 
-# Artists forced to kids/household regardless of tags.
-HOUSEHOLD_ARTISTS: frozenset[str] = frozenset(
-    {
-        "CoComelon",
-        "Pinkfong",
-        "Elmo",
-        "Bluey",
-        "Kristen Bell",
-        "Idina Menzel",
-        "Auli'i Cravalho",
-        "Mark Mancina",
-        "Josh Gad",
-        "Jonathan Groff",
-        "Super Simple Songs",
-        "The Wiggles",
-        "Bruce Brus",           # white-noise sleep audio (tags say electronic; not taste)
-        "Nursery Rhymes Band",
-    }
-)
-
-_WHITE_NOISE_RE = re.compile(r"white\s+noise", re.IGNORECASE)
+# HOUSEHOLD_ARTISTS, _WHITE_NOISE_RE re-exported from household.py for backward
+# compatibility with tests and any external importers.
+# household.py is the canonical source; edit there, not here.
+from household import HOUSEHOLD_ARTISTS, _WHITE_NOISE_RE  # noqa: F401  (re-export)
 
 # ------------------------------------------------------------------ helpers
 
 
 def _is_household(name: str) -> bool:
     """True when an artist name is in the household set or matches white-noise pattern."""
-    return name in HOUSEHOLD_ARTISTS or bool(_WHITE_NOISE_RE.search(name))
+    from household import is_household
+    return is_household(name)
 
 
 def _tag_to_bucket(tag: str) -> str | None:
@@ -355,6 +340,290 @@ def _compute_genre_waves(
             bucket_plays[bucket] = bucket_plays.get(bucket, 0) + a["plays"]
         waves[year] = bucket_plays
     return waves
+
+
+# ------------------------------------------------------------------ v3 behavior helpers
+
+
+def _build_behavior_clock(clock: dict) -> dict:
+    """Clock grids compacted to 7×24 count arrays (rows=weekday Mon–Sun, cols=hour).
+
+    The summary stores each grid as a list of {wd, h, n} cells — ~4× heavier in the
+    embedded JSON than a plain nested array. The front end only needs the counts.
+    """
+    grids_out: dict[str, list[list[int]]] = {}
+    for era, cells in clock.get("data", {}).items():
+        grid = [[0] * 24 for _ in range(7)]
+        for c in cells:
+            wd, h = c.get("wd"), c.get("h")
+            if isinstance(wd, int) and isinstance(h, int) and 0 <= wd < 7 and 0 <= h < 24:
+                grid[wd][h] = c.get("n", 0)
+        grids_out[era] = grid
+    return {
+        "eras": clock.get("eras", []),
+        "rows": "weekday 0=Mon..6=Sun; cols hour 0-23 (America/New_York)",
+        "grids": grids_out,
+    }
+
+
+def _build_behavior_intentionality(intentionality: dict) -> dict:
+    """Per-year deliberate/passive/shuffle/other counts (drop reason_start_counts)."""
+    by_year_out: dict[str, dict] = {}
+    for year, yd in intentionality.get("by_year", {}).items():
+        by_year_out[year] = {
+            "deliberate": yd.get("deliberate", 0),
+            "passive": yd.get("passive", 0),
+            "shuffle": yd.get("shuffle", 0),
+            "other": yd.get("other", 0),
+            "total": yd.get("total", 0),
+        }
+    return {"by_year": by_year_out}
+
+
+def _build_behavior_seasonality(
+    seasonality: dict,
+    artist_buckets: dict[str, str],
+) -> dict:
+    """Genre-bucketed seasonality: month (1–12) × bucket play weights + plain totals.
+
+    Uses the summary's artist_by_month slice (top-200 artists, household-excluded).
+    Artists not in artist_buckets fall to "other" (same fallback as genre_waves).
+    """
+    # Plain month totals: sum across all years from by_year
+    month_totals: dict[int, int] = {m: 0 for m in range(1, 13)}
+    for year_data in seasonality.get("by_year", {}).values():
+        for month_str, plays in year_data.items():
+            try:
+                m = int(month_str)
+                month_totals[m] = month_totals.get(m, 0) + plays
+            except ValueError:
+                pass
+
+    # Genre-bucketed month weights from artist_by_month
+    # Structure: {year: {month_str: {artist: plays}}}
+    bucket_by_month: dict[int, dict[str, int]] = {m: {} for m in range(1, 13)}
+    for year_data in seasonality.get("artist_by_month", {}).values():
+        for month_str, artist_plays in year_data.items():
+            try:
+                m = int(month_str)
+            except ValueError:
+                continue
+            for artist, plays in artist_plays.items():
+                bucket = artist_buckets.get(artist, "other")
+                bucket_by_month[m][bucket] = bucket_by_month[m].get(bucket, 0) + plays
+
+    return {
+        "month_totals": {str(m): month_totals[m] for m in range(1, 13)},
+        "bucket_by_month": {str(m): bucket_by_month[m] for m in range(1, 13)},
+    }
+
+
+def _build_behavior_platforms(platforms: dict) -> dict:
+    """Per-year platform bucket totals (drop platform_map — audit data)."""
+    by_year_out: dict[str, dict] = {}
+    for year, yd in platforms.get("by_year", {}).items():
+        by_year_out[year] = dict(yd)
+    return {"by_year": by_year_out}
+
+
+def _build_behavior_skip(
+    artist_skip: dict,
+    artist_buckets: dict[str, str],
+) -> dict:
+    """Derived skip lists + per-year skip series.
+
+    never_skip  — top 15 lowest skip_rate (exposure guard applied by summary)
+    most_skipped — top 15 highest skip_rate
+    per_year    — summary's existing per-year skip totals
+
+    Each list entry: {name, plays, skips, skip_rate, bucket}.
+    The exposure guard (plays+skips >= threshold) is already applied in the summary.
+    """
+    guard = artist_skip.get("exposure_guard", 20)
+    artists = [
+        a for a in artist_skip.get("artists", [])
+        if (a.get("plays", 0) + a.get("skips", 0)) >= guard
+    ]
+
+    def _entry(a: dict) -> dict:
+        return {
+            "name": a["name"],
+            "plays": a["plays"],
+            "skips": a["skips"],
+            "skip_rate": a["skip_rate"],
+            "bucket": artist_buckets.get(a["name"], "other"),
+        }
+
+    by_skip_rate = sorted(artists, key=lambda a: a["skip_rate"])
+    never_skip = [_entry(a) for a in by_skip_rate[:15]]
+    most_skipped = [_entry(a) for a in reversed(by_skip_rate[-15:])]
+
+    return {
+        "exposure_guard": guard,
+        "never_skip": never_skip,
+        "most_skipped": most_skipped,
+    }
+
+
+def _build_behavior_obsessions(obsession_episodes: dict, cap: int = 30) -> list:
+    """Pass-through obsession episodes, capped at `cap`."""
+    episodes = obsession_episodes.get("episodes", [])
+    # Sort by plays descending (intensity), then cap
+    episodes_sorted = sorted(episodes, key=lambda e: e.get("plays", 0), reverse=True)
+    return episodes_sorted[:cap]
+
+
+def _build_behavior_rediscoveries(rediscoveries: dict, cap: int = 25) -> list:
+    """Pass-through rediscovery artists, capped at `cap` by total plays."""
+    artists = rediscoveries.get("artists", [])
+    artists_sorted = sorted(
+        artists, key=lambda a: a.get("total_plays", 0), reverse=True
+    )
+    return artists_sorted[:cap]
+
+
+# ------------------------------------------------------------------ v3 loyalty (V6)
+
+
+def _build_loyalty(
+    all_time_artists: list[dict],
+    artist_buckets: dict[str, str],
+    top_n: int = 120,
+) -> list[dict]:
+    """V6 loyalty spans derived from all_time_artists[].by_year trajectories.
+
+    For the top `top_n` artists by total plays: first_year, last_year,
+    active_years (count of years with plays), total plays, bucket, still_active
+    (plays in 2025 or 2026). Household artists are included (they have spans too).
+    Sorted by first_year ascending, then plays descending.
+    """
+    # Take top N by plays
+    top_artists = sorted(
+        all_time_artists, key=lambda a: a.get("plays", 0), reverse=True
+    )[:top_n]
+
+    out: list[dict] = []
+    for a in top_artists:
+        by_year = a.get("by_year", {})
+        if not by_year:
+            continue
+        years_with_plays = [int(y) for y, p in by_year.items() if p > 0]
+        if not years_with_plays:
+            continue
+        first_year = min(years_with_plays)
+        last_year = max(years_with_plays)
+        active_years = len(years_with_plays)
+        still_active = any(int(y) in (2025, 2026) for y, p in by_year.items() if p > 0)
+        out.append(
+            {
+                "name": a["name"],
+                "bucket": artist_buckets.get(a["name"], "other"),
+                "first_year": first_year,
+                "last_year": last_year,
+                "active_years": active_years,
+                "plays": a["plays"],
+                "still_active": still_active,
+                "household": _is_household(a["name"]),
+            }
+        )
+
+    # Sort by first_year asc, then plays desc
+    out.sort(key=lambda x: (x["first_year"], -x["plays"]))
+    return out
+
+
+# ------------------------------------------------------------------ v3 discovery (V8)
+
+
+def _build_discovery(
+    log_path: str,
+    all_time_artists: list[dict],
+    taste_dump_path: str | None,
+    artist_buckets: dict[str, str],
+) -> dict:
+    """V8 discovery overlay derived from the discovery ledger.
+
+    Parses discovery_log.jsonl; dedupes by artist (keeps earliest date).
+    `stuck` = True when the artist appears in the streaming history all_time_artists
+    OR in the taste dump's known/top artists.
+    Malformed lines are silently skipped.
+    """
+    # Build the "known" set from streaming history
+    known_from_history: set[str] = {
+        a["name"].lower() for a in all_time_artists if a.get("name")
+    }
+
+    # Build from taste dump
+    known_from_taste: set[str] = set()
+    if taste_dump_path and os.path.exists(taste_dump_path):
+        try:
+            with open(taste_dump_path) as f:
+                taste = json.load(f)
+            for tier in taste.get("top_artists", {}).values():
+                for a in tier:
+                    if a.get("name"):
+                        known_from_taste.add(a["name"].lower())
+            # saved_tracks / recently_played carry artist names too — the raw dump
+            # has no precomputed known_artists key (that's a taste-snapshot derivation)
+            for section in ("saved_tracks", "recently_played"):
+                for t in taste.get(section, []):
+                    for a in t.get("artists", []) or []:
+                        if isinstance(a, dict) and a.get("name"):
+                            known_from_taste.add(a["name"].lower())
+        except Exception:
+            pass  # non-fatal
+
+    all_known = known_from_history | known_from_taste
+
+    # Parse ledger — dedupe by artist keeping earliest ts
+    if not os.path.exists(log_path):
+        events: list[dict] = []
+    else:
+        earliest: dict[str, dict] = {}  # lower(artist) → record
+        with open(log_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except Exception:
+                    continue  # malformed — skip
+                artist = rec.get("artist")
+                if not artist:
+                    continue
+                key = artist.lower()
+                existing = earliest.get(key)
+                if existing is None or rec.get("ts", "") < existing.get("ts", ""):
+                    earliest[key] = rec
+
+        events = []
+        for key, rec in sorted(earliest.items(), key=lambda x: x[1].get("ts", "")):
+            artist = rec["artist"]
+            entry: dict = {
+                "date": rec.get("ts", "")[:10],
+                "artist": artist,
+                "bucket": artist_buckets.get(artist, "other"),
+                "stuck": key in all_known,
+            }
+            if rec.get("playlist"):
+                # store only the playlist id — the URL prefix is constant and the
+                # 194-event list is embedded in the page
+                entry["playlist"] = rec["playlist"].rstrip("/").rsplit("/", 1)[-1]
+            if rec.get("recipe"):
+                entry["recipe"] = rec["recipe"]
+            events.append(entry)
+
+    stuck_count = sum(1 for e in events if e["stuck"])
+    return {
+        "note": (
+            "Discovery ledger starts mid-2026 (~3 weeks of data). "
+            "'stuck' = artist found in streaming history or taste dump after being surfaced."
+        ),
+        "events": events,
+        "total": len(events),
+        "stuck_count": stuck_count,
+    }
 
 
 # ------------------------------------------------------------------ build entry point
@@ -528,6 +797,37 @@ def build_timeline(
     # --- 2026 "now" panel ---
     now = _load_now_panel()
 
+    # --- v3: behavior sections (household already excluded at aggregation) ---
+    v2_meta = summary.get("v2_meta", {})
+    behavior = {
+        "note": v2_meta.get("note", ""),
+        "household_excluded_plays": v2_meta.get("household_excluded_plays", 0),
+        "clock": _build_behavior_clock(summary.get("clock", {})),
+        "intentionality": _build_behavior_intentionality(
+            summary.get("intentionality", {})
+        ),
+        "seasonality": _build_behavior_seasonality(
+            summary.get("seasonality", {}), artist_buckets
+        ),
+        "platforms": _build_behavior_platforms(summary.get("platforms", {})),
+        "skip": _build_behavior_skip(summary.get("artist_skip", {}), artist_buckets),
+        "obsessions": _build_behavior_obsessions(
+            summary.get("obsession_episodes", {})
+        ),
+        "rediscoveries": _build_behavior_rediscoveries(
+            summary.get("rediscoveries", {})
+        ),
+    }
+
+    # --- v3: loyalty spans (V6) + discovery overlay (V8) ---
+    loyalty = _build_loyalty(summary.get("all_time_artists", []), artist_buckets)
+    discovery = _build_discovery(
+        DISCOVERY_LOG_PATH,
+        summary.get("all_time_artists", []),
+        _latest_taste_dump(),  # full path (now["dump_path"] is just the basename)
+        artist_buckets,
+    )
+
     # --- assemble output ---
     out = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -547,6 +847,9 @@ def build_timeline(
         "annotations": annotations,
         "now": now,
         "artist_buckets": artist_buckets,  # persist resolved map for cheap UI/re-runs
+        "behavior": behavior,
+        "loyalty": loyalty,
+        "discovery": discovery,
     }
 
     with open(TIMELINE_PATH, "w") as f:
