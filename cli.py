@@ -54,6 +54,7 @@ from lastfm import _cmd_artist_tags, _cmd_similar_artists, _cmd_similar_tracks
 from sensing import _cmd_library_scan, _cmd_now_playing
 from streaming_history import _cmd_history_build, _cmd_history_snapshot
 import streaming_history
+from build_timeline_data import _cmd_timeline_build
 from tools import _cmd_build_playlist, _cmd_search_verify, _cmd_set_playlist_image
 
 
@@ -273,6 +274,15 @@ def main() -> int:
     )
     hs.add_argument("--year", default=None, help="Zoom into a single year (YYYY).")
     hs.set_defaults(func=_cmd_history_snapshot)
+
+    tb = sub.add_parser(
+        "timeline-build",
+        help="Merge history layers into data/taste_timeline.json (viz-ready JSON).",
+    )
+    tb.add_argument(
+        "--verbose", "-v", action="store_true", help="Print per-artist bucket resolution."
+    )
+    tb.set_defaults(func=_cmd_timeline_build)
 
     la = sub.add_parser(
         "log-add", help="Record surfaced artist(s)/track(s) in the discovery ledger."

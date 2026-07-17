@@ -299,6 +299,7 @@
       <button class="tab active" data-v="recipes">Recipes</button>
       <button class="tab" data-v="playlists">Playlists</button>
       <button class="tab" data-v="stats">Stats</button>
+      <a class="tab" href="/discovery/history" style="text-decoration:none">Taste timeline ↗</a>
     </div>
   </header>
 
@@ -1203,7 +1204,7 @@ function render(){
 }
 
 document.getElementById('tabs').addEventListener('click', e=>{
-  const t = e.target.closest('.tab'); if(!t) return;
+  const t = e.target.closest('.tab'); if(!t || !t.dataset.v) return;
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');
   activeView = t.dataset.v;

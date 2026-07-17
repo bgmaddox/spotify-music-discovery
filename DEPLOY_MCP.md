@@ -159,6 +159,32 @@ scp docs/recipes.html rachett:/var/www/discovery/index.html
 curl -s -o /dev/null -w "%{http_code}\n" https://rachett.tail504ae5.ts.net/discovery   # 200
 ```
 
+### Taste timeline page (`/discovery/history`)
+
+The interactive taste-timeline visualization (`docs/history.html`, self-contained: D3 v7 +
+`data/taste_timeline.json` inlined) is served the same way from the same directory. Its
+Caddy route is a second exact-match matcher (the `@discovery` matcher is exact, so it never
+serves subpaths):
+
+```
+@history path /discovery/history /discovery/history/
+handle @history {
+    root * /var/www/discovery
+    rewrite * /history.html
+    file_server
+}
+```
+
+```bash
+# redeploy after editing docs/history.html (no Caddy change, no restart)
+scp docs/history.html rachett:/var/www/discovery/history.html
+curl -s -o /dev/null -w "%{http_code}\n" https://rachett.tail504ae5.ts.net/discovery/history  # 200
+```
+
+If the underlying data changes, rebuild + re-embed first: `python cli.py timeline-build`,
+then re-inject the JSON into `docs/history.html` (see `TASTE_TIMELINE_PLAN.md` → rebuild
+note) before the `scp`.
+
 ## Using it on the phone
 Ask naturally — e.g. *"What's playing? Give me three new artists like it, check they're
 real."* Mobile-me will call `now_playing` → `lastfm_similar_artists` → `search_verify`,

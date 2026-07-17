@@ -107,6 +107,21 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   era is the iTunes 2013–14 layer). Caveat: a heavy kids-music layer (CoComelon = #1
   all-time artist) is household plays, not taste signal — filter it out when reasoning.
   Tests in `tests/test_streaming_history.py`.
+- **Taste timeline page — DEPLOYED, 2026-07-16.** `docs/history.html` is an interactive
+  visualization of 13 years of listening, live at
+  `https://rachett.tail504ae5.ts.net/discovery/history` (own Caddy exact-match route →
+  `/var/www/discovery/history.html`; linked from the showcase tabs). Self-contained
+  (~400 KB): D3 v7 + `data/taste_timeline.json` inlined, zero network deps. Views:
+  genre-river streamgraph (streaming years 2018–2026 only), clickable era chapters,
+  focused-year + artist-trajectory panels, an all-artists bubble field (search + genre
+  filter), and a separate "Before streaming" iTunes-library shelf (2013–14; extendable if
+  more Library.xml snapshots turn up). 2015–17 are reported as thin/absent, never drawn.
+  Data side: `build_timeline_data.py` + `cli.py timeline-build` merge the history summary,
+  iTunes layer, and newest taste dump into `data/taste_timeline.json` (~127 KB) with a
+  Last.fm tag→bucket genre mapping (`TAG_BUCKETS`) and a `HOUSEHOLD_ARTISTS` tag (UI
+  toggle, hidden by default). Design explored via Google Stitch (3 concepts, user picked a
+  hybrid; reference PNGs in `docs/stitch_concepts/`). Working doc: `TASTE_TIMELINE_PLAN.md`;
+  redeploy runbook in `DEPLOY_MCP.md`. Tests in `tests/test_timeline_data.py` (25).
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 - **Showcase page — done, 2026-07-14.** `docs/recipes.html` is now a tabbed
