@@ -93,6 +93,12 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   ledger** — `discovery_log.py` (`log-add`/`log-artists`/`log-recent`) records what Claude has
   already surfaced across sessions → `data/discovery_log.jsonl`; filter new candidates against
   BOTH the taste dump (what the user knows) and the ledger (what Claude already proposed).
+  **Always log discoveries with `log-add --new-only`** — it drops seeds/sample-sources/
+  rediscovery picks (any artist already in `known_listened_artists()` = history all-time ∪
+  newest taste dump) so only genuinely-new artists land in the ledger; logging whole
+  playlists unfiltered is what mislabeled long-time favorites (Childers, Sturgill, Kendrick…)
+  as "found" and inflated the timeline's "surfaced" count (audited + purged 2026-07-18,
+  194→156).
   (4) **CLI drift fixed** — `genre-find` is now exposed in `cli.py` (was module-only). (5)
   **Hygiene** — dumps self-prune to newest 5 (`prune_dumps`), Last.fm CLI prints clean errors
   instead of tracebacks, `import html` hoisted in `genre_map.py`. All five primitives + new

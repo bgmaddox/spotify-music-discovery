@@ -27,6 +27,7 @@ CLI use:
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import os
 import sys
@@ -34,6 +35,67 @@ from datetime import datetime, timezone
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 LOG_PATH = os.path.join(DATA_DIR, "discovery_log.jsonl")
+HISTORY_SUMMARY_PATH = os.path.join(DATA_DIR, "history_summary.json")
+
+
+def known_listened_artists() -> set[str]:
+    """Lowercased set of artists the user demonstrably *already* listens to.
+
+    Built from the same signals the timeline uses to mark a "discovery" as
+    already-known: the streaming-history all-time artists (data/history_summary.json)
+    plus the newest raw taste dump's top/saved/recent artists. Used by the
+    `--new-only` guard so seeds, sample-sources, and rediscovery picks aren't logged
+    as genuine discoveries. Missing files are skipped (returns whatever's available).
+    """
+    known: set[str] = set()
+
+    # streaming-history all-time artists
+    if os.path.exists(HISTORY_SUMMARY_PATH):
+        try:
+            with open(HISTORY_SUMMARY_PATH, encoding="utf-8") as f:
+                hist = json.load(f)
+            for a in hist.get("all_time_artists", []):
+                if a.get("name"):
+                    known.add(a["name"].lower())
+        except Exception:
+            pass  # non-fatal
+
+    # newest raw taste dump (taste_2026*.json — not taste_timeline.json)
+    dumps = sorted(glob.glob(os.path.join(DATA_DIR, "taste_2*.json")))
+    if dumps:
+        try:
+            with open(dumps[-1], encoding="utf-8") as f:
+                taste = json.load(f)
+            for tier in taste.get("top_artists", {}).values():
+                for a in tier:
+                    if a.get("name"):
+                        known.add(a["name"].lower())
+            for section in ("saved_tracks", "recently_played"):
+                for t in taste.get(section, []):
+                    for a in t.get("artists", []) or []:
+                        if isinstance(a, dict) and a.get("name"):
+                            known.add(a["name"].lower())
+        except Exception:
+            pass  # non-fatal
+
+    return known
+
+
+def filter_new(records: list[dict]) -> tuple[list[dict], list[str]]:
+    """Split `records` into (genuinely-new, skipped-artist-names).
+
+    A record is "skipped" when its artist is already in `known_listened_artists()`
+    — i.e. a seed/source/rediscovery pick, not a discovery.
+    """
+    known = known_listened_artists()
+    new, skipped = [], []
+    for rec in records:
+        artist = (rec.get("artist") or "").strip()
+        if artist and artist.lower() in known:
+            skipped.append(artist)
+        else:
+            new.append(rec)
+    return new, skipped
 
 
 def append(records: list[dict], recipe: str | None = None,
@@ -126,6 +188,12 @@ def _cmd_log_add(args) -> int:
     else:
         print("Provide --artist or --from-tsv.", file=sys.stderr)
         return 1
+    if args.new_only:
+        records, skipped = filter_new(records)
+        if skipped:
+            uniq = sorted(set(skipped), key=str.lower)
+            print(f"  --new-only: skipped {len(skipped)} already-known "
+                  f"pick(s): {', '.join(uniq)}", file=sys.stderr)
     n = append(records, recipe=args.recipe, playlist=args.playlist)
     print(LOG_PATH)
     print(f"  logged {n} discovery record(s)", file=sys.stderr)
@@ -158,6 +226,11 @@ def _add_log_add_args(parser) -> None:
     parser.add_argument("--from-tsv", help="File: artist<TAB>title<TAB>uri per line.")
     parser.add_argument("--recipe", help="Recipe/angle tag, applied to all records.")
     parser.add_argument("--playlist", help="Playlist URL these picks went into.")
+    parser.add_argument(
+        "--new-only", action="store_true",
+        help="Drop picks the user already listens to (seeds/sources/rediscoveries) "
+             "before logging — only genuinely-new artists are recorded.",
+    )
 
 
 def main() -> int:
