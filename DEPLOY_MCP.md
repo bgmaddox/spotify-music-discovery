@@ -184,8 +184,11 @@ scp docs/history.local.html rachett:/var/www/discovery/history.html
 curl -s -o /dev/null -w "%{http_code}\n" https://rachett.tail504ae5.ts.net/discovery/history  # 200
 ```
 
-If the underlying data changes, run `python cli.py timeline-build` first, then the
-inject + `scp` above. Never `scp docs/history.html` itself — it's the data-free
+If the underlying data changes, rebuild first, then the inject + `scp` above. Full
+pipeline (a fresh GDPR export needs all of it; a taste-dump refresh only the tail):
+`history-build` → `enrich-meta` (Spotify track/album metadata + cover thumbs, cached
+in `.cache_spotify_meta/`) → `similarity-build` (only after a taste shift) →
+`timeline-build`. Never `scp docs/history.html` itself — it's the data-free
 template and would deploy an empty page.
 
 ## Using it on the phone

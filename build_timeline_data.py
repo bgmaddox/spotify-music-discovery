@@ -33,6 +33,7 @@ ITUNES_PATH = os.path.join(DATA_DIR, "itunes_history.json")
 TIMELINE_PATH = os.path.join(DATA_DIR, "taste_timeline.json")
 DISCOVERY_LOG_PATH = os.path.join(DATA_DIR, "discovery_log.jsonl")
 SIMILARITY_EDGES_PATH = os.path.join(DATA_DIR, "similarity_edges.json")
+TRACK_ALBUM_META_PATH = os.path.join(DATA_DIR, "track_album_meta.json")
 
 # ------------------------------------------------------------------ genre buckets
 
@@ -539,6 +540,336 @@ def _build_discovery(
     }
 
 
+# ------------------------------------------------------------------ Phase 3 merge helpers
+
+
+def _load_track_album_meta(path: str) -> dict | None:
+    """Load enrichment file; return None when absent (forker / not-yet-enriched path)."""
+    if not os.path.exists(path):
+        return None
+    with open(path) as f:
+        return json.load(f)
+
+
+def _build_albums_key(summary: dict, meta: dict | None, top_n: int = 35) -> dict:
+    """Merge Phase 1 album aggregates with Phase 2 enrichment.
+
+    Returns `albums` timeline key:
+      enriched: bool — whether meta was available
+      top_albums: list of up to `top_n` records, sorted by plays desc:
+        name, artist, plays, by_year, session_count, top_track,
+        release_year (null without meta), total_tracks (null without meta),
+        completion (fraction 0-1 or null), thumb_b64 (null without meta),
+        image_url (null without meta)
+      session_score: {total, by_year} — album-session totals
+      session_albums: list of {album, artist} listened front-to-back
+      one_track_wonders: list of {album, artist, hit_track, rest_plays,
+        image_url (null without meta), thumb_b64 (null without meta)}
+
+    Completion is the fraction of the official tracklist that the user has played
+    at least once, computed from the top-100 track_stories URIs via enrichment.
+    Because track_stories only covers the top 100 tracks, completion is a lower-bound
+    estimate for high-play albums and may be null when total_tracks is absent.
+    """
+    raw_albums = summary.get("albums", {})
+    top_albums_raw = raw_albums.get("top_albums", [])[:top_n]
+    album_sessions = raw_albums.get("album_sessions", {})
+    one_track_wonders_raw = raw_albums.get("one_track_wonders", [])
+
+    # Build URI→album_id lookup from enrichment (for completion + art)
+    uri_to_meta: dict[str, dict] = {}  # uri → track meta record
+    album_id_to_meta: dict[str, dict] = {}  # album_id → album meta record
+
+    if meta is not None:
+        uri_to_meta = meta.get("tracks", {})
+        album_id_to_meta = meta.get("albums", {})
+
+    # Build album_id → set of distinct played URIs (from track_stories)
+    album_played_uris: dict[str, set[str]] = {}
+    for t in summary.get("track_stories", {}).get("tracks", []):
+        uri = t.get("uri")
+        if uri and uri in uri_to_meta:
+            aid = uri_to_meta[uri].get("album_id")
+            if aid:
+                album_played_uris.setdefault(aid, set()).add(uri)
+
+    # Build enriched top_albums list
+    top_albums_out = []
+    for alb in top_albums_raw:
+        sample_uri = alb.get("sample_uri")
+        album_id = None
+        alb_enrichment: dict = {}
+
+        if meta is not None and sample_uri and sample_uri in uri_to_meta:
+            album_id = uri_to_meta[sample_uri].get("album_id")
+            if album_id and album_id in album_id_to_meta:
+                alb_enrichment = album_id_to_meta[album_id]
+
+        # Completion: distinct played URIs ÷ total_tracks
+        total_tracks = alb_enrichment.get("total_tracks") if alb_enrichment else None
+        played_count = len(album_played_uris.get(album_id, set())) if album_id else 0
+        completion: float | None = (
+            round(played_count / total_tracks, 3)
+            if (total_tracks and total_tracks > 0 and meta is not None)
+            else None
+        )
+
+        top_albums_out.append(
+            {
+                "name": alb["name"],
+                "artist": alb["artist"],
+                "plays": alb["plays"],
+                "by_year": alb.get("by_year", {}),
+                "session_count": alb.get("session_count", 0),
+                "top_track": alb.get("top_track"),
+                "release_year": alb_enrichment.get("release_year"),
+                "total_tracks": total_tracks,
+                "completion": completion,
+                "thumb_b64": alb_enrichment.get("thumb_b64"),
+                "image_url": alb_enrichment.get("image_url"),
+            }
+        )
+
+    # Enrich one-track wonders with art from the hit_track URI
+    wonders_out = []
+    for w in one_track_wonders_raw:
+        hit_uri = w.get("hit_track", {}).get("uri")
+        wonder_enrichment: dict = {}
+        if meta is not None and hit_uri and hit_uri in uri_to_meta:
+            hit_album_id = uri_to_meta[hit_uri].get("album_id")
+            if hit_album_id and hit_album_id in album_id_to_meta:
+                wonder_enrichment = album_id_to_meta[hit_album_id]
+        wonders_out.append(
+            {
+                "album": w["album"],
+                "artist": w["artist"],
+                "hit_track": w["hit_track"],
+                "rest_plays": w.get("rest_plays", 0),
+                "image_url": wonder_enrichment.get("image_url"),
+                "thumb_b64": wonder_enrichment.get("thumb_b64"),
+            }
+        )
+
+    return {
+        "enriched": meta is not None,
+        "top_albums": top_albums_out,
+        "session_score": {
+            "total": album_sessions.get("total_sessions", 0),
+            "by_year": album_sessions.get("by_year", {}),
+        },
+        "session_albums": album_sessions.get("session_albums", []),
+        "one_track_wonders": wonders_out,
+    }
+
+
+def _build_track_stories_key(summary: dict, meta: dict | None) -> dict:
+    """Merge Phase 1 track lifelines with Phase 2 enrichment.
+
+    Returns `track_stories` timeline key:
+      enriched: bool
+      tracks: top-100 list, each:
+        artist, title, uri, plays, ms_played,
+        lifeline: [[YYYY-MM, count], ...] sparse monthly array,
+        first_play: YYYY-MM-DD, last_play: YYYY-MM-DD,
+        devotion_years: int, year_span: [first, last],
+        duration_ms (null without meta), popularity (null without meta)
+      seasons: list from track_seasons (pass-through, already household-excluded)
+    """
+    raw_tracks = summary.get("track_stories", {}).get("tracks", [])
+    uri_to_meta: dict[str, dict] = {}
+    if meta is not None:
+        uri_to_meta = meta.get("tracks", {})
+
+    tracks_out = []
+    for t in raw_tracks:
+        uri = t.get("uri")
+        t_enrichment = uri_to_meta.get(uri, {}) if (meta is not None and uri) else {}
+        tracks_out.append(
+            {
+                "artist": t["artist"],
+                "title": t["title"],
+                "uri": uri,
+                "plays": t["plays"],
+                "ms_played": t["ms_played"],
+                "lifeline": t.get("lifeline", []),
+                "first_play": t.get("first_play"),
+                "last_play": t.get("last_play"),
+                "devotion_years": t.get("devotion_years", 0),
+                "year_span": t.get("year_span", []),
+                "duration_ms": t_enrichment.get("duration_ms"),
+                "popularity": t_enrichment.get("popularity"),
+            }
+        )
+
+    # Pass-through track_seasons (already household-excluded in Phase 1)
+    seasons = summary.get("track_seasons", {}).get("tracks", [])
+
+    return {
+        "enriched": meta is not None,
+        "tracks": tracks_out,
+        "seasons": seasons,
+    }
+
+
+def _build_lists_key(summary: dict, meta: dict | None) -> dict:
+    """Compute the fun-lists payload (Phase 1 + Phase 2 combined).
+
+    Returns `lists` timeline key:
+      receipt: {YYYY: {top_tracks: [{artist,title,uri,plays}], total_hours, total_skips}}
+        — straight from per_year_tracks, top 15 tracks per year
+      milestones: top-20 tracks by total ms_played, each:
+        artist, title, uri, ms_played, hours_played,
+        duration_ms (null without meta), estimated_plays_hours (null without meta)
+      anthems: [{year, artist, title, uri, plays, concentration,
+        duration_ms (null), popularity (null)}]
+      deep_cuts: {
+        enriched: bool,
+        contrarian_score: float (fraction) or null,
+        items: [{artist, user_track, user_uri, user_popularity,
+                 artist_top_track, artist_max_popularity, diff, is_deep_cut}]
+      }
+    """
+    uri_to_meta: dict[str, dict] = {}
+    artist_id_to_meta: dict[str, dict] = {}
+    if meta is not None:
+        uri_to_meta = meta.get("tracks", {})
+        artist_id_to_meta = meta.get("artists", {})
+
+    # --- receipt ---
+    receipt: dict[str, dict] = {}
+    for year, yd in summary.get("per_year_tracks", {}).get("by_year", {}).items():
+        receipt[year] = {
+            "top_tracks": yd.get("top_tracks", []),
+            "total_hours": yd.get("total_hours", 0.0),
+            "total_skips": yd.get("total_skips", 0),
+        }
+
+    # --- milestones: top 20 by ms_played ---
+    raw_tracks = summary.get("track_stories", {}).get("tracks", [])
+    milestones_sorted = sorted(
+        raw_tracks, key=lambda t: t.get("ms_played", 0), reverse=True
+    )[:20]
+
+    milestones_out = []
+    for t in milestones_sorted:
+        uri = t.get("uri")
+        t_enrichment = uri_to_meta.get(uri, {}) if (meta is not None and uri) else {}
+        dur = t_enrichment.get("duration_ms")
+        hours_played = t.get("ms_played", 0) / 3_600_000
+        # plays × duration gives the "should-have-been" hours if listened front-to-back
+        estimated_plays_hours = (
+            round(t.get("plays", 0) * dur / 3_600_000, 2) if dur else None
+        )
+        milestones_out.append(
+            {
+                "artist": t["artist"],
+                "title": t["title"],
+                "uri": uri,
+                "ms_played": t.get("ms_played", 0),
+                "hours_played": round(hours_played, 2),
+                "duration_ms": dur,
+                "estimated_plays_hours": estimated_plays_hours,
+            }
+        )
+
+    # --- anthems: pass-through, join with enrichment ---
+    anthems_raw = summary.get("yearbook_anthems", {}).get("anthems", [])
+    anthems_out = []
+    for a in anthems_raw:
+        uri = a.get("uri")
+        t_enrichment = uri_to_meta.get(uri, {}) if (meta is not None and uri) else {}
+        anthems_out.append(
+            {
+                "year": a["year"],
+                "artist": a["artist"],
+                "title": a["title"],
+                "uri": uri,
+                "plays": a.get("plays", 0),
+                "concentration": a.get("concentration"),
+                "duration_ms": t_enrichment.get("duration_ms"),
+                "popularity": t_enrichment.get("popularity"),
+            }
+        )
+
+    # --- deep cuts ---
+    deep_cuts_items: list[dict] = []
+    if meta is not None:
+        # Build per-artist best track (most played) from track_stories
+        artist_best: dict[str, dict] = {}
+        for t in raw_tracks:
+            art = t["artist"]
+            if art not in artist_best or t["plays"] > artist_best[art]["plays"]:
+                artist_best[art] = t
+
+        artists_with_data = 0
+        deep_cut_count = 0
+        seen_artist_ids: set[str] = set()
+
+        for artist, track in artist_best.items():
+            uri = track.get("uri")
+            if not uri or uri not in uri_to_meta:
+                continue
+            track_meta = uri_to_meta[uri]
+            user_pop = track_meta.get("popularity")
+            if user_pop is None:
+                continue
+
+            # Resolve artist-level meta via artist_ids on the track
+            for aid in track_meta.get("artist_ids", []):
+                if aid in seen_artist_ids or aid not in artist_id_to_meta:
+                    continue
+                seen_artist_ids.add(aid)
+                art_meta = artist_id_to_meta[aid]
+                art_max = art_meta.get("max_popularity")
+                top_track_name = art_meta.get("top_track_name")
+                if art_max is None:
+                    continue
+
+                artists_with_data += 1
+                diff = art_max - user_pop
+                is_deep_cut = diff >= 15 and track["title"] != top_track_name
+                if is_deep_cut:
+                    deep_cut_count += 1
+
+                deep_cuts_items.append(
+                    {
+                        "artist": artist,
+                        "user_track": track["title"],
+                        "user_uri": uri,
+                        "user_popularity": user_pop,
+                        "artist_top_track": top_track_name,
+                        "artist_max_popularity": art_max,
+                        "diff": diff,
+                        "is_deep_cut": is_deep_cut,
+                    }
+                )
+                break  # one artist-level entry per track
+
+        # Sort: deep cuts first, then by diff desc
+        deep_cuts_items.sort(key=lambda x: (-int(x["is_deep_cut"]), -x["diff"]))
+        contrarian_score = (
+            round(deep_cut_count / artists_with_data, 3) if artists_with_data > 0 else 0.0
+        )
+        deep_cuts: dict = {
+            "enriched": True,
+            "contrarian_score": contrarian_score,
+            "items": deep_cuts_items,
+        }
+    else:
+        deep_cuts = {
+            "enriched": False,
+            "contrarian_score": None,
+            "items": [],
+        }
+
+    return {
+        "receipt": receipt,
+        "milestones": milestones_out,
+        "anthems": anthems_out,
+        "deep_cuts": deep_cuts,
+    }
+
+
 # ------------------------------------------------------------------ build entry point
 
 
@@ -767,6 +1098,12 @@ def build_timeline(
     # --- v4: similarity network (Phase 5; optional — built by similarity-build) ---
     network = _load_network(SIMILARITY_EDGES_PATH)
 
+    # --- Phase 3: albums / track_stories / lists (optional enrichment) ---
+    enrichment_meta = _load_track_album_meta(TRACK_ALBUM_META_PATH)
+    albums_key = _build_albums_key(summary, enrichment_meta)
+    track_stories_key = _build_track_stories_key(summary, enrichment_meta)
+    lists_key = _build_lists_key(summary, enrichment_meta)
+
     # --- assemble output ---
     out = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -790,6 +1127,9 @@ def build_timeline(
         "loyalty": loyalty,
         "discovery": discovery,
         "network": network,
+        "albums": albums_key,
+        "track_stories": track_stories_key,
+        "lists": lists_key,
     }
 
     # compact separators: this file is machine-read only (inlined into the page),
@@ -814,17 +1154,30 @@ def _cmd_timeline_build(args) -> int:
 
     size_kb = os.path.getsize(TIMELINE_PATH) / 1024
     print(TIMELINE_PATH)  # stdout: the machine result (path)
+    alb = result.get("albums", {})
+    ts = result.get("track_stories", {})
+    lists = result.get("lists", {})
     print(
         f"  {size_kb:.0f} KB · "
         f"{len(result['artists'])} artists · "
         f"{len(result['tracks'])} tracks · "
         f"{len(result['years'])} years · "
-        f"{len(result['genre_waves'])} year waves",
+        f"{len(result['genre_waves'])} year waves · "
+        f"{len(alb.get('top_albums', []))} albums · "
+        f"{len(ts.get('tracks', []))} track lifelines · "
+        f"enriched={alb.get('enriched', False)}",
         file=sys.stderr,
     )
-    if size_kb > 250:
+    dc = lists.get("deep_cuts", {})
+    if dc.get("enriched"):
         print(
-            f"  WARNING: output is {size_kb:.0f} KB (target < 250 KB)",
+            f"  deep-cut contrarian score: {dc.get('contrarian_score', 0):.1%} "
+            f"({sum(1 for i in dc.get('items', []) if i['is_deep_cut'])} of {len(dc.get('items', []))} artists)",
+            file=sys.stderr,
+        )
+    if size_kb > 450:
+        print(
+            f"  WARNING: output is {size_kb:.0f} KB (target < 450 KB for ≤800 KB page)",
             file=sys.stderr,
         )
     return 0

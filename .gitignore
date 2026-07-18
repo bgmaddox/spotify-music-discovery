@@ -3,6 +3,7 @@
 .cache_pi_readonly
 .cache_lastfm/
 .cache_everynoise/
+.cache_spotify_meta/
 __pycache__/
 .venv/
 .DS_Store
@@ -21,3 +22,4 @@ docs/history.local.html
 !config/*.json
 # keep the parsed everynoise genre map (static reference data, not a secret/dump)
 !knowledge/genres_coords.json
+.playwright-mcp/

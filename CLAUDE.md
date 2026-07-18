@@ -172,6 +172,26 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   `PLAYLIST_NOTES.md` + the `PLAYLISTS` array in `docs/recipes.html` intentionally still
   carry the user's real playlist journal (it's the showcase); SETUP.md tells forkers to
   clear them.
+- **Songs & albums expansion — DEPLOYED, 2026-07-18.** `TRACKS_ALBUMS_PLAN.md` phases 0–7
+  complete: 12 features across three new sections on `/discovery/history`, built from the
+  two dimensions the page lacked (albums were aggregated nowhere; tracks were a bare
+  top-150). **"The records"**: 35-album cover-art crate (base64 thumbs, progressive CDN
+  swap) with per-album play story + completion ring, album-session score (513 full-album
+  sessions, 236 records front-to-back), one-track wonders. **"The songs"**: searchable
+  lifeline sparkline grid (top 100 tracks, shared time axis), first-listen dot timeline,
+  longest-devotion list, track-seasons card. **"Fun lists"**: CVS-style year receipt
+  (year picker, screenshot-styled, skips as tax), milestone club (hours-inside-one-song),
+  yearbook anthems mixtape with copy-tracklist button, deep-cut-or-hit dumbbells
+  (contrarian score 15%). Data side: `streaming_history.py` v3 (album/track aggregation,
+  session detection, lifelines), **`enrich_meta.py` + `cli.py enrich-meta`** — the new
+  cached Spotify metadata step (plain `/tracks` + `/albums`, batch 50, read-only scopes,
+  caches `.cache_spotify_meta/` → `data/track_album_meta.json`), merged by
+  `timeline-build` into `albums`/`track_stories`/`lists` keys (graceful stubs when
+  enrichment absent). **Rebuild order is now: `history-build` → `enrich-meta` →
+  `timeline-build` → `timeline-inject` → scp.** Page 859 KB self-contained; 202 tests
+  green (+69); verified desktop + 390×844 + template fallback, zero console errors.
+  Orchestration note: phases 1–3 Sonnet subagents, 4–6 Opus subagents, verify Sonnet —
+  Fable only spec'd/reviewed/deployed.
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 - **Showcase page — done, 2026-07-14.** `docs/recipes.html` is now a tabbed

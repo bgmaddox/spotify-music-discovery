@@ -274,6 +274,165 @@
   .netrow .sdot{flex:none}
   .netrow .nmatch{margin-left:auto;color:var(--faint);font-size:11.5px;font-variant-numeric:tabular-nums}
 
+  /* ---------- the records ---------- */
+  .crate{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:10px;margin-top:14px}
+  .crate-item{position:relative;padding:0;border:0;background:none;cursor:pointer;font:inherit;border-radius:8px}
+  .crate-cover{width:100%;aspect-ratio:1/1;border-radius:8px;border:1px solid var(--line);overflow:hidden;transition:transform .15s ease,border-color .15s ease;display:block}
+  .crate-cover img{width:100%;height:100%;object-fit:cover;display:block}
+  .crate-item:hover .crate-cover{transform:translateY(-2px);border-color:var(--green-dim)}
+  .crate-item.sel .crate-cover{border-color:var(--green)}
+  .crate-item:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .crate-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--panel-2);color:var(--faint);font-size:26px;font-weight:600}
+  .rechead{display:flex;gap:14px;align-items:flex-start}
+  .rechead .crate-cover{width:74px;height:74px;flex:none;aspect-ratio:auto}
+  .rec-title{font-size:17px;font-weight:600;line-height:1.2;margin:0}
+  .rec-artist{background:none;border:0;padding:0;font:inherit;color:var(--green);cursor:pointer;text-decoration:none}
+  .rec-artist:hover{text-decoration:underline}
+  .rec-artist.plain{color:var(--muted);cursor:default}
+  .rec-artist.plain:hover{text-decoration:none}
+  .rec-meta{color:var(--faint);font-size:12px;margin-top:3px}
+  .rec-story{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin:14px 0 4px}
+  .rec-chart{flex:1;min-width:200px}
+  .rec-chart svg{display:block;width:100%}
+  .rec-ring{flex:none;text-align:center}
+  .rec-ring .ringlabel{font-size:11px;color:var(--faint);margin-top:4px;max-width:96px}
+  .rec-toptrack{font-size:13px;color:var(--text);margin-top:8px}
+  .rec-toptrack a{color:var(--text);text-decoration:none}
+  .rec-toptrack a:hover{color:var(--green)}
+  .rec-toptrack em{color:var(--faint);font-style:normal}
+  .crate-details{margin-top:12px}
+  .crate-details summary{cursor:pointer;color:var(--muted);font-size:12.5px;list-style:none;user-select:none}
+  .crate-details summary::-webkit-details-marker{display:none}
+  .crate-details summary:hover{color:var(--green)}
+  .crate-list{max-height:220px;overflow-y:auto;margin-top:8px}
+  .crate-list .row{font-size:12.5px;padding:5px 2px;border-bottom:1px solid var(--line)}
+  .crate-list .row span{color:var(--muted)}
+  .wonders{grid-column:1/-1}
+  .wondergrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:10px}
+  .wondercard{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-decoration:none;color:var(--text)}
+  .wondercard:hover{border-color:var(--green-dim)}
+  .wondercard:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .wondercard .wc-cover{width:40px;height:40px;flex:none;border-radius:6px;border:1px solid var(--line);overflow:hidden}
+  .wondercard .wc-cover img{width:100%;height:100%;object-fit:cover;display:block}
+  .wondercard .wc-cover .crate-fallback{font-size:18px}
+  .wondercard b{font-size:13px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wondercard .wc-artist{font-size:11.5px;color:var(--muted)}
+  .wondercard .wc-line{font-size:11.5px;color:var(--faint);margin-top:3px;line-height:1.35}
+  .wondercard .wc-line em{color:var(--amber);font-style:normal;font-weight:600}
+
+  /* ---------- the songs ---------- */
+  .lifewrap{grid-column:1/-1}
+  .lifegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px}
+  .lifecard{display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px 8px;text-decoration:none;color:var(--text)}
+  .lifecard:hover{border-color:var(--green-dim)}
+  .lifecard:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .lifecard svg{display:block;width:100%;height:36px;margin-bottom:5px}
+  .lifecard .lc-title{font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.25}
+  .lifecard .lc-artist{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lifecard .lc-plays{font-size:11px;color:var(--faint);margin-top:2px}
+  .lifecard .lc-plays b{color:var(--green);font-weight:600}
+  #songsMet svg{display:block;width:100%}
+  .devlist{display:flex;flex-direction:column}
+  .devrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:6px 2px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--text)}
+  .devrow:last-child{border-bottom:0}
+  .devrow:hover .dv-title{color:var(--green)}
+  .devrow .dv-main{flex:1;min-width:120px}
+  .devrow .dv-title{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+  .devrow .dv-artist{font-size:11.5px;color:var(--muted)}
+  .devrow .dv-span{flex:none;color:var(--faint);font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:auto}
+  .devrow .dv-span em{color:var(--amber);font-style:normal;font-weight:600}
+  .seasoncard{display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;text-decoration:none;color:var(--text);margin-bottom:8px}
+  .seasoncard:last-child{margin-bottom:0}
+  .seasoncard:hover{border-color:var(--green-dim)}
+  .seasoncard b{color:var(--text)}
+  .seasoncard .sc-month{color:var(--amber);font-weight:600}
+  .seasoncard .sc-line{font-size:13px;line-height:1.5}
+  .seasoncard .sc-sub{font-size:11.5px;color:var(--faint);margin-top:4px}
+
+  /* ---------- fun lists ---------- */
+  .funtop{display:grid;grid-template-columns:minmax(0,400px) 1fr;gap:14px;align-items:start;margin-top:14px}
+  @media (max-width:840px){.funtop{grid-template-columns:1fr}}
+  .funcard{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+  .funcard h3{margin:0 0 2px;font-size:14.5px;letter-spacing:-.01em}
+  .funcard .sub2{color:var(--faint);font-size:12px;margin:0 0 12px}
+  /* receipt */
+  .rcpicker{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+  .rcchip{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:3px 11px;font-size:12px;cursor:pointer;font-variant-numeric:tabular-nums;transition:border-color .12s ease,color .12s ease}
+  .rcchip:hover{border-color:var(--green-dim);color:var(--text)}
+  .rcchip.on{background:var(--green);border-color:var(--green);color:#0a0a0c;font-weight:600}
+  .rcchip:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .rcstage{display:flex;justify-content:center;padding:4px 0}
+  .receipt{width:100%;max-width:360px;background:#f4f1e8;color:#1c1a16;font-family:"SFMono-Regular",ui-monospace,Menlo,monospace;font-size:12px;line-height:1.55;padding:22px 20px;box-shadow:0 12px 30px rgba(0,0,0,.45);position:relative}
+  .receipt::before,.receipt::after{content:"";position:absolute;left:0;right:0;height:10px;background:linear-gradient(135deg,#f4f1e8 25%,transparent 25%) -6px 0/12px 12px,linear-gradient(225deg,#f4f1e8 25%,transparent 25%) -6px 0/12px 12px}
+  .receipt::before{top:-10px}
+  .receipt::after{bottom:-10px;transform:scaleY(-1)}
+  .rc-head{text-align:center;margin-bottom:12px}
+  .rc-head .rc-store{font-weight:700;letter-spacing:.06em;font-size:12px}
+  .rc-head .rc-year{font-size:30px;font-weight:700;letter-spacing:.04em;margin:2px 0}
+  .rc-head .rc-gag{font-size:10.5px;color:#6b665c}
+  .rc-rule{border:0;border-top:1px dashed #b3ada0;margin:10px 0}
+  .rc-item{display:flex;gap:6px;align-items:baseline;white-space:nowrap;overflow:hidden}
+  .rc-item .rc-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+  .rc-item .rc-dots{flex:none;color:#8a8579}
+  .rc-item .rc-qty{flex:none;font-variant-numeric:tabular-nums}
+  a.rc-item{color:inherit;text-decoration:none}
+  a.rc-item:hover .rc-name{text-decoration:underline}
+  .rc-tot{display:flex;justify-content:space-between;font-weight:700;text-transform:uppercase}
+  .rc-tot.rc-sub{font-size:13px}
+  .rc-line{display:flex;justify-content:space-between;text-transform:uppercase}
+  .rc-foot{text-align:center;margin-top:10px}
+  .rc-thanks{text-align:center;font-weight:700;letter-spacing:.05em;margin:12px 0 8px}
+  .rc-barcode{height:46px;margin:0 auto;width:82%;background:repeating-linear-gradient(90deg,#1c1a16 0,#1c1a16 2px,transparent 2px,transparent 4px,#1c1a16 4px,#1c1a16 5px,transparent 5px,transparent 9px,#1c1a16 9px,#1c1a16 12px,transparent 12px,transparent 14px)}
+  .rc-code{text-align:center;letter-spacing:.28em;font-size:11px;margin-top:5px}
+  /* milestone club */
+  .msrow{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:baseline;padding:9px 2px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--text)}
+  .msrow:last-child{border-bottom:0}
+  .msrow:hover .ms-title{color:var(--green)}
+  .msrow .ms-rank{color:var(--faint);font-variant-numeric:tabular-nums;font-size:12.5px}
+  .msrow .ms-title{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+  .msrow .ms-artist{font-size:11.5px;color:var(--muted)}
+  .msrow .ms-hook{font-size:11px;color:var(--faint);margin-top:3px}
+  .msrow .ms-bar{height:3px;border-radius:2px;background:var(--green-dim);margin-top:6px;min-width:2px}
+  .msrow .ms-h{flex:none;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .msrow .ms-h b{color:var(--amber);font-size:16px;font-weight:700}
+  .msrow .ms-h span{color:var(--faint);font-size:11px;display:block}
+  /* anthems */
+  .jcard{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px}
+  .jcard h3{margin:0 0 2px;font-size:14.5px;letter-spacing:-.01em}
+  .jhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .copybtn{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:4px 12px;font:inherit;font-size:12px;cursor:pointer;transition:border-color .12s ease,color .12s ease}
+  .copybtn:hover{border-color:var(--green-dim);color:var(--text)}
+  .copybtn:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .copybtn.ok{border-color:var(--green);color:var(--green)}
+  .jcols{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;margin-top:12px}
+  @media (max-width:640px){.jcols{grid-template-columns:1fr}}
+  .jside{font-size:11px;color:var(--faint);letter-spacing:.12em;text-transform:uppercase;padding:6px 0 2px;border-bottom:1px solid var(--line)}
+  .jrow{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:baseline;padding:8px 2px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--text)}
+  .jrow:hover .j-title{color:var(--green)}
+  .jrow .j-year{font-variant-numeric:tabular-nums;font-weight:700;color:var(--amber);font-size:13px}
+  .jrow .j-title{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+  .jrow .j-artist{font-size:11.5px;color:var(--muted)}
+  .jrow .j-conc{font-size:10.5px;color:var(--faint);margin-top:2px}
+  .jrow .j-plays{flex:none;color:var(--faint);font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* deep cut or hit */
+  .dchead{font-size:13.5px;line-height:1.55;margin:0 0 4px}
+  .dchead b{color:var(--green)}
+  .dclist{margin-top:12px}
+  .dcrow{display:grid;grid-template-columns:1fr 150px;gap:12px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line)}
+  .dcrow:last-child{border-bottom:0}
+  @media (max-width:640px){.dcrow{grid-template-columns:1fr;gap:6px}}
+  .dc-main .dc-artist{font-size:13px;font-weight:600;color:var(--text);background:none;border:0;padding:0;font-family:inherit;cursor:default}
+  a.dc-artist,button.dc-artist{cursor:pointer;text-decoration:none}
+  a.dc-artist:hover,button.dc-artist:hover{color:var(--green)}
+  .dc-artist:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:3px}
+  .dc-badge{display:inline-block;margin-left:7px;font-size:9.5px;letter-spacing:.08em;color:var(--amber);border:1px solid var(--amber);border-radius:4px;padding:0 5px;vertical-align:1px}
+  .dc-tracks{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+  .dc-tracks .dc-you{color:var(--text)}
+  .dc-tracks .dc-hit{color:var(--faint)}
+  .dc-dumbbell{position:relative;height:22px}
+  .dc-dumbbell svg{display:block;width:100%;height:22px;overflow:visible}
+  .dc-caption{color:var(--faint);font-size:12px;margin-top:8px}
+
   /* ---------- provenance ---------- */
   .prov{margin-top:26px;color:var(--faint);font-size:12.5px;max-width:860px}
   .prov b{color:var(--muted)}
@@ -466,6 +625,122 @@
       </div>
     </div>
     <p class="caption" id="netCaption"></p>
+  </section>
+
+  <section class="panel sectiongap reveal" id="records" hidden>
+    <h2>The records</h2>
+    <p class="sub">Artists have the river; these are the albums underneath it. The crate holds your 35 most-played records — click one for its story. Household plays are already filtered out.</p>
+    <div class="crate" id="crate"></div>
+    <div class="hylgrid">
+      <div class="hylcard">
+        <h3 id="recTitle">Album up close</h3>
+        <p class="sub2" id="recSub">One record, its trajectory, and how far in you got.</p>
+        <div id="recBody"><p class="placeholder">Pick a record from the crate.</p></div>
+      </div>
+      <div class="hylcard">
+        <h3>Album people or singles people?</h3>
+        <p class="sub2" id="sessSub"></p>
+        <div id="sessChart"></div>
+        <details class="crate-details">
+          <summary id="sessSummary"></summary>
+          <div class="crate-list" id="sessList"></div>
+        </details>
+      </div>
+      <div class="hylcard wonders">
+        <h3>One-track wonders</h3>
+        <p class="sub2">Albums where one song got all the love — the hit has the plays, the rest of the record is nearly untouched. Each one is an unexplored room.</p>
+        <div class="wondergrid" id="wonderGrid"></div>
+      </div>
+    </div>
+    <p class="caption"><b>Reading the crate.</b> Covers come from Spotify; completion counts only tracks from your all-time top 100, so rings are a floor, not a ceiling. Sessions are detected from consecutive same-album plays where each track ran to its end.</p>
+  </section>
+
+  <section class="panel sectiongap reveal" id="songs" hidden>
+    <h2>The songs</h2>
+    <p class="sub">Down from albums to the individual tracks — the hundred you've played most. Each one has a
+    shape: a slow-burn, a summer obsession, a song you found once and never let go. Household plays are
+    filtered out, so every one of these is yours.</p>
+
+    <div class="hylcard lifewrap">
+      <h3>Song lifelines</h3>
+      <p class="sub2">Every top track as a monthly-plays sparkline, all on one shared timeline — so a 2019
+      burst sits left and a 2025 discovery sits right. Height is each song's own peak; the shape is what to read.</p>
+      <div class="fieldtools" style="margin-bottom:2px">
+        <label class="search"><span aria-hidden="true" style="color:var(--faint)">⌕</span>
+          <input id="songSearch" type="search" placeholder="Find a song…" aria-label="Find a song by title or artist">
+        </label>
+      </div>
+      <div class="lifegrid" id="lifeGrid"></div>
+    </div>
+
+    <div class="hylcard lifewrap" style="margin-top:14px">
+      <h3>The day you met your favorite songs</h3>
+      <p class="sub2">Every top song placed on the day it first played for you. Older friendships sit left,
+      recent finds right; bigger dots have more plays behind them.</p>
+      <svg id="songsMet" role="img" aria-label="Timeline of first-play dates for top tracks"></svg>
+      <p class="caption" id="metCaption"></p>
+    </div>
+
+    <div class="hylgrid">
+      <div class="hylcard">
+        <h3>Longest devotion</h3>
+        <p class="sub2">The songs that spanned the most calendar years — the ones you kept coming back to
+        long after you first heard them.</p>
+        <div class="devlist" id="devList"></div>
+      </div>
+      <div class="hylcard">
+        <h3>Track seasons</h3>
+        <p class="sub2">Songs that pile up inside one month of the year — the ones with a season attached.</p>
+        <div id="seasonCards"></div>
+      </div>
+    </div>
+
+    <p class="caption"><b>Reading the lifelines.</b> All hundred cards share one time axis, so their positions
+    are comparable — but each card's height is scaled to its own busiest month, so a song with 8 plays and a
+    song with 130 both fill the card. Read the shape, not the height.</p>
+  </section>
+
+  <section class="panel sectiongap reveal" id="funlists" hidden>
+    <h2>Fun lists</h2>
+    <p class="sub">A few ways to hold your listening in your hand — a year as a shop receipt, the songs
+    you've spent the most hours inside, a one-track-per-year mixtape, and whether you reach for the hit
+    or the deep cut. Household plays are filtered out; these are all you.</p>
+
+    <div class="funtop">
+      <div class="funcard">
+        <h3>The receipt</h3>
+        <p class="sub2">One year of listening, rung up like a shop till. Pick a year.</p>
+        <div class="rcpicker" id="rcPicker" role="group" aria-label="Choose a year"></div>
+        <div class="rcstage" id="rcStage"></div>
+        <p class="caption"><b>Made for screenshots.</b> Snap it and share your year — every line is a real
+        top track, the subtotal is your hours, and the "tax" is how many songs you skipped.</p>
+      </div>
+
+      <div class="funcard">
+        <h3>Milestone club</h3>
+        <p class="sub2">Total time spent inside a single song — plays × length. The ones you've truly lived in.</p>
+        <div id="msList"></div>
+      </div>
+    </div>
+
+    <div class="jcard">
+      <div class="jhead">
+        <div>
+          <h3>Yearbook anthems</h3>
+          <p class="sub2">One defining track for each year — the song that owned it. A mixtape of your life in music.</p>
+        </div>
+        <button type="button" class="copybtn" id="anthemCopy">Copy tracklist</button>
+      </div>
+      <div class="jcols" id="anthemCols"></div>
+    </div>
+
+    <div class="jcard">
+      <h3>Deep cut or hit?</h3>
+      <p class="dchead" id="dcHead"></p>
+      <div class="dclist" id="dcList"></div>
+      <p class="dc-caption">Green dot = your most-played song's popularity. Grey dot = the artist's biggest hit.
+      A wide gap means you went digging.</p>
+    </div>
   </section>
 
   <section class="panel sectiongap reveal">
@@ -1551,6 +1826,534 @@ function bootNetwork(){
   } else initNetwork();
 }
 
+/* ---------- the records ---------- */
+const ALB = (TIMELINE.albums && TIMELINE.albums.top_albums && TIMELINE.albums.top_albums.length) ? TIMELINE.albums : null;
+let recInited = false, recSelected = -1;
+
+function recCover(a, cls){
+  if (a._cdn && a.image_url)
+    return `<span class="crate-cover ${cls||""}"><img src="${a.image_url}" alt="" loading="lazy"></span>`;
+  if (a.thumb_b64)
+    return `<span class="crate-cover ${cls||""}"><img src="data:image/jpeg;base64,${a.thumb_b64}" alt="" loading="lazy"></span>`;
+  const ch = (a.name || a.album || "?").charAt(0);
+  return `<span class="crate-cover ${cls||""}"><span class="crate-fallback">${esc(ch)}</span></span>`;
+}
+
+function recBarChart(byYear, color, chartH){
+  const years = d3.range(2018, 2027);
+  const vals = years.map(y => ({y, p:(byYear||{})[String(y)] || 0}));
+  const W = 400, H = chartH + 18;
+  const svg = d3.create("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("preserveAspectRatio","xMidYMid meet");
+  const bx = d3.scaleBand().domain(years).range([4, W-4]).padding(0.25);
+  const maxP = d3.max(vals, d => d.p) || 1;
+  const by = d3.scaleLinear().domain([0, maxP]).range([0, chartH - 8]);
+  svg.selectAll("rect").data(vals).join("rect")
+    .attr("x", d => bx(d.y)).attr("width", bx.bandwidth())
+    .attr("y", d => chartH - by(d.p))
+    .attr("height", d => Math.max(by(d.p), d.p > 0 ? 2 : 0))
+    .attr("fill", color).attr("opacity", .85).attr("rx", 2)
+    .on("mousemove", (ev, d) => showTip(ev, `<b>${d.y}</b><br><span class="t-muted">${fmt(d.p)}</span>`))
+    .on("mouseleave", hideTip);
+  svg.selectAll("text").data(years).join("text")
+    .attr("class","axistick").attr("x", y => bx(y) + bx.bandwidth()/2).attr("y", H - 4)
+    .attr("text-anchor","middle").text(y => "’" + String(y).slice(2));
+  return svg.node();
+}
+
+function selectRecord(i){
+  if (!ALB) return;
+  recSelected = i;
+  document.querySelectorAll("#crate .crate-item").forEach((el, j) => el.classList.toggle("sel", j === i));
+  const a = ALB.top_albums[i];
+  const body = document.getElementById("recBody");
+
+  const meta = [];
+  if (a.release_year) meta.push(`released ${a.release_year}`);
+  meta.push(`${fmt(a.plays)} plays`);
+  if (a.session_count > 0) meta.push(`${fmt(a.session_count)} front-to-back session${a.session_count === 1 ? "" : "s"}`);
+
+  const known = artistByName(a.artist);
+  const artistHtml = known
+    ? `<button class="rec-artist" data-artist="${esc(a.artist)}">${esc(a.artist)}</button>`
+    : `<span class="rec-artist plain">${esc(a.artist)}</span>`;
+
+  let ringHtml;
+  if (a.completion == null){
+    ringHtml = `<div class="rec-ring"><div class="ringlabel">tracklist unknown</div></div>`;
+  } else {
+    ringHtml = `<div class="rec-ring"><svg id="recRing" width="64" height="64" viewBox="0 0 64 64"></svg>
+      <div class="ringlabel">${a.total_tracks ? `${Math.round(a.completion * a.total_tracks)} of ${a.total_tracks} tracks ever played` : "of the tracklist ever played"}</div></div>`;
+  }
+
+  let ttHtml = "";
+  if (a.top_track && a.top_track.name){
+    const id = a.top_track.uri ? a.top_track.uri.split(":")[2] : null;
+    const nm = id
+      ? `<a href="https://open.spotify.com/track/${id}" target="_blank" rel="noopener">${esc(a.top_track.name)}</a>`
+      : esc(a.top_track.name);
+    ttHtml = `<p class="rec-toptrack">Top track — ${nm} <em>(${fmt(a.top_track.plays)} plays)</em></p>`;
+  }
+
+  body.innerHTML = `
+    <div class="rechead">${recCover(a)}
+      <div><p class="rec-title">${esc(a.name)}</p>
+        <div>${artistHtml}</div>
+        <p class="rec-meta">${meta.join(" · ")}</p></div>
+    </div>
+    <div class="rec-story">
+      <div class="rec-chart" id="recChart"></div>
+      ${ringHtml}
+    </div>
+    ${ttHtml}
+    <a class="spotifylink" target="_blank" rel="noopener" href="${spotifySearch(a.name + " " + a.artist)}">Open album search ↗</a>`;
+
+  document.getElementById("recChart").appendChild(recBarChart(a.by_year, "var(--green)", 64));
+
+  if (a.completion != null){
+    const rsvg = d3.select("#recRing"), rr = 26, rg = rsvg.append("g").attr("transform","translate(32,32)");
+    const arcGen = d3.arc().innerRadius(rr - 5).outerRadius(rr).startAngle(0).cornerRadius(3);
+    rg.append("path").attr("d", arcGen({endAngle: Math.PI * 2})).attr("fill","var(--line)");
+    rg.append("path").attr("d", arcGen({endAngle: Math.PI * 2 * Math.min(a.completion, 1)})).attr("fill","var(--amber)");
+    rg.append("text").attr("text-anchor","middle").attr("dy","0.35em")
+      .attr("fill","var(--text)").attr("font-size","13px").attr("font-weight","600")
+      .text(Math.round(a.completion * 100) + "%");
+  }
+
+  const ab = body.querySelector(".rec-artist[data-artist]");
+  if (ab) ab.addEventListener("click", () => selectArtist(ab.getAttribute("data-artist"), true));
+}
+
+function initRecords(){
+  if (recInited || !ALB) return;
+  recInited = true;
+
+  const crate = document.getElementById("crate");
+  crate.innerHTML = ALB.top_albums.map((a, i) =>
+    `<button class="crate-item" data-i="${i}" aria-label="${esc(a.name)}, ${esc(a.artist)}">${recCover(a)}</button>`).join("");
+  crate.querySelectorAll(".crate-item").forEach(btn => {
+    const a = ALB.top_albums[+btn.dataset.i];
+    btn.addEventListener("click", () => selectRecord(+btn.dataset.i));
+    btn.addEventListener("mousemove", ev => showTip(ev, `<b>${esc(a.name)}</b><br><span class="t-muted">${esc(a.artist)} · ${fmt(a.plays)} plays</span>`));
+    btn.addEventListener("mouseleave", hideTip);
+  });
+
+  // sessions card
+  const ss = ALB.session_score || {total:0, by_year:{}};
+  document.getElementById("sessSub").textContent =
+    `A full-album session = four or more tracks of the same record in a row, each one rolling into the next. You've done that ${fmt(ss.total)} times.`;
+  document.getElementById("sessChart").appendChild(recBarChart(ss.by_year, "var(--blue)", 90));
+  const sa = ALB.session_albums || [];
+  document.getElementById("sessSummary").textContent = `All ${fmt(sa.length)} records played front-to-back`;
+  document.getElementById("sessList").innerHTML = sa.map(r =>
+    `<div class="row">${esc(r.album)} — <span>${esc(r.artist)}</span></div>`).join("");
+
+  // one-track wonders
+  document.getElementById("wonderGrid").innerHTML = (ALB.one_track_wonders || []).map(w => {
+    const restN = w.total_tracks ? `the other ${w.total_tracks - 1} tracks` : "the rest";
+    const restP = w.rest_plays === 0 ? "never played" : w.rest_plays === 1 ? "1 play" : `${fmt(w.rest_plays)} plays total`;
+    const cov = w.thumb_b64
+      ? `<span class="wc-cover"><img src="data:image/jpeg;base64,${w.thumb_b64}" alt="" loading="lazy"></span>`
+      : `<span class="wc-cover"><span class="crate-fallback">${esc((w.album || "?").charAt(0))}</span></span>`;
+    return `<a class="wondercard" target="_blank" rel="noopener" href="${spotifySearch(w.album + " " + w.artist)}">
+      ${cov}<span style="min-width:0">
+        <b>${esc(w.album)}</b><span class="wc-artist">${esc(w.artist)}</span>
+        <div class="wc-line"><em>${fmt(w.hit_track.plays)} plays</em> of “${esc(w.hit_track.name)}” · ${restN}: ${restP}</div>
+      </span></a>`;
+  }).join("");
+
+  selectRecord(0);
+
+  // progressive swap: upgrade base64 thumbs to crisper CDN covers when online
+  ALB.top_albums.forEach((a, i) => {
+    if (!a.image_url) return;
+    try {
+      const im = new Image();
+      im.onload = () => {
+        a._cdn = true;
+        document.querySelectorAll(`#crate .crate-item[data-i="${i}"] img`).forEach(el => { el.src = a.image_url; });
+        if (recSelected === i){ const h = document.querySelector("#recBody .rechead img"); if (h) h.src = a.image_url; }
+      };
+      im.src = a.image_url;
+    } catch (e) { /* offline is fine — the b64 thumb already rendered */ }
+  });
+}
+
+function bootRecords(){
+  if (!ALB) return;
+  const sec = document.getElementById("records");
+  sec.hidden = false;
+  if ("IntersectionObserver" in window){
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting)){ initRecords(); io.disconnect(); }
+    }, {rootMargin: "200px"});
+    io.observe(sec);
+  } else initRecords();
+}
+
+/* ---------- the songs ---------- */
+const SNG = (TIMELINE.track_stories && TIMELINE.track_stories.tracks && TIMELINE.track_stories.tracks.length) ? TIMELINE.track_stories : null;
+let sngInited = false, sngMetDrawn = false;
+let songQuery = "";
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const trackId = uri => (uri && uri.indexOf(":") >= 0) ? uri.split(":")[2] : null;
+const trackUrl = uri => { const id = trackId(uri); return id ? `https://open.spotify.com/track/${id}` : "#"; };
+
+function songLifelineSVG(t, xMin, xMax){
+  const W = 168, H = 34, pad = 1;
+  const svg = d3.create("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("preserveAspectRatio","none");
+  const parse = d3.timeParse("%Y-%m");
+  // fill sparse lifeline with zeros across the shared domain
+  const map = new Map((t.lifeline || []).map(d => [d[0], d[1]]));
+  const start = new Date(xMin.getFullYear(), xMin.getMonth(), 1);
+  const end = new Date(xMax.getFullYear(), xMax.getMonth(), 1);
+  const months = [];
+  for (let d = new Date(start); d <= end; d.setMonth(d.getMonth() + 1)){
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    months.push({t: new Date(d), p: map.get(key) || 0});
+  }
+  const x = d3.scaleTime().domain([xMin, xMax]).range([pad, W - pad]);
+  const maxP = d3.max(months, d => d.p) || 1;
+  const y = d3.scaleLinear().domain([0, maxP]).range([H - pad, pad + 2]);
+  const area = d3.area().x(d => x(d.t)).y0(H - pad).y1(d => y(d.p)).curve(d3.curveMonotoneX);
+  const line = d3.line().x(d => x(d.t)).y(d => y(d.p)).curve(d3.curveMonotoneX);
+  svg.append("path").attr("d", area(months)).attr("fill","var(--green)").attr("opacity",.16);
+  svg.append("path").attr("d", line(months)).attr("fill","none").attr("stroke","var(--green)").attr("stroke-width",1.5).attr("vector-effect","non-scaling-stroke");
+  return svg.node();
+}
+
+function initSongs(){
+  if (sngInited || !SNG) return;
+  sngInited = true;
+
+  const tracks = [...SNG.tracks].sort((a, b) => b.plays - a.plays);
+
+  // shared x-domain across all cards
+  const parse = d3.timeParse("%Y-%m");
+  let xMin = null, xMax = null;
+  tracks.forEach(t => (t.lifeline || []).forEach(d => {
+    const m = parse(d[0]); if (!m) return;
+    if (!xMin || m < xMin) xMin = m;
+    if (!xMax || m > xMax) xMax = m;
+  }));
+  if (!xMin){ xMin = new Date(2018, 0, 1); xMax = new Date(); }
+
+  // lifeline small-multiples (build DOM once; search toggles display only)
+  const grid = document.getElementById("lifeGrid");
+  tracks.forEach(t => {
+    const id = trackId(t.uri);
+    const card = document.createElement(id ? "a" : "div");
+    card.className = "lifecard";
+    if (id){ card.href = `https://open.spotify.com/track/${id}`; card.target = "_blank"; card.rel = "noopener"; }
+    card.dataset.q = ((t.title || "") + " " + (t.artist || "")).toLowerCase();
+    card.appendChild(songLifelineSVG(t, xMin, xMax));
+    const meta = document.createElement("div");
+    meta.innerHTML = `<div class="lc-title">${esc(t.title)}</div>
+      <div class="lc-artist">${esc(t.artist)}</div>
+      <div class="lc-plays"><b>${fmt(t.plays)}</b> plays</div>`;
+    card.appendChild(meta);
+    // peak-month tooltip
+    let peak = null;
+    (t.lifeline || []).forEach(d => { if (!peak || d[1] > peak[1]) peak = d; });
+    if (peak){
+      const pm = parse(peak[0]);
+      const label = pm ? d3.timeFormat("%b %Y")(pm) : peak[0];
+      card.addEventListener("mousemove", ev => showTip(ev,
+        `<b>${esc(t.title)}</b><br><span class="t-muted">Peak: ${label} · ${fmt(peak[1])} plays</span>`));
+      card.addEventListener("mouseleave", hideTip);
+    }
+    grid.appendChild(card);
+  });
+
+  // devotion list — top 12 by distinct years, tiebreak plays
+  const dev = [...SNG.tracks].sort((a, b) =>
+    (b.devotion_years - a.devotion_years) || (b.plays - a.plays)).slice(0, 12);
+  document.getElementById("devList").innerHTML = dev.map(t => {
+    const url = trackUrl(t.uri);
+    const y0 = (t.year_span && t.year_span[0]) || "";
+    const y1 = (t.year_span && t.year_span[1]) ? "’" + String(t.year_span[1]).slice(2) : "";
+    const yrs = t.devotion_years;
+    return `<a class="devrow" target="_blank" rel="noopener" href="${url}">
+      <span class="dv-main"><span class="dv-title">${esc(t.title)}</span><span class="dv-artist">${esc(t.artist)}</span></span>
+      <span class="dv-span">${y0} → ${y1} · <em>${yrs} yr${yrs === 1 ? "" : "s"}</em> · ${fmt(t.plays)} plays</span>
+    </a>`;
+  }).join("");
+
+  // track seasons
+  const seasons = SNG.seasons || [];
+  const seasonEl = document.getElementById("seasonCards");
+  if (!seasons.length){
+    seasonEl.innerHTML = '<p class="placeholder">No strongly seasonal songs detected — your favorites are year-round.</p>';
+  } else {
+    seasonEl.innerHTML = seasons.map(s => {
+      const lbl = (s.season_label || "").charAt(0).toUpperCase() + (s.season_label || "").slice(1);
+      const pct = Math.round((s.concentration || 0) * 100);
+      return `<a class="seasoncard" target="_blank" rel="noopener" href="${trackUrl(s.uri)}">
+        <div class="sc-line"><b>${esc(s.title)}</b> — ${esc(s.artist)} is a <span class="sc-month">${esc(lbl)}</span> song.</div>
+        <div class="sc-sub">${pct}% of its ${fmt(s.plays)} plays land in ${esc(lbl)}.</div>
+      </a>`;
+    }).join("");
+  }
+
+  drawMet();
+}
+
+function drawMet(){
+  if (!SNG) return;
+  const el = d3.select("#songsMet");
+  if (el.empty() || !el.node().parentElement) return;
+  const tracks = [...SNG.tracks].sort((a, b) => b.plays - a.plays).slice(0, 60);
+  const parse = d3.timeParse("%Y-%m-%d");
+  const pts = tracks.map(t => ({...t, t: parse(t.first_play)})).filter(t => t.t);
+  if (!pts.length) return;
+  const bw = Math.max(300, el.node().parentElement.getBoundingClientRect().width - 34);
+  const h = 176, top = 14, bottom = 22;
+  el.attr("viewBox", `0 0 ${bw} ${h}`).attr("width", bw).attr("height", h);
+  el.selectAll("*").remove();
+  const xT = d3.scaleTime()
+    .domain([d3.min(pts, d => d.t), d3.max(pts, d => d.t)])
+    .range([16, bw - 16]).nice();
+  const r = d3.scaleSqrt().domain([d3.min(pts, d => d.plays), d3.max(pts, d => d.plays) || 1]).range([4, 16]);
+  const lanes = 5;
+  const sorted = [...pts].sort((a, b) => a.t - b.t);
+  sorted.forEach((d, i) => { d.lane = i % lanes; });
+  const laneY = l => top + 14 + l * ((h - top - bottom - 26) / (lanes - 1));
+  for (const yTick of xT.ticks(6)){
+    el.append("text").attr("class","axistick")
+      .attr("x", xT(yTick)).attr("y", h - 6).attr("text-anchor","middle")
+      .text(d3.timeFormat("’%y")(yTick));
+  }
+  const fmtMet = d3.timeFormat("%b %-d, %Y");
+  el.selectAll("circle").data(sorted).join("circle")
+    .attr("cx", d => xT(d.t)).attr("cy", d => laneY(d.lane))
+    .attr("r", d => r(d.plays))
+    .attr("fill", d => COLORS[TIMELINE.artist_buckets[d.artist] || "other"])
+    .attr("opacity", .82).attr("stroke", "rgba(10,10,12,.6)")
+    .style("cursor","pointer")
+    .on("mousemove", (ev, d) => showTip(ev,
+      `<b>${esc(d.title)}</b><br><span class="t-muted">${esc(d.artist)} · met ${fmtMet(d.t)} · ${fmt(d.plays)} plays since</span>`))
+    .on("mouseleave", hideTip)
+    .on("click", (ev, d) => { const u = trackUrl(d.uri); if (u !== "#") window.open(u, "_blank", "noopener"); });
+  const topT = sorted.reduce((p, q) => (q.plays > p.plays ? q : p), sorted[0]);
+  el.append("text").attr("class","riverlabel")
+    .attr("x", Math.min(xT(topT.t), bw - 8)).attr("y", laneY(topT.lane) - r(topT.plays) - 5)
+    .attr("text-anchor", xT(topT.t) > bw * .6 ? "end" : "middle")
+    .text(topT.title);
+  // caption: oldest first-meeting among the top tracks
+  const oldest = sorted[0];
+  const yearsSince = Math.max(1, Math.round((Date.now() - oldest.t.getTime()) / (365.25 * 864e5)));
+  document.getElementById("metCaption").innerHTML =
+    `You met <b>${esc(oldest.title)}</b> by ${esc(oldest.artist)} on ${fmtMet(oldest.t)}, and it's still here ${yearsSince} year${yearsSince === 1 ? "" : "s"} later.`;
+  sngMetDrawn = true;
+}
+
+function renderSongSearch(){
+  let any = false;
+  document.querySelectorAll("#lifeGrid .lifecard").forEach(c => {
+    const hit = !songQuery || c.dataset.q.includes(songQuery);
+    c.hidden = !hit;
+    if (hit) any = true;
+  });
+  let ph = document.getElementById("songNoMatch");
+  if (!any){
+    if (!ph){
+      ph = document.createElement("p");
+      ph.id = "songNoMatch"; ph.className = "placeholder";
+      ph.textContent = "No songs match.";
+      document.getElementById("lifeGrid").after(ph);
+    }
+  } else if (ph){ ph.remove(); }
+}
+document.getElementById("songSearch").addEventListener("input", (ev) => {
+  songQuery = ev.target.value.trim().toLowerCase();
+  renderSongSearch();
+});
+
+function bootSongs(){
+  if (!SNG) return;
+  const sec = document.getElementById("songs");
+  sec.hidden = false;
+  if ("IntersectionObserver" in window){
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting)){ initSongs(); io.disconnect(); }
+    }, {rootMargin: "200px"});
+    io.observe(sec);
+  } else initSongs();
+}
+
+/* ---------- fun lists ---------- */
+const FUN = (TIMELINE.lists && ((TIMELINE.lists.receipt && Object.keys(TIMELINE.lists.receipt).length) || (TIMELINE.lists.milestones||[]).length || (TIMELINE.lists.anthems||[]).length || (TIMELINE.lists.deep_cuts && (TIMELINE.lists.deep_cuts.items||[]).length))) ? TIMELINE.lists : null;
+let funInited = false, rcYear = null;
+
+function renderReceipt(year){
+  const stage = document.getElementById("rcStage");
+  const rec = (FUN && FUN.receipt) ? FUN.receipt[year] : null;
+  if (!rec){ stage.innerHTML = '<p class="placeholder">No receipt for this year.</p>'; return; }
+  rcYear = year;
+  document.querySelectorAll("#rcPicker .rcchip").forEach(c => {
+    const on = c.dataset.year === String(year);
+    c.classList.toggle("on", on);
+    c.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  const tracks = (rec.top_tracks || []).slice(0, 12);
+  const rows = tracks.map(t => {
+    const id = trackId(t.uri), url = trackUrl(t.uri);
+    const tag = id ? "a" : "div";
+    const attrs = id ? ` href="${url}" target="_blank" rel="noopener"` : "";
+    return `<${tag} class="rc-item"${attrs}><span class="rc-name">${esc(t.title || "Untitled")}</span><span class="rc-dots">·····</span><span class="rc-qty">x${fmt(t.plays || 0)}</span></${tag}>`;
+  }).join("");
+  const hrs = (typeof rec.total_hours === "number") ? rec.total_hours.toFixed(1) : "0.0";
+  const skips = fmt(rec.total_skips || 0);
+  const reg = String(year).slice(2) + String((rec.total_skips || 0) % 100).padStart(2, "0");
+  const code = (String(year) + "0" + String(Math.round((rec.total_hours || 0) * 10)).padStart(4, "0") + "42").replace(/(.{4})/g, "$1 ").trim();
+  stage.innerHTML = `<div class="receipt">
+    <div class="rc-head">
+      <div class="rc-store">SPOTIFY — 12 MONTHS OF LISTENING</div>
+      <div class="rc-year">${esc(String(year))}</div>
+      <div class="rc-gag">STORE #0${esc(String(year).slice(2))} · REG ${esc(reg)} · YOUR EARS, EVERY DAY</div>
+    </div>
+    <hr class="rc-rule">
+    ${rows || '<div class="rc-item"><span class="rc-name">a quiet year</span></div>'}
+    <hr class="rc-rule">
+    <div class="rc-tot rc-sub"><span>SUBTOTAL</span><span>${hrs} HOURS</span></div>
+    <div class="rc-line"><span>TAX (SKIPS)</span><span>${skips}</span></div>
+    <div class="rc-line"><span>CASHIER</span><span>🤖</span></div>
+    <hr class="rc-rule">
+    <div class="rc-thanks">THANK YOU FOR LISTENING</div>
+    <div class="rc-foot"><div class="rc-barcode" aria-hidden="true"></div><div class="rc-code">${esc(code)}</div></div>
+  </div>`;
+}
+
+function renderMilestones(){
+  const el = document.getElementById("msList");
+  const items = (FUN && FUN.milestones) ? FUN.milestones : [];
+  if (!items.length){ el.innerHTML = '<p class="placeholder">No milestone data yet.</p>'; return; }
+  const top = items[0].hours_played || 1;
+  el.innerHTML = items.map((m, i) => {
+    const id = trackId(m.uri), url = trackUrl(m.uri);
+    const tag = id ? "a" : "div";
+    const attrs = id ? ` href="${url}" target="_blank" rel="noopener"` : "";
+    const hrs = (m.hours_played || 0).toFixed(1);
+    const mins = Math.round((m.duration_ms || 0) / 60000);
+    const minLbl = mins >= 1 ? `${mins}-min` : "short";
+    const hook = `That's a ${minLbl} song — you've lived in it for ${hrs} hours.`;
+    const w = Math.max(2, Math.round(((m.hours_played || 0) / top) * 100));
+    return `<${tag} class="msrow"${attrs}>
+      <span class="ms-rank">${i + 1}</span>
+      <span class="ms-main"><span class="ms-title">${esc(m.title)}</span><span class="ms-artist">${esc(m.artist)}</span>
+        <span class="ms-hook">${esc(hook)}</span>
+        <span class="ms-bar" style="width:${w}%"></span></span>
+      <span class="ms-h"><b>${hrs} h</b><span>inside</span></span>
+    </${tag}>`;
+  }).join("");
+}
+
+function renderAnthems(){
+  const cols = document.getElementById("anthemCols");
+  const btn = document.getElementById("anthemCopy");
+  const items = (FUN && FUN.anthems) ? [...FUN.anthems].sort((a, b) => (a.year || "").localeCompare(b.year || "")) : [];
+  if (!items.length){ cols.innerHTML = '<p class="placeholder">No anthem data yet.</p>'; if (btn) btn.style.display = "none"; return; }
+  const mid = Math.ceil(items.length / 2);
+  const rowHTML = m => {
+    const url = trackUrl(m.uri), tag = trackId(m.uri) ? "a" : "div";
+    const attrs = trackId(m.uri) ? ` href="${url}" target="_blank" rel="noopener"` : "";
+    const conc = (m.concentration >= 0.5)
+      ? `<span class="j-conc">${Math.round(m.concentration * 100)}% of its lifetime plays were this year</span>` : "";
+    return `<${tag} class="jrow"${attrs}>
+      <span class="j-year">${esc(String(m.year))}</span>
+      <span class="j-main"><span class="j-title">${esc(m.title)}</span><span class="j-artist">${esc(m.artist)}</span>${conc}</span>
+      <span class="j-plays">${fmt(m.plays || 0)} plays</span>
+    </${tag}>`;
+  };
+  const side = (label, arr) => `<div><div class="jside">${label}</div>${arr.map(rowHTML).join("")}</div>`;
+  cols.innerHTML = side("Side A", items.slice(0, mid)) + side("Side B", items.slice(mid));
+
+  const text = items.map(m => `${m.artist} — ${m.title}`).join("\n");
+  btn.onclick = () => {
+    const done = () => { btn.textContent = "Copied ✓"; btn.classList.add("ok"); setTimeout(() => { btn.textContent = "Copy tracklist"; btn.classList.remove("ok"); }, 1600); };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done).catch(() => { btn.textContent = "Press ⌘/Ctrl+C"; setTimeout(() => { btn.textContent = "Copy tracklist"; }, 1800); });
+      } else {
+        const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); done(); } catch(e){ btn.textContent = "Press ⌘/Ctrl+C"; setTimeout(() => { btn.textContent = "Copy tracklist"; }, 1800); }
+        document.body.removeChild(ta);
+      }
+    } catch(e){ btn.textContent = "Press ⌘/Ctrl+C"; setTimeout(() => { btn.textContent = "Copy tracklist"; }, 1800); }
+  };
+}
+
+function renderDeepCuts(){
+  const head = document.getElementById("dcHead");
+  const list = document.getElementById("dcList");
+  const dc = (FUN && FUN.deep_cuts) ? FUN.deep_cuts : null;
+  const items = (dc && dc.enriched && (dc.items || []).length) ? [...dc.items].sort((a, b) => (b.diff || 0) - (a.diff || 0)) : [];
+  if (!items.length){
+    head.textContent = "";
+    list.innerHTML = '<p class="placeholder">Popularity enrichment not available yet — run enrich-meta to fill this in.</p>';
+    return;
+  }
+  const pct = Math.round((dc.contrarian_score || 0) * 100);
+  head.innerHTML = `Contrarian score: <b>${pct}%</b>. For ${pct}% of your top artists, your most-played song is a deep cut, not the hit.`;
+  const dumbbell = (you, hit) => {
+    const x = p => 5 + (Math.max(0, Math.min(100, p)) / 100) * 90;
+    return `<span class="dc-dumbbell"><svg viewBox="0 0 100 22" preserveAspectRatio="none">
+      <line x1="5" y1="11" x2="95" y2="11" stroke="var(--line)" stroke-width="1"></line>
+      <line x1="${Math.min(x(you), x(hit))}" y1="11" x2="${Math.max(x(you), x(hit))}" y2="11" stroke="var(--green-dim)" stroke-width="2"></line>
+      <circle cx="${x(hit)}" cy="11" r="4" fill="var(--faint)"></circle>
+      <circle cx="${x(you)}" cy="11" r="4.5" fill="var(--green)"></circle>
+    </svg></span>`;
+  };
+  list.innerHTML = items.map(it => {
+    const has = !!artistByName(it.artist);
+    const badge = it.is_deep_cut ? '<span class="dc-badge">DEEP CUT</span>' : "";
+    const artistEl = has
+      ? `<button type="button" class="dc-artist" data-artist="${esc(it.artist)}">${esc(it.artist)}</button>`
+      : `<span class="dc-artist">${esc(it.artist)}</span>`;
+    return `<div class="dcrow">
+      <div class="dc-main">${artistEl}${badge}
+        <div class="dc-tracks"><span class="dc-you">${esc(it.user_track)}</span> <span style="color:var(--faint)">(${it.user_popularity})</span>
+          &nbsp;vs&nbsp; <span class="dc-hit">${esc(it.artist_top_track)} (${it.artist_max_popularity})</span></div>
+      </div>
+      ${dumbbell(it.user_popularity, it.artist_max_popularity)}
+    </div>`;
+  }).join("");
+  list.querySelectorAll(".dc-artist[data-artist]").forEach(b => {
+    b.addEventListener("click", () => selectArtist(b.dataset.artist, true));
+  });
+}
+
+function initFun(){
+  if (funInited || !FUN) return;
+  funInited = true;
+  const receipt = FUN.receipt || {};
+  const years = Object.keys(receipt).sort();
+  const picker = document.getElementById("rcPicker");
+  if (years.length){
+    picker.innerHTML = years.map(y => `<button type="button" class="rcchip" data-year="${esc(y)}" aria-pressed="false">${esc(y)}</button>`).join("");
+    picker.querySelectorAll(".rcchip").forEach(c => c.addEventListener("click", () => renderReceipt(c.dataset.year)));
+    renderReceipt(years[years.length - 1]);
+  } else {
+    picker.innerHTML = "";
+    document.getElementById("rcStage").innerHTML = '<p class="placeholder">No receipt data yet.</p>';
+  }
+  renderMilestones();
+  renderAnthems();
+  renderDeepCuts();
+}
+
+function bootFun(){
+  if (!FUN) return;
+  const sec = document.getElementById("funlists");
+  sec.hidden = false;
+  if ("IntersectionObserver" in window){
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting)){ initFun(); io.disconnect(); }
+    }, {rootMargin: "200px"});
+    io.observe(sec);
+  } else initFun();
+}
+
 /* ---------- household toggle ---------- */
 document.getElementById("hhToggle").addEventListener("change", (ev) => {
   includeHH = ev.target.checked;
@@ -1561,7 +2364,7 @@ document.getElementById("hhToggle").addEventListener("change", (ev) => {
 
 /* ---------- resize ---------- */
 let rt = null;
-window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { drawRiver(); drawBubbles(); renderBehavior(); if (!document.getElementById("artiststories").hidden) drawObsessions(); if (netInited){ const [w2, h2] = netSize(); netSvgEl.attr("viewBox", [-w2/2, -h2/2, w2, h2]); } }, 160); });
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { drawRiver(); drawBubbles(); renderBehavior(); if (!document.getElementById("artiststories").hidden) drawObsessions(); if (sngInited) drawMet(); if (netInited){ const [w2, h2] = netSize(); netSvgEl.attr("viewBox", [-w2/2, -h2/2, w2, h2]); } }, 160); });
 
 /* ---------- boot ---------- */
 renderStats();
@@ -1572,6 +2375,9 @@ renderShelf();
 renderBehavior();
 renderStories();
 bootNetwork();
+bootRecords();
+bootSongs();
+bootFun();
 setFocus(LAST_YEAR);
 drawBubbles();
 </script>

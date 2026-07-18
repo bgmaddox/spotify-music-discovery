@@ -8,6 +8,7 @@ lastfm:       lastfm.py  (similar_artists, similar_tracks, artist_tags; lib + CL
 genremap:     genre_map.py  (genre-neighbors / genre-find: everynoise ranked nearby genres; lib + CLI; caches to .cache_everynoise/) · build_genre_data.py rebuilds knowledge/genres_coords.json
 ledger:       discovery_log.py  (log-add / log-artists / log-recent: cross-session record of what Claude has already surfaced, for dedup; lib + CLI; appends data/discovery_log.jsonl)
 mcp (Mode C): mcp_server.py  (Phase 6; read-only FastMCP server for mobile Claude; DEPLOYED at rachett.tail504ae5.ts.net/discovery-mcp via Tailscale Funnel + Caddy proxy-auth) · mint_pi_cache.py mints the read-only Spotify .cache for the Pi · runbook: DEPLOY_MCP.md
+timeline:     streaming_history.py (GDPR export → history_summary.json) · enrich_meta.py (Spotify track/album meta → data/track_album_meta.json, caches .cache_spotify_meta/) · build_similarity_data.py · build_timeline_data.py (merge all → data/taste_timeline.json) · plans: TASTE_TIMELINE_PLAN.md, VIZ_EXPANSION_PLAN.md, TRACKS_ALBUMS_PLAN.md
 recipes:      RECIPES.md  (1 ladder, 2 now-playing, 3 taste-report, 4 archaeologist, 5 time-machine, 6 lastfm-seeded ladder, 7 genre-ladder)
 knowledge:    knowledge/  (discovery_heuristics.md = angles, genre_map.md = curated adjacencies, genres_coords.json = full everynoise map index [machine-only, query via genre-neighbors]; read .md before reasoning)
 tests:        tests/  (pytest; pure parsing/normalization logic — no network/auth — run `pytest -q`)

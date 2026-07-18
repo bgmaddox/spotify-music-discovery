@@ -55,6 +55,7 @@ from sensing import _cmd_library_scan, _cmd_now_playing
 from streaming_history import _cmd_history_build, _cmd_history_snapshot
 import streaming_history
 from build_timeline_data import _cmd_timeline_build, _cmd_timeline_inject
+from enrich_meta import _cmd_enrich
 from build_similarity_data import _cmd_similarity_build
 from tools import _cmd_build_playlist, _cmd_search_verify, _cmd_set_playlist_image
 
@@ -290,6 +291,23 @@ def main() -> int:
         help="Inline data/taste_timeline.json into docs/history.local.html.",
     )
     ti.set_defaults(func=_cmd_timeline_inject)
+
+    em = sub.add_parser(
+        "enrich-meta",
+        help="Batch-fetch Spotify track/album/artist metadata → data/track_album_meta.json.",
+    )
+    import enrich_meta as _em
+    em.add_argument(
+        "--history-path",
+        default=_em.HISTORY_PATH,
+        help="Path to history_summary.json (default: data/history_summary.json).",
+    )
+    em.add_argument(
+        "--meta-path",
+        default=_em.OUTPUT_PATH,
+        help="Output path for track_album_meta.json (default: data/track_album_meta.json).",
+    )
+    em.set_defaults(func=_cmd_enrich)
 
     sb = sub.add_parser(
         "similarity-build",
