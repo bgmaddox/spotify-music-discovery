@@ -123,7 +123,7 @@ auth, so it runs offline in well under a second.
 | `data/` | Cached taste/library dumps (newest 5 kept) + `discovery_log.jsonl` |
 | `CLAUDE.md` | Instructions for Claude (not a user doc) |
 | `DEPLOY_MCP.md` | Pi + Cloudflare Tunnel deploy runbook for the mobile server |
-| `claude_initial_plan.md` | The original phase-by-phase build plan |
+| `plans/claude_initial_plan.md` | The original phase-by-phase build plan |
 
 ---
 

@@ -4,7 +4,7 @@ Personal single-user music-discovery toolkit. Spotify's algorithmic endpoints ar
 deprecated for this app, so the recommendation reasoning lives in the Claude Code
 session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
 
-## Progress (see claude_initial_plan.md for full phase specs)
+## Progress (see plans/claude_initial_plan.md for full phase specs)
 > Open backlog / deferred ideas live in `IMPROVEMENTS.md` (e.g. GDPR extended-history import, waiting on Spotify's export).
 
 - **Phase 0 — done.** Scaffolding + auth complete. OAuth works (user: bgmaddox).
@@ -120,7 +120,7 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   iTunes layer, and newest taste dump into `data/taste_timeline.json` (~127 KB) with a
   Last.fm tag→bucket genre mapping (`TAG_BUCKETS`) and a `HOUSEHOLD_ARTISTS` tag (UI
   toggle, hidden by default). Design explored via Google Stitch (3 concepts, user picked a
-  hybrid; reference PNGs in `docs/stitch_concepts/`). Working doc: `TASTE_TIMELINE_PLAN.md`;
+  hybrid; reference PNGs in `docs/stitch_concepts/`). Working doc: `plans/TASTE_TIMELINE_PLAN.md`;
   redeploy runbook in `DEPLOY_MCP.md`. Tests in `tests/test_timeline_data.py` (25).
 - **Taste timeline v3 ("How you listen" expansion) — DEPLOYED, 2026-07-18.** Two new
   sections on `/discovery/history` built from previously-unused GDPR export fields
@@ -136,10 +136,10 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   `reason_start` map: remote=deliberate, appload=passive; `OBSESSION_MIN_PLAYS=15`);
   `build_timeline_data.py` merges them into `behavior`/`loyalty`/`discovery` keys
   (215 KB JSON, clock grids compacted to 7×24 arrays). Page is ~485 KB self-contained;
-  112 tests green. Working doc: `VIZ_EXPANSION_PLAN.md` (Phase 5 similarity network
+  112 tests green. Working doc: `plans/VIZ_EXPANSION_PLAN.md` (Phase 5 similarity network
   deferred). Redeploy unchanged: rebuild → re-inject `__TIMELINE_JSON__` → `scp`.
 - **Similarity network ("The shape of your taste") — DEPLOYED, 2026-07-18.** Phase 5 of
-  `VIZ_EXPANSION_PLAN.md`: a lazy-initialized D3 force-directed map on `/discovery/history`
+  `plans/VIZ_EXPANSION_PLAN.md`: a lazy-initialized D3 force-directed map on `/discovery/history`
   of all 187 non-household artists linked by 864 Last.fm similarity edges — clusters read
   as scenes (americana mass, hip-hop island, soul corridor; 12 artists float free). Click a
   node → in-library neighbors ranked by match **and** a "Just beyond the edge" card of
@@ -172,7 +172,7 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   `PLAYLIST_NOTES.md` + the `PLAYLISTS` array in `docs/recipes.html` intentionally still
   carry the user's real playlist journal (it's the showcase); SETUP.md tells forkers to
   clear them.
-- **Songs & albums expansion — DEPLOYED, 2026-07-18.** `TRACKS_ALBUMS_PLAN.md` phases 0–7
+- **Songs & albums expansion — DEPLOYED, 2026-07-18.** `plans/TRACKS_ALBUMS_PLAN.md` phases 0–7
   complete: 12 features across three new sections on `/discovery/history`, built from the
   two dimensions the page lacked (albums were aggregated nowhere; tracks were a bare
   top-150). **"The records"**: 35-album cover-art crate (base64 thumbs, progressive CDN
@@ -222,7 +222,7 @@ python cli.py -h                   # one entry point for every primitive (Phase 
   `/v1/artists/{id}/related-artists`, or featured/category playlists — they 403/404
   for this app (re-confirm via `probe.py`).
 - Keep Python dumb: it fetches JSON and acts. No recommendation logic in Python —
-  that belongs in the Claude session (Mode A). See `claude_initial_plan.md` for phases.
+  that belongs in the Claude session (Mode A). See `plans/claude_initial_plan.md` for phases.
 - **Reading taste data: use `cli.py taste-snapshot`, never `Read` the raw
   `data/taste_*.json`.** The raw dump is ~55k tokens of mostly-unused metadata; the
   snapshot is ~2k and carries everything a session needs — top long-term artists, top
