@@ -440,6 +440,32 @@
   .prov b{color:var(--muted)}
   .sectiongap{margin-top:16px}
 
+  /* ---------- sticky section nav ---------- */
+  #secnav{
+    position:sticky;top:0;z-index:200;
+    background:rgba(10,10,12,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    /* chip strip lives inside .wrap width — no extra overflow */
+  }
+  #secnav-inner{
+    display:flex;gap:4px;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;padding:7px 0;
+    /* chips scroll horizontally on mobile without leaking to doc */
+    max-width:100%;
+  }
+  #secnav-inner::-webkit-scrollbar{display:none}
+  .snchip{
+    flex:none;
+    display:inline-flex;align-items:center;
+    padding:5px 13px;border-radius:999px;
+    font-size:12.5px;font-weight:600;letter-spacing:.01em;
+    background:var(--panel-2);border:1px solid var(--line);color:var(--muted);
+    cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s,background .15s;
+  }
+  .snchip:hover,.snchip:focus-visible{color:var(--text);border-color:var(--faint)}
+  .snchip.active{background:rgba(29,185,84,.12);border-color:var(--green-dim);color:var(--green)}
+
   @media (prefers-reduced-motion:no-preference){
     .reveal{opacity:0;transform:translateY(8px);animation:rise .6s ease forwards}
     @keyframes rise{to{opacity:1;transform:none}}
@@ -470,7 +496,21 @@
 
   <div class="stats" id="stats"></div>
 
-  <section class="panel reveal">
+  <nav id="secnav" aria-label="Jump to section">
+    <div id="secnav-inner">
+      <button class="snchip" data-target="riverSection">Genre river</button>
+      <button class="snchip" data-target="howyoulisten">How you listen</button>
+      <button class="snchip" data-target="bubblesSection">Every artist</button>
+      <button class="snchip" data-target="artiststories">Artist stories</button>
+      <button class="snchip" data-target="tastenet">Shape of taste</button>
+      <button class="snchip" data-target="records">The records</button>
+      <button class="snchip" data-target="songs">The songs</button>
+      <button class="snchip" data-target="funlists">Keepsakes</button>
+      <button class="snchip" data-target="itunesSection">iTunes shelf</button>
+    </div>
+  </nav>
+
+  <section class="panel reveal" id="riverSection">
     <h2>Genre river · the streaming years</h2>
     <p class="sub">Plays per year by genre, 2018–2026. Streaming only — the iTunes era lives in its
     own shelf below, and the thin 2015–17 years are noted there rather than drawn.</p>
@@ -529,7 +569,7 @@
     </div>
   </section>
 
-  <section class="panel sectiongap reveal">
+  <section class="panel sectiongap reveal" id="bubblesSection">
     <h2>Every artist on record</h2>
     <p class="sub">All tracked artists, sized by lifetime streamed plays and colored by genre.
     Search or tap a genre chip to filter; click a bubble to see its trajectory.</p>
@@ -640,7 +680,7 @@
         <p class="sub2" id="recSub">One record, its trajectory, and how far in you got.</p>
         <div id="recBody"><p class="placeholder">Pick a record from the crate.</p></div>
       </div>
-      <div class="hylcard">
+      <div class="hylcard" style="align-self:start">
         <h3>Album people or singles people?</h3>
         <p class="sub2" id="sessSub"></p>
         <div id="sessChart"></div>
@@ -745,7 +785,7 @@
     </div>
   </section>
 
-  <section class="panel sectiongap reveal">
+  <section class="panel sectiongap reveal" id="itunesSection">
     <h2>Before streaming · the iTunes library, 2013–14</h2>
     <p class="sub">Two library snapshots, September 2013 and April 2014 — cumulative play counts from
     the pre-streaming years, a different kind of record than the river above.</p>
@@ -2355,6 +2395,62 @@ function bootFun(){
     io.observe(sec);
   } else initFun();
 }
+
+/* ---------- section nav ---------- */
+// The IO-gated sections (tastenet/records/songs/funlists) are un-hidden at boot but
+// only *rendered* (init*) when scrolled near, so before the nav has been used the page
+// is shorter than its final height. Jumping to a far section against that short layout
+// undershoots, because intermediate sections expand as the smooth-scroll passes them.
+// Fix: on first nav use, init every lazy section so the document reaches full height,
+// THEN compute the scroll target. Each init* is guarded by its own *Inited flag, so this
+// is idempotent and normal scroll-to-reveal browsing is unaffected.
+function revealAllLazy(){
+  const tn = document.getElementById("tastenet");
+  if (tn && !tn.hidden && !netInited) initNetwork();
+  const rc = document.getElementById("records");
+  if (rc && !rc.hidden && !recInited) initRecords();
+  const sg = document.getElementById("songs");
+  if (sg && !sg.hidden && !sngInited) initSongs();
+  const fn = document.getElementById("funlists");
+  if (fn && !fn.hidden && !funInited) initFun();
+}
+
+(function(){
+  const nav = document.getElementById("secnav");
+  const chips = nav.querySelectorAll(".snchip[data-target]");
+
+  chips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      const id = chip.dataset.target;
+      revealAllLazy(); // stabilize page height so the jump lands accurately
+      const el = document.getElementById(id);
+      if (!el || el.hidden) return; // section absent (no data) — nothing to jump to
+      // Two RAFs so layout settles after the newly-rendered sections are in the DOM.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        // Offset by nav height so the section isn't hidden under the sticky bar
+        const navH = nav.getBoundingClientRect().height;
+        const top = el.getBoundingClientRect().top + window.scrollY - navH - 8;
+        window.scrollTo({top, behavior:"smooth"});
+      }));
+    });
+  });
+
+  // Highlight active chip based on scroll position
+  const sectionIds = Array.from(chips).map(c => c.dataset.target);
+  function updateActive(){
+    const navH = nav.getBoundingClientRect().height;
+    let active = null;
+    for (const id of sectionIds){
+      const el = document.getElementById(id);
+      if (!el || el.hidden) continue;
+      const rect = el.getBoundingClientRect();
+      if (rect.top <= navH + 40) active = id;
+    }
+    chips.forEach(c => c.classList.toggle("active", c.dataset.target === active));
+  }
+  window.addEventListener("scroll", updateActive, {passive:true});
+  updateActive();
+})();
 
 /* ---------- household toggle ---------- */
 document.getElementById("hhToggle").addEventListener("change", (ev) => {
