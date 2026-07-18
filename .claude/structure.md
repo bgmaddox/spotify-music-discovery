@@ -13,7 +13,8 @@ knowledge:    knowledge/  (discovery_heuristics.md = angles, genre_map.md = cura
 tests:        tests/  (pytest; pure parsing/normalization logic — no network/auth — run `pytest -q`)
 data:         data/    (taste_*.json, library_*.json dumps [newest 5 kept], discovery_log.jsonl; gitignored)
 covers:       covers/  (generated playlist cover .jpgs from generate-cover; gitignored — regenerable, already on Spotify. Write new covers here: generate-cover "..." --out covers/<name>.jpg)
-docs:         docs/    (recipes.html = rendered view of RECIPES.md; gitignored, derived)
-config:       .env  (secrets)  ·  .env.example  (template)
+docs:         docs/    (recipes.html = showcase page; history.html = data-free timeline TEMPLATE — personal copy is gitignored history.local.html via `cli.py timeline-inject`)
+config:       .env  (secrets)  ·  .env.example  (template)  ·  config/  (per-user seeds: household_artists.txt, tag_buckets.json — see config/README.md)
+setup:        SETUP.md  (new-user/new-machine guide; GDPR export first, discovery layer while waiting)
 plan:         claude_initial_plan.md
 skip:         .venv/, __pycache__/, .cache, .cache_lastfm/, .cache_everynoise/, covers/, docs/recipes.html

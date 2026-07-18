@@ -54,7 +54,7 @@ from lastfm import _cmd_artist_tags, _cmd_similar_artists, _cmd_similar_tracks
 from sensing import _cmd_library_scan, _cmd_now_playing
 from streaming_history import _cmd_history_build, _cmd_history_snapshot
 import streaming_history
-from build_timeline_data import _cmd_timeline_build
+from build_timeline_data import _cmd_timeline_build, _cmd_timeline_inject
 from build_similarity_data import _cmd_similarity_build
 from tools import _cmd_build_playlist, _cmd_search_verify, _cmd_set_playlist_image
 
@@ -284,6 +284,12 @@ def main() -> int:
         "--verbose", "-v", action="store_true", help="Print per-artist bucket resolution."
     )
     tb.set_defaults(func=_cmd_timeline_build)
+
+    ti = sub.add_parser(
+        "timeline-inject",
+        help="Inline data/taste_timeline.json into docs/history.local.html.",
+    )
+    ti.set_defaults(func=_cmd_timeline_inject)
 
     sb = sub.add_parser(
         "similarity-build",

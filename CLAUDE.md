@@ -152,6 +152,26 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   compact — 204 KB, smaller than v3's 215 despite the new data; page 549 KB self-contained;
   125 tests green (13 new in `tests/test_similarity_data.py`). After a taste shift:
   `similarity-build` → `timeline-build` → re-inject → scp (runbook unchanged).
+- **Shareability pass — done, 2026-07-18.** Made the repo forkable by strangers (+ their
+  AI agents) without leaking the user's data. (1) `docs/history.html` is now a **data-free
+  template**: the inlined personal timeline JSON was replaced with the `__TIMELINE_JSON__`
+  placeholder (563→355 KB) plus a friendly "no data injected yet" fallback screen; the
+  personal deployable copy is the **gitignored `docs/history.local.html`**, produced by the
+  new `cli.py timeline-inject` (formalizes the old ad-hoc replace; escapes `</` inside JSON
+  strings). **Redeploy flow is now: `timeline-build` → `timeline-inject` →
+  `scp docs/history.local.html rachett:/var/www/discovery/history.html`** — never scp
+  `docs/history.html` itself (it's the empty template). (2) Per-user seeds moved to a
+  tracked `config/` dir (`!config/*.json` gitignore negation): `household_artists.txt`
+  (loaded by `household.py`; warning + empty set if missing) and `tag_buckets.json` (loaded
+  by `build_timeline_data.py`, order-preserving; bucket names stay fixed to the front-end
+  `BUCKETS` palette — see `config/README.md`). (3) `SETUP.md` = new-user guide sequenced
+  around the ~30-day GDPR export wait (request export day 1, run the discovery layer
+  meanwhile, personalize config, build the timeline when it lands); README links it.
+  133 tests green (8 new in `tests/test_config_inject.py`); both pages verified in-browser
+  (injected copy renders the full viz, bare template shows the fallback). Note:
+  `PLAYLIST_NOTES.md` + the `PLAYLISTS` array in `docs/recipes.html` intentionally still
+  carry the user's real playlist journal (it's the showcase); SETUP.md tells forkers to
+  clear them.
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 - **Showcase page — done, 2026-07-14.** `docs/recipes.html` is now a tabbed

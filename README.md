@@ -11,6 +11,10 @@ You don't run most of this by hand. You **talk to Claude** ("find me something n
 roots/Americana vein", "what's playing and where does it come from?", "build me a playlist
 from my Isbell/Sturgill cluster") and Claude drives the tools below.
 
+> **Want to run this against your own Spotify account?** See **`SETUP.md`** — the
+> discovery layer is a ~1-hour setup; the history visualizations need Spotify's
+> Extended Streaming History export (up to ~30 days), so request that first.
+
 ---
 
 ## What it can do
@@ -111,6 +115,8 @@ auth, so it runs offline in well under a second.
 | `discovery_log.py` | Cross-session ledger of what Claude has already surfaced (dedup) |
 | `mcp_server.py` | Read-only server for the Claude mobile app (Phase 6) |
 | `probe.py` | Confirms which Spotify endpoints are dead |
+| `SETUP.md` | Set this up on your own machine / Spotify account |
+| `config/` | Per-user personalization: household filter + tag→genre buckets |
 | `RECIPES.md` | The discovery workflows Claude follows |
 | `knowledge/` | `discovery_heuristics.md` (angles) + `genre_map.md` (adjacencies) |
 | `tests/` | `pytest` suite over the pure parsing/normalization logic |

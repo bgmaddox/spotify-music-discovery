@@ -12,7 +12,12 @@ data/
 # generated playlist covers (regenerable; already uploaded to Spotify)
 covers/
 
+# personal injected copy of the timeline page (docs/history.html stays a data-free template)
+docs/history.local.html
+
 # keep the example env tracked
 !.env.example
+# keep the per-user personalization config tracked (see config/README.md)
+!config/*.json
 # keep the parsed everynoise genre map (static reference data, not a secret/dump)
 !knowledge/genres_coords.json

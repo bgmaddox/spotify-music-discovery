@@ -161,8 +161,10 @@ curl -s -o /dev/null -w "%{http_code}\n" https://rachett.tail504ae5.ts.net/disco
 
 ### Taste timeline page (`/discovery/history`)
 
-The interactive taste-timeline visualization (`docs/history.html`, self-contained: D3 v7 +
-`data/taste_timeline.json` inlined) is served the same way from the same directory. Its
+The interactive taste-timeline visualization is served the same way from the same
+directory. `docs/history.html` in the repo is a **data-free template** (D3 v7 inlined,
+`__TIMELINE_JSON__` placeholder); the deployable personal copy is the gitignored
+`docs/history.local.html`, produced by `python cli.py timeline-inject`. Its
 Caddy route is a second exact-match matcher (the `@discovery` matcher is exact, so it never
 serves subpaths):
 
@@ -176,14 +178,15 @@ handle @history {
 ```
 
 ```bash
-# redeploy after editing docs/history.html (no Caddy change, no restart)
-scp docs/history.html rachett:/var/www/discovery/history.html
+# redeploy after editing the template or refreshing data (no Caddy change, no restart)
+python cli.py timeline-inject      # docs/history.html + data/taste_timeline.json → docs/history.local.html
+scp docs/history.local.html rachett:/var/www/discovery/history.html
 curl -s -o /dev/null -w "%{http_code}\n" https://rachett.tail504ae5.ts.net/discovery/history  # 200
 ```
 
-If the underlying data changes, rebuild + re-embed first: `python cli.py timeline-build`,
-then re-inject the JSON into `docs/history.html` (see `TASTE_TIMELINE_PLAN.md` → rebuild
-note) before the `scp`.
+If the underlying data changes, run `python cli.py timeline-build` first, then the
+inject + `scp` above. Never `scp docs/history.html` itself — it's the data-free
+template and would deploy an empty page.
 
 ## Using it on the phone
 Ask naturally — e.g. *"What's playing? Give me three new artists like it, check they're

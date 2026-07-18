@@ -1,0 +1,19 @@
+# Artists forced into the kids/household bucket regardless of Last.fm tags.
+# One artist per line; lines starting with # are comments. Case-sensitive exact match.
+# Edit this for YOUR household (kids' music, sleep audio, partner-only artists, …).
+# Anything matching "white noise" (case-insensitive) is always filtered, no entry needed.
+CoComelon
+Pinkfong
+Elmo
+Bluey
+Kristen Bell
+Idina Menzel
+Auli'i Cravalho
+Mark Mancina
+Josh Gad
+Jonathan Groff
+Super Simple Songs
+The Wiggles
+# white-noise sleep audio (Last.fm tags say electronic; not taste)
+Bruce Brus
+Nursery Rhymes Band

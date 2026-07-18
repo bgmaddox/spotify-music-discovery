@@ -37,116 +37,28 @@ SIMILARITY_EDGES_PATH = os.path.join(DATA_DIR, "similarity_edges.json")
 # ------------------------------------------------------------------ genre buckets
 
 # Maps messy Last.fm tag strings (lowercased) → canonical bucket names.
-# Longer / more-specific entries must appear before shorter ones so the first
-# match wins when a tag could satisfy multiple patterns.
-TAG_BUCKETS: dict[str, str] = {
-    # folk / americana cluster
-    "americana": "folk/americana",
-    "folk": "folk/americana",
-    "alt-country": "folk/americana",
-    "alt country": "folk/americana",
-    "outlaw country": "folk/americana",
-    "red dirt": "folk/americana",
-    "bluegrass": "folk/americana",
-    "roots rock": "folk/americana",
-    "folk rock": "folk/americana",
-    "singer-songwriter": "folk/americana",
-    "singer songwriter": "folk/americana",
-    "appalachian folk": "folk/americana",
-    "acoustic": "folk/americana",
-    "new americana": "folk/americana",
-    # country (mainstream/traditional, NOT bluegrass/americana)
-    "country": "country",
-    "texas country": "country",
-    "traditional country": "country",
-    "bro country": "country",
-    "nashville sound": "country",
-    # indie rock / alternative
-    "indie rock": "indie rock",
-    "indie pop": "indie rock",
-    "indie": "indie rock",
-    "alternative": "indie rock",
-    "alternative rock": "indie rock",
-    "indie folk": "indie rock",
-    "dream pop": "indie rock",
-    "shoegaze": "indie rock",
-    "lo-fi": "indie rock",
-    "post-punk": "indie rock",
-    "emo": "indie rock",
-    # hip hop
-    "hip hop": "hip hop",
-    "hip-hop": "hip hop",
-    "rap": "hip hop",
-    "gangsta rap": "hip hop",
-    "southern hip hop": "hip hop",
-    "east coast hip hop": "hip hop",
-    "west coast hip hop": "hip hop",
-    "trap": "hip hop",
-    "conscious hip hop": "hip hop",
-    # classic rock (guitar-driven, pre-2000s mainstream rock)
-    "classic rock": "classic rock",
-    "rock": "classic rock",
-    "hard rock": "classic rock",
-    "arena rock": "classic rock",
-    "blues rock": "classic rock",
-    "70s": "classic rock",
-    "80s": "classic rock",
-    "southern rock": "classic rock",
-    "heartland rock": "classic rock",
-    # soul / blues / r&b
-    "soul": "soul/blues",
-    "blues": "soul/blues",
-    "r&b": "soul/blues",
-    "rnb": "soul/blues",
-    "motown": "soul/blues",
-    "funk": "soul/blues",
-    "neo soul": "soul/blues",
-    "gospel": "soul/blues",
-    # pop
-    "pop": "pop",
-    "electropop": "pop",
-    "synthpop": "pop",
-    "power pop": "pop",
-    "dance pop": "pop",
-    "teen pop": "pop",
-    # electronic
-    "electronic": "electronic",
-    "electronica": "electronic",
-    "edm": "electronic",
-    "house": "electronic",
-    "techno": "electronic",
-    "ambient": "electronic",
-    "downtempo": "electronic",
-    "chillout": "electronic",
-    "trip-hop": "electronic",
-    "idm": "electronic",
-    "mashup": "electronic",
-    # metal / punk
-    "metal": "metal/punk",
-    "punk": "metal/punk",
-    "punk rock": "metal/punk",
-    "heavy metal": "metal/punk",
-    "death metal": "metal/punk",
-    "black metal": "metal/punk",
-    "hardcore": "metal/punk",
-    # jazz
-    "jazz": "jazz",
-    "bossa nova": "jazz",
-    "swing": "jazz",
-    "big band": "jazz",
-    "smooth jazz": "jazz",
-    # soundtrack / score
-    "soundtrack": "soundtrack",
-    "score": "soundtrack",
-    "film score": "soundtrack",
-    "video game music": "soundtrack",
-    "classical": "soundtrack",
-    # kids / household — also forced via HOUSEHOLD_ARTISTS
-    "children's music": "kids/household",
-    "children": "kids/household",
-    "kids": "kids/household",
-    "nursery rhymes": "kids/household",
-}
+# Lives in config/tag_buckets.json so a new user can re-seed it for their own
+# genre clusters without touching code. Order matters: longer / more-specific
+# entries must appear before shorter ones so the first match wins when a tag
+# could satisfy multiple patterns (JSON object order is preserved on load).
+TAG_BUCKETS_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "config", "tag_buckets.json"
+)
+
+
+def _load_tag_buckets(path: str = TAG_BUCKETS_PATH) -> dict[str, str]:
+    try:
+        with open(path, encoding="utf-8") as f:
+            return {str(k): str(v) for k, v in json.load(f).items()}
+    except FileNotFoundError:
+        print(
+            f"warning: {path} not found — all tags will fall through to 'other'",
+            file=sys.stderr,
+        )
+        return {}
+
+
+TAG_BUCKETS: dict[str, str] = _load_tag_buckets()
 
 # iTunes genre strings → canonical buckets (direct label match, case-insensitive).
 ITUNES_GENRE_MAP: dict[str, str] = {
@@ -918,6 +830,62 @@ def _cmd_timeline_build(args) -> int:
     return 0
 
 
+# ------------------------------------------------------------------ inject
+
+TEMPLATE_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docs", "history.html"
+)
+INJECTED_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docs", "history.local.html"
+)
+_PLACEHOLDER = "__TIMELINE_JSON__"
+
+
+def inject_timeline(
+    template_path: str = TEMPLATE_PATH,
+    data_path: str = TIMELINE_PATH,
+    out_path: str = INJECTED_PATH,
+) -> str:
+    """Inline data/taste_timeline.json into the history.html template.
+
+    The committed docs/history.html is a data-free template with a
+    __TIMELINE_JSON__ placeholder; this writes the personal, deployable copy
+    to docs/history.local.html (gitignored). Returns the output path.
+    """
+    template = open(template_path, encoding="utf-8").read()
+    if _PLACEHOLDER not in template:
+        raise ValueError(
+            f"{template_path} has no {_PLACEHOLDER} placeholder — "
+            "it may already be an injected copy"
+        )
+    with open(data_path, encoding="utf-8") as f:
+        data = json.load(f)
+    payload = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+    # a "</script>" inside a JSON string would end the tag early; "<\/" is
+    # identical JSON but inert in HTML
+    payload = payload.replace("</", "<\\/")
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(template.replace(_PLACEHOLDER, payload, 1))
+    return out_path
+
+
+def _cmd_timeline_inject(args) -> int:
+    try:
+        out = inject_timeline()
+    except FileNotFoundError as e:
+        print(
+            f"error: {e}\n  (run `python cli.py timeline-build` first)", file=sys.stderr
+        )
+        return 1
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    print(out)  # stdout: the machine result (path)
+    size_kb = os.path.getsize(out) / 1024
+    print(f"  {size_kb:.0f} KB self-contained page ready to open/deploy", file=sys.stderr)
+    return 0
+
+
 def main() -> int:
     import argparse
 
@@ -928,6 +896,10 @@ def main() -> int:
         "--verbose", "-v", action="store_true", help="Print per-artist bucket resolution."
     )
     tb.set_defaults(func=_cmd_timeline_build)
+    ti = sub.add_parser(
+        "inject", help="Inline the timeline JSON into docs/history.local.html."
+    )
+    ti.set_defaults(func=_cmd_timeline_inject)
     args = p.parse_args()
     return args.func(args)
 
