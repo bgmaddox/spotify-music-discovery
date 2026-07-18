@@ -198,6 +198,16 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   green (+69); verified desktop + 390×844 + template fallback, zero console errors.
   Orchestration note: phases 1–3 Sonnet subagents, 4–6 Opus subagents, verify Sonnet —
   Fable only spec'd/reviewed/deployed.
+- **History-page polish pass — DEPLOYED, 2026-07-18.** `plans/HISTORY_POLISH_PLAN.md`
+  all 5 phases shipped: mobile overflow fix (390px milestone rows), copy pass (new lede,
+  "Fun lists"→"Keepsakes", disclaimer trim), sticky section nav with scroll-spy +
+  records whitespace, and the gated **Phase 4 narrative reorder** — sections regrouped
+  what-then-how (river → every artist → shape of taste → records → songs, then how you
+  listen → artist stories → keepsakes, iTunes shelf last). Only `howyoulisten` and
+  `artiststories` moved; nav chips reordered to match (scroll-spy assumes chip order =
+  DOM order). Phase 4 done by Fable directly (high breakage surface), Playwright verify
+  by a Sonnet subagent: both widths clean, 0 console messages, no overflow, all 9 nav
+  jumps land, cross-section clicks fire.
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 - **Showcase page — done, 2026-07-14.** `docs/recipes.html` is now a tabbed

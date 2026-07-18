@@ -86,8 +86,15 @@ Language/voice work — the judgment-heavy phase.
 - Update `CLAUDE.md` history-page entry + `plans/` note that the polish pass shipped.
 - **Why Sonnet:** mechanical execution of an existing runbook.
 
-## Phase 4 — (GATED) Narrative reorder — what-then-how  ·  Model: **Opus**
-**Do not start without explicit user go-ahead** (decision: keep gated). Regroup
+## Phase 4 — Narrative reorder — what-then-how  ·  **SHIPPED 2026-07-18**
+User gave go-ahead; executed by **Fable directly** (not a subagent) per user
+instruction, with a Sonnet subagent doing the Playwright verification. Only two
+blocks actually moved (`howyoulisten`, `artiststories` → between `songs` and
+`funlists`); nav chips reordered to match the new DOM order (scroll-spy depends
+on chip order). Verified both widths: all sections render, 0 console messages,
+no mobile overflow, all 9 nav jumps land, cross-section clicks fire. Deployed.
+
+Original spec follows. Regroup
 sections into a clean arc: the *what*-zoom (genre river → every artist → shape of
 your taste → records → songs) then the *how/when* cluster (how you listen → artist
 stories → fun lists), iTunes shelf last.

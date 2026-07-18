@@ -499,12 +499,12 @@
   <nav id="secnav" aria-label="Jump to section">
     <div id="secnav-inner">
       <button class="snchip" data-target="riverSection">Genre river</button>
-      <button class="snchip" data-target="howyoulisten">How you listen</button>
       <button class="snchip" data-target="bubblesSection">Every artist</button>
-      <button class="snchip" data-target="artiststories">Artist stories</button>
       <button class="snchip" data-target="tastenet">Shape of taste</button>
       <button class="snchip" data-target="records">The records</button>
       <button class="snchip" data-target="songs">The songs</button>
+      <button class="snchip" data-target="howyoulisten">How you listen</button>
+      <button class="snchip" data-target="artiststories">Artist stories</button>
       <button class="snchip" data-target="funlists">Keepsakes</button>
       <button class="snchip" data-target="itunesSection">iTunes shelf</button>
     </div>
@@ -534,41 +534,6 @@
     </section>
   </div>
 
-  <section class="panel sectiongap reveal" id="howyoulisten" hidden>
-    <h2>How you listen</h2>
-    <p class="sub">Not what — how. When the music plays, whether you chose it or the queue did,
-    and which devices carried it. Household and kids plays are excluded from everything in this
-    section, so this is the taste signal only.</p>
-    <div class="hylgrid">
-      <div class="hylcard">
-        <h3>The listening clock</h3>
-        <p class="sub2">Plays by hour and weekday, local time.</p>
-        <div class="legend" id="clockChips" style="margin:0 0 10px"></div>
-        <svg id="clockSvg" role="img" aria-label="Heatmap of plays by hour of day and weekday"></svg>
-        <p class="caption" id="clockCaption"></p>
-      </div>
-      <div class="hylcard">
-        <h3>Autopilot vs. intent</h3>
-        <p class="sub2">How each play started, per year — share of plays.</p>
-        <svg id="intentSvg" role="img" aria-label="Stacked bars of deliberate, shuffle, and autoplay plays per year"></svg>
-        <div class="legend" id="intentLegend" style="margin-top:10px"></div>
-        <p class="caption" id="intentCaption"></p>
-      </div>
-      <div class="hylcard">
-        <h3>Where it played</h3>
-        <p class="sub2">Devices per year — share of plays.</p>
-        <svg id="platSvg" role="img" aria-label="Stacked bars of platform share per year"></svg>
-        <div class="legend" id="platLegend" style="margin-top:10px"></div>
-      </div>
-      <div class="hylcard">
-        <h3>Seasons of sound</h3>
-        <p class="sub2">Each genre's calendar rhythm, all years combined. Shading is relative to each genre's own peak month.</p>
-        <svg id="seasonSvg" role="img" aria-label="Heatmap of genre plays by calendar month"></svg>
-        <p class="caption" id="seasonCaption"></p>
-      </div>
-    </div>
-  </section>
-
   <section class="panel sectiongap reveal" id="bubblesSection">
     <h2>Every artist on record</h2>
     <p class="sub">All tracked artists, sized by lifetime streamed plays and colored by genre.
@@ -580,62 +545,6 @@
       <div class="legend" id="bubbleFilter" style="margin:0"></div>
     </div>
     <svg id="bubbles" role="img" aria-label="Bubble chart of all artists sized by plays"></svg>
-  </section>
-
-  <section class="panel sectiongap reveal" id="artiststories" hidden>
-    <h2>Artist stories</h2>
-    <p class="sub">The arcs inside the river — who stayed, who left and came back, the songs you
-    couldn't stop playing, and the artists you never skip. Click any name to trace its trajectory.</p>
-
-    <div class="hylcard">
-      <h3>Loyalty spans</h3>
-      <p class="sub2">First play to last play for your biggest artists. A bright right edge means they're still in rotation.</p>
-      <div class="fieldtools" style="margin-bottom:2px">
-        <label class="search"><span aria-hidden="true" style="color:var(--faint)">⌕</span>
-          <input id="loyaltySearch" type="search" placeholder="Find an artist…" aria-label="Find an artist in loyalty spans">
-        </label>
-      </div>
-      <div class="laxis" id="loyaltyAxis" aria-hidden="true"></div>
-      <div class="loyaltywrap" id="loyaltyList"></div>
-    </div>
-
-    <div class="hylgrid">
-      <div class="hylcard">
-        <h3>Left &amp; came back</h3>
-        <p class="sub2">Artists with a two-year-plus silence who returned.</p>
-        <div class="redisgrid" id="redisGrid"></div>
-      </div>
-      <div class="hylcard">
-        <h3>Obsessions</h3>
-        <p class="sub2">Tracks played 15+ times inside a single month. Bigger dot, deeper spiral.</p>
-        <svg id="obsSvg" role="img" aria-label="Timeline of track obsession episodes"></svg>
-        <p class="caption" id="obsCaption"></p>
-      </div>
-    </div>
-
-    <div class="hylgrid">
-      <div class="hylcard">
-        <h3>The skip fingerprint</h3>
-        <p class="sub2">Trust and impatience, measured. Only artists with 20+ exposures count.</p>
-        <div class="skipcols">
-          <div>
-            <p class="skiph" style="color:var(--green)">Never skip</p>
-            <div id="neverSkip"></div>
-          </div>
-          <div>
-            <p class="skiph" style="color:var(--amber)">Quick to skip</p>
-            <div id="mostSkip"></div>
-          </div>
-        </div>
-      </div>
-      <div class="hylcard">
-        <h3>The Claude era</h3>
-        <p class="sub2" id="claudeNote"></p>
-        <div class="ministats" id="claudeStats"></div>
-        <p class="skiph" style="color:var(--green);margin-top:6px">Stuck — now in your listening</p>
-        <div class="stuckwrap" id="claudeStuck"></div>
-      </div>
-    </div>
   </section>
 
   <section class="panel sectiongap reveal" id="tastenet" hidden>
@@ -740,6 +649,97 @@
     <p class="caption"><b>Reading the lifelines.</b> All hundred cards share one time axis, so their positions
     are comparable — but each card's height is scaled to its own busiest month, so a song with 8 plays and a
     song with 130 both fill the card. Read the shape, not the height.</p>
+  </section>
+
+  <section class="panel sectiongap reveal" id="howyoulisten" hidden>
+    <h2>How you listen</h2>
+    <p class="sub">Not what — how. When the music plays, whether you chose it or the queue did,
+    and which devices carried it. Household and kids plays are excluded from everything in this
+    section, so this is the taste signal only.</p>
+    <div class="hylgrid">
+      <div class="hylcard">
+        <h3>The listening clock</h3>
+        <p class="sub2">Plays by hour and weekday, local time.</p>
+        <div class="legend" id="clockChips" style="margin:0 0 10px"></div>
+        <svg id="clockSvg" role="img" aria-label="Heatmap of plays by hour of day and weekday"></svg>
+        <p class="caption" id="clockCaption"></p>
+      </div>
+      <div class="hylcard">
+        <h3>Autopilot vs. intent</h3>
+        <p class="sub2">How each play started, per year — share of plays.</p>
+        <svg id="intentSvg" role="img" aria-label="Stacked bars of deliberate, shuffle, and autoplay plays per year"></svg>
+        <div class="legend" id="intentLegend" style="margin-top:10px"></div>
+        <p class="caption" id="intentCaption"></p>
+      </div>
+      <div class="hylcard">
+        <h3>Where it played</h3>
+        <p class="sub2">Devices per year — share of plays.</p>
+        <svg id="platSvg" role="img" aria-label="Stacked bars of platform share per year"></svg>
+        <div class="legend" id="platLegend" style="margin-top:10px"></div>
+      </div>
+      <div class="hylcard">
+        <h3>Seasons of sound</h3>
+        <p class="sub2">Each genre's calendar rhythm, all years combined. Shading is relative to each genre's own peak month.</p>
+        <svg id="seasonSvg" role="img" aria-label="Heatmap of genre plays by calendar month"></svg>
+        <p class="caption" id="seasonCaption"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel sectiongap reveal" id="artiststories" hidden>
+    <h2>Artist stories</h2>
+    <p class="sub">The arcs inside the river — who stayed, who left and came back, the songs you
+    couldn't stop playing, and the artists you never skip. Click any name to trace its trajectory.</p>
+
+    <div class="hylcard">
+      <h3>Loyalty spans</h3>
+      <p class="sub2">First play to last play for your biggest artists. A bright right edge means they're still in rotation.</p>
+      <div class="fieldtools" style="margin-bottom:2px">
+        <label class="search"><span aria-hidden="true" style="color:var(--faint)">⌕</span>
+          <input id="loyaltySearch" type="search" placeholder="Find an artist…" aria-label="Find an artist in loyalty spans">
+        </label>
+      </div>
+      <div class="laxis" id="loyaltyAxis" aria-hidden="true"></div>
+      <div class="loyaltywrap" id="loyaltyList"></div>
+    </div>
+
+    <div class="hylgrid">
+      <div class="hylcard">
+        <h3>Left &amp; came back</h3>
+        <p class="sub2">Artists with a two-year-plus silence who returned.</p>
+        <div class="redisgrid" id="redisGrid"></div>
+      </div>
+      <div class="hylcard">
+        <h3>Obsessions</h3>
+        <p class="sub2">Tracks played 15+ times inside a single month. Bigger dot, deeper spiral.</p>
+        <svg id="obsSvg" role="img" aria-label="Timeline of track obsession episodes"></svg>
+        <p class="caption" id="obsCaption"></p>
+      </div>
+    </div>
+
+    <div class="hylgrid">
+      <div class="hylcard">
+        <h3>The skip fingerprint</h3>
+        <p class="sub2">Trust and impatience, measured. Only artists with 20+ exposures count.</p>
+        <div class="skipcols">
+          <div>
+            <p class="skiph" style="color:var(--green)">Never skip</p>
+            <div id="neverSkip"></div>
+          </div>
+          <div>
+            <p class="skiph" style="color:var(--amber)">Quick to skip</p>
+            <div id="mostSkip"></div>
+          </div>
+        </div>
+      </div>
+      <div class="hylcard">
+        <h3>The Claude era</h3>
+        <p class="sub2" id="claudeNote"></p>
+        <div class="ministats" id="claudeStats"></div>
+        <p class="skiph" style="color:var(--green);margin-top:6px">Stuck — now in your listening</p>
+        <div class="stuckwrap" id="claudeStuck"></div>
+      </div>
+    </div>
   </section>
 
   <section class="panel sectiongap reveal" id="funlists" hidden>
