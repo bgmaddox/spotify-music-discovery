@@ -253,7 +253,7 @@
   .skiph{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin:0 0 7px}
   .skiprow{display:flex;align-items:center;gap:8px;border:0;background:none;width:100%;padding:3px 0;font:inherit;color:var(--text);font-size:12.5px;cursor:pointer;text-align:left}
   .skiprow:hover .sname{color:var(--green)}
-  .sname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .srate{color:var(--faint);font-size:11.5px;flex:none;width:74px;text-align:right}
   .sdot{width:8px;height:8px;border-radius:50%;flex:none}
   .stuckwrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
@@ -385,9 +385,10 @@
   .rc-barcode{height:46px;margin:0 auto;width:82%;background:repeating-linear-gradient(90deg,#1c1a16 0,#1c1a16 2px,transparent 2px,transparent 4px,#1c1a16 4px,#1c1a16 5px,transparent 5px,transparent 9px,#1c1a16 9px,#1c1a16 12px,transparent 12px,transparent 14px)}
   .rc-code{text-align:center;letter-spacing:.28em;font-size:11px;margin-top:5px}
   /* milestone club */
-  .msrow{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:baseline;padding:9px 2px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--text)}
+  .msrow{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:9px 2px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--text)}
   .msrow:last-child{border-bottom:0}
   .msrow:hover .ms-title{color:var(--green)}
+  .msrow .ms-main{display:block;min-width:0}
   .msrow .ms-rank{color:var(--faint);font-variant-numeric:tabular-nums;font-size:12.5px}
   .msrow .ms-title{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
   .msrow .ms-artist{font-size:11.5px;color:var(--muted)}
@@ -407,7 +408,8 @@
   .jcols{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;margin-top:12px}
   @media (max-width:640px){.jcols{grid-template-columns:1fr}}
   .jside{font-size:11px;color:var(--faint);letter-spacing:.12em;text-transform:uppercase;padding:6px 0 2px;border-bottom:1px solid var(--line)}
-  .jrow{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:baseline;padding:8px 2px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--text)}
+  .jrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:11px;align-items:baseline;padding:8px 2px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--text)}
+  .jrow .j-main{display:block;min-width:0}
   .jrow:hover .j-title{color:var(--green)}
   .jrow .j-year{font-variant-numeric:tabular-nums;font-weight:700;color:var(--amber);font-size:13px}
   .jrow .j-title{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
