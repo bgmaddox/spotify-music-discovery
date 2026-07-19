@@ -321,9 +321,19 @@
   .wondercard .wc-line em{color:var(--amber);font-style:normal;font-weight:600}
 
   /* ---------- the songs ---------- */
-  .lifewrap{grid-column:1/-1}
-  .lifegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px}
+  .lifewrap{grid-column:1/-1;position:relative}
+  .lifegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px;
+    max-height:480px;overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:var(--green-dim) transparent}
+  .lifegrid::-webkit-scrollbar{width:8px}
+  .lifegrid::-webkit-scrollbar-thumb{background:var(--green-dim);border-radius:4px}
+  .lifegrid::-webkit-scrollbar-track{background:transparent}
+  /* bottom fade cue — hidden once the grid is scrolled to the end */
+  .lifewrap::after{content:"";position:absolute;left:0;right:0;bottom:0;height:44px;border-radius:0 0 10px 10px;
+    background:linear-gradient(to bottom,transparent,var(--panel));pointer-events:none;
+    opacity:1;transition:opacity .2s ease}
+  .lifewrap.at-end::after{opacity:0}
   .lifecard{display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px 8px;text-decoration:none;color:var(--text)}
+  .lifecard[hidden]{display:none}
   .lifecard:hover{border-color:var(--green-dim)}
   .lifecard:focus-visible{outline:2px solid var(--green);outline-offset:2px}
   .lifecard svg{display:block;width:100%;height:36px;margin-bottom:5px}
@@ -2106,6 +2116,17 @@ function initSongs(){
     grid.appendChild(card);
   });
 
+  // bottom-fade cue: hide it once the grid is scrolled to (or fits within) the end
+  const lifewrap = grid.closest(".lifewrap");
+  const syncLifeFade = () => {
+    if (!lifewrap) return;
+    const atEnd = grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 4;
+    lifewrap.classList.toggle("at-end", atEnd);
+  };
+  grid.addEventListener("scroll", syncLifeFade, { passive: true });
+  window.addEventListener("resize", syncLifeFade);
+  syncLifeFade();
+
   // devotion list — top 12 by distinct years, tiebreak plays
   const dev = [...SNG.tracks].sort((a, b) =>
     (b.devotion_years - a.devotion_years) || (b.plays - a.plays)).slice(0, 12);
@@ -2204,6 +2225,10 @@ function renderSongSearch(){
       document.getElementById("lifeGrid").after(ph);
     }
   } else if (ph){ ph.remove(); }
+  // filtering changed the grid's scroll height — reset to top and re-sync the fade cue
+  const g = document.getElementById("lifeGrid");
+  g.scrollTop = 0;
+  g.dispatchEvent(new Event("scroll"));
 }
 document.getElementById("songSearch").addEventListener("input", (ev) => {
   songQuery = ev.target.value.trim().toLowerCase();
