@@ -629,7 +629,7 @@
         <div class="wondergrid" id="wonderGrid"></div>
       </div>
     </div>
-    <p class="caption"><b>Reading the crate.</b> Covers come from Spotify; completion counts only tracks from your all-time top 100, so rings are a floor, not a ceiling. Sessions are detected from consecutive same-album plays where each track ran to its end.</p>
+    <p class="caption noexport"><b>Reading the crate.</b> Covers come from Spotify; completion counts only tracks from your all-time top 100, so rings are a floor, not a ceiling. Sessions are detected from consecutive same-album plays where each track ran to its end.</p>
   </section>
 
   <section class="panel sectiongap reveal" id="songs" hidden>
@@ -671,7 +671,7 @@
       </div>
     </div>
 
-    <p class="caption"><b>Reading the lifelines.</b> All hundred cards share one time axis, so their positions
+    <p class="caption noexport"><b>Reading the lifelines.</b> All hundred cards share one time axis, so their positions
     are comparable — but each card's height is scaled to its own busiest month, so a song with 8 plays and a
     song with 130 both fill the card. Read the shape, not the height.</p>
   </section>
@@ -779,7 +779,7 @@
         <p class="sub2">One year of listening, rung up like a shop till. Pick a year.</p>
         <div class="rcpicker" id="rcPicker" role="group" aria-label="Choose a year"></div>
         <div class="rcstage" id="rcStage"></div>
-        <p class="caption"><b>Made for screenshots.</b> Snap it and share your year — every line is a real
+        <p class="caption noexport"><b>Made for screenshots.</b> Snap it and share your year — every line is a real
         top track, the subtotal is your hours, and the "tax" is how many songs you skipped.</p>
       </div>
 
@@ -805,7 +805,7 @@
       <h3>Deep Cut or Hit?</h3>
       <p class="dchead" id="dcHead"></p>
       <div class="dclist" id="dcList"></div>
-      <p class="dc-caption">Green dot = your most-played song's popularity. Grey dot = the artist's biggest hit.
+      <p class="dc-caption noexport">Green dot = your most-played song's popularity. Grey dot = the artist's biggest hit.
       A wide gap means you went digging.</p>
     </div>
   </section>
@@ -2537,22 +2537,41 @@ drawBubbles();
   function today(){ var d=new Date(); return d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0"); }
   var bodyBg = getComputedStyle(document.body).backgroundColor || "#0a0a0c";
 
+  var PR = 2;                       // pixel ratio (crisp on retina / for sharing)
+  var PAD = Math.round(24 * PR);     // outer breathing room, in device px
   function exportNode(node, name, btn){
     if (!node) return;
     btn.classList.add("busy");
-    htmlToImage.toPng(node, {
-      pixelRatio: 2,
+    htmlToImage.toCanvas(node, {
+      pixelRatio: PR,
       backgroundColor: bodyBg,
       cacheBust: true,
       imagePlaceholder: TRANSPARENT_PX,
       style: { margin: "0" },
       filter: function(n){
-        return !(n.classList && (n.classList.contains("dlbtn") ||
-          n.classList.contains("copybtn") || n.classList.contains("clearbtn")));
+        if (!n.classList) return true;
+        // drop interactive chrome + explainer captions that don't belong in a static image
+        if (n.classList.contains("dlbtn") || n.classList.contains("copybtn") ||
+            n.classList.contains("clearbtn")) return false;
+        if (n.classList.contains("search")) return false;    // "Find an artist…" box
+        if (n.classList.contains("nethint")) return false;   // "drag to pan…" hint
+        if (n.classList.contains("noexport")) return false;  // long "Reading the…" captions
+        // an otherwise-empty toolbar row (search only, no genre legend) → drop it
+        if (n.classList.contains("fieldtools") && !n.querySelector(".legend")) return false;
+        return true;
       }
-    }).then(function(dataUrl){
+    }).then(function(canvas){
+      // matte the visual with a page-colored border so it isn't flush to the edges
+      var out = document.createElement("canvas");
+      out.width = canvas.width + PAD * 2;
+      out.height = canvas.height + PAD * 2;
+      var ctx = out.getContext("2d");
+      ctx.fillStyle = bodyBg;
+      ctx.fillRect(0, 0, out.width, out.height);
+      ctx.drawImage(canvas, PAD, PAD);
       var a = document.createElement("a");
-      a.href = dataUrl; a.download = "taste-" + name + "-" + today() + ".png";
+      a.href = out.toDataURL("image/png");
+      a.download = "taste-" + name + "-" + today() + ".png";
       document.body.appendChild(a); a.click(); a.remove();
       btn.classList.remove("busy"); btn.classList.add("ok");
       setTimeout(function(){ btn.classList.remove("ok"); }, 1400);
