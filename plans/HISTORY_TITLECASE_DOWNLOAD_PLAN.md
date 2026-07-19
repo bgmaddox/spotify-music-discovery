@@ -96,7 +96,19 @@ acceptable and lower-risk.
 
 ---
 
-## Phase C — Per-visual "Save image" / download button  → **Model: Opus**
+## Phase C — Per-visual "Save image" / download button  → **Model: Opus**  ✅ SHIPPED
+**As built:** vendored `html-to-image` (19.5 KB, MIT) inlined into `docs/history.html`
+(source kept at `vendor/html-to-image.js` for re-injection provenance; keeps the page's
+zero-network-deps invariant). A ⤓ button is wired at load into **26 targets** — every
+`.hylcard`/`.funcard`/`.jcard` heading plus the four chart-only nodes (Genre River section,
+Every Artist section, `.netwrap`, and the `#crate`). Click → 2× PNG named
+`taste-<slug>-<yyyymmdd>.png`, page-bg filled, with `.dlbtn`/`.copybtn`/`.clearbtn` filtered
+out of the capture. Verified: PNGs produced for SVG, HTML-card, and the CORS-risky album
+crate (real covers rendered, not placeholders); no overflow at 1280 or 390; console clean.
+Re-inject after a template rebuild is handled by `cli.py timeline-inject` (the lib is part of
+the committed template, so nothing extra to do). Original design notes below kept for record.
+
+
 Higher design + cross-cutting risk (touches every section, mixed HTML+SVG), so Opus.
 
 **Feasibility: yes, and not too hard — but do it uniformly.** All charts are inline **SVG
