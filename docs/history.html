@@ -327,6 +327,12 @@
   .lifegrid::-webkit-scrollbar{width:8px}
   .lifegrid::-webkit-scrollbar-thumb{background:var(--green-dim);border-radius:4px}
   .lifegrid::-webkit-scrollbar-track{background:transparent}
+  /* scroll-cap tall lists (Milestone Club, Deep Cut or Hit?) */
+  #msList,#dcList{max-height:420px;overflow-y:auto;padding-right:6px;
+    scrollbar-width:thin;scrollbar-color:var(--green-dim) transparent}
+  #msList::-webkit-scrollbar,#dcList::-webkit-scrollbar{width:8px}
+  #msList::-webkit-scrollbar-thumb,#dcList::-webkit-scrollbar-thumb{background:var(--green-dim);border-radius:4px}
+  #msList::-webkit-scrollbar-track,#dcList::-webkit-scrollbar-track{background:transparent}
   /* bottom fade cue — hidden once the grid is scrolled to the end */
   .lifewrap::after{content:"";position:absolute;left:0;right:0;bottom:0;height:44px;border-radius:0 0 10px 10px;
     background:linear-gradient(to bottom,transparent,var(--panel));pointer-events:none;
@@ -488,7 +494,7 @@
   <header>
     <div>
       <span class="eyebrow">Listening history · 2013–2026</span>
-      <h1>Taste <span class="accent">timeline</span></h1>
+      <h1>Taste <span class="accent">Timeline</span></h1>
       <p class="lede">Thirteen years of listening, read from every angle. The streaming years rise as one
       genre river, then fan out into the artists behind it — mapped, sized, and linked — with the records
       and songs underneath and the hours and habits of how you actually listen. The iTunes library that
@@ -508,20 +514,20 @@
 
   <nav id="secnav" aria-label="Jump to section">
     <div id="secnav-inner">
-      <button class="snchip" data-target="riverSection">Genre river</button>
-      <button class="snchip" data-target="bubblesSection">Every artist</button>
-      <button class="snchip" data-target="tastenet">Shape of taste</button>
-      <button class="snchip" data-target="records">The records</button>
-      <button class="snchip" data-target="songs">The songs</button>
-      <button class="snchip" data-target="howyoulisten">How you listen</button>
-      <button class="snchip" data-target="artiststories">Artist stories</button>
+      <button class="snchip" data-target="riverSection">Genre River</button>
+      <button class="snchip" data-target="bubblesSection">Every Artist</button>
+      <button class="snchip" data-target="tastenet">Shape of Taste</button>
+      <button class="snchip" data-target="records">The Records</button>
+      <button class="snchip" data-target="songs">The Songs</button>
+      <button class="snchip" data-target="howyoulisten">How You Listen</button>
+      <button class="snchip" data-target="artiststories">Artist Stories</button>
       <button class="snchip" data-target="funlists">Keepsakes</button>
-      <button class="snchip" data-target="itunesSection">iTunes shelf</button>
+      <button class="snchip" data-target="itunesSection">iTunes Shelf</button>
     </div>
   </nav>
 
   <section class="panel reveal" id="riverSection">
-    <h2>Genre river · the streaming years</h2>
+    <h2>Genre River · The Streaming Years</h2>
     <p class="sub">Plays per year by genre, 2018–2026. Streaming only — the iTunes era lives in its
     own shelf below, and the thin 2015–17 years are noted there rather than drawn.</p>
     <div class="river-scroll"><svg id="river" role="img" aria-label="Streamgraph of listening by genre, 2018 to 2026"></svg></div>
@@ -532,11 +538,11 @@
 
   <div class="focusrow">
     <section class="panel" id="yearpanel" aria-live="polite">
-      <h2>Focused year</h2>
+      <h2>Focused Year</h2>
       <div id="yearbody"></div>
     </section>
     <section class="panel" id="artistpanel" aria-live="polite">
-      <h2 style="display:flex;align-items:center">Artist trajectory
+      <h2 style="display:flex;align-items:center">Artist Trajectory
         <button class="clearbtn" id="clearArtist" hidden>× clear</button>
       </h2>
       <div id="artistbody"><p class="placeholder">Click an artist anywhere on this page — year list,
@@ -545,7 +551,7 @@
   </div>
 
   <section class="panel sectiongap reveal" id="bubblesSection">
-    <h2>Every artist on record</h2>
+    <h2>Every Artist on Record</h2>
     <p class="sub">All tracked artists, sized by lifetime streamed plays and colored by genre.
     Search or tap a genre chip to filter; click a bubble to see its trajectory.</p>
     <div class="fieldtools">
@@ -558,7 +564,7 @@
   </section>
 
   <section class="panel sectiongap reveal" id="tastenet" hidden>
-    <h2>The shape of your taste</h2>
+    <h2>The Shape of Your Taste</h2>
     <p class="sub">Your library as one map — every artist linked to the artists Last.fm hears in
     them, sized by lifetime plays and colored by genre. Clusters are scenes; bridges are the
     artists that connect them. Click a node to see its neighborhood — including similar artists
@@ -575,12 +581,12 @@
     </div>
     <div class="hylgrid">
       <div class="hylcard">
-        <h3 id="netDetailTitle">Artist up close</h3>
+        <h3 id="netDetailTitle">Artist Up Close</h3>
         <p class="sub2" id="netDetailSub">Nearest neighbors inside your library, by similarity.</p>
         <div class="netrows" id="netNeighbors"><p class="placeholder">Click a node on the map.</p></div>
       </div>
       <div class="hylcard">
-        <h3>Just beyond the edge</h3>
+        <h3>Just Beyond the Edge</h3>
         <p class="sub2" id="netOutsideSub">Artists Last.fm places right next to the selection — but who
         aren't in your listening history. The discovery frontier.</p>
         <div class="netrows" id="netOutside"><p class="placeholder">Waiting on a selection.</p></div>
@@ -590,17 +596,17 @@
   </section>
 
   <section class="panel sectiongap reveal" id="records" hidden>
-    <h2>The records</h2>
+    <h2>The Records</h2>
     <p class="sub">Artists have the river; these are the albums underneath it. The crate holds your 35 most-played records — click one for its story.</p>
     <div class="crate" id="crate"></div>
     <div class="hylgrid">
       <div class="hylcard">
-        <h3 id="recTitle">Album up close</h3>
+        <h3 id="recTitle">Album Up Close</h3>
         <p class="sub2" id="recSub">One record, its trajectory, and how far in you got.</p>
         <div id="recBody"><p class="placeholder">Pick a record from the crate.</p></div>
       </div>
       <div class="hylcard" style="align-self:start">
-        <h3>Album people or singles people?</h3>
+        <h3>Album People or Singles People?</h3>
         <p class="sub2" id="sessSub"></p>
         <div id="sessChart"></div>
         <details class="crate-details">
@@ -609,7 +615,7 @@
         </details>
       </div>
       <div class="hylcard wonders">
-        <h3>One-track wonders</h3>
+        <h3>One-Track Wonders</h3>
         <p class="sub2">Albums where one song got all the love — the hit has the plays, the rest of the record is nearly untouched. Each one is an unexplored room.</p>
         <div class="wondergrid" id="wonderGrid"></div>
       </div>
@@ -618,12 +624,12 @@
   </section>
 
   <section class="panel sectiongap reveal" id="songs" hidden>
-    <h2>The songs</h2>
+    <h2>The Songs</h2>
     <p class="sub">Down from albums to the individual tracks — the hundred you've played most. Each one has a
     shape: a slow-burn, a summer obsession, a song you found once and never let go.</p>
 
     <div class="hylcard lifewrap">
-      <h3>Song lifelines</h3>
+      <h3>Song Lifelines</h3>
       <p class="sub2">Every top track as a monthly-plays sparkline, all on one shared timeline — so a 2019
       burst sits left and a 2025 discovery sits right. Height is each song's own peak; the shape is what to read.</p>
       <div class="fieldtools" style="margin-bottom:2px">
@@ -635,7 +641,7 @@
     </div>
 
     <div class="hylcard lifewrap" style="margin-top:14px">
-      <h3>The day you met your favorite songs</h3>
+      <h3>The Day You Met Your Favorite Songs</h3>
       <p class="sub2">Every top song placed on the day it first played for you. Older friendships sit left,
       recent finds right; bigger dots have more plays behind them.</p>
       <svg id="songsMet" role="img" aria-label="Timeline of first-play dates for top tracks"></svg>
@@ -644,13 +650,13 @@
 
     <div class="hylgrid">
       <div class="hylcard">
-        <h3>Longest devotion</h3>
+        <h3>Longest Devotion</h3>
         <p class="sub2">The songs that spanned the most calendar years — the ones you kept coming back to
         long after you first heard them.</p>
         <div class="devlist" id="devList"></div>
       </div>
       <div class="hylcard">
-        <h3>Track seasons</h3>
+        <h3>Track Seasons</h3>
         <p class="sub2">Songs that pile up inside one month of the year — the ones with a season attached.</p>
         <div id="seasonCards"></div>
       </div>
@@ -662,33 +668,33 @@
   </section>
 
   <section class="panel sectiongap reveal" id="howyoulisten" hidden>
-    <h2>How you listen</h2>
+    <h2>How You Listen</h2>
     <p class="sub">Not what — how. When the music plays, whether you chose it or the queue did,
     and which devices carried it. Household and kids plays are excluded from everything in this
     section, so this is the taste signal only.</p>
     <div class="hylgrid">
       <div class="hylcard">
-        <h3>The listening clock</h3>
+        <h3>The Listening Clock</h3>
         <p class="sub2">Plays by hour and weekday, local time.</p>
         <div class="legend" id="clockChips" style="margin:0 0 10px"></div>
         <svg id="clockSvg" role="img" aria-label="Heatmap of plays by hour of day and weekday"></svg>
         <p class="caption" id="clockCaption"></p>
       </div>
       <div class="hylcard">
-        <h3>Autopilot vs. intent</h3>
+        <h3>Autopilot vs. Intent</h3>
         <p class="sub2">How each play started, per year — share of plays.</p>
         <svg id="intentSvg" role="img" aria-label="Stacked bars of deliberate, shuffle, and autoplay plays per year"></svg>
         <div class="legend" id="intentLegend" style="margin-top:10px"></div>
         <p class="caption" id="intentCaption"></p>
       </div>
       <div class="hylcard">
-        <h3>Where it played</h3>
+        <h3>Where It Played</h3>
         <p class="sub2">Devices per year — share of plays.</p>
         <svg id="platSvg" role="img" aria-label="Stacked bars of platform share per year"></svg>
         <div class="legend" id="platLegend" style="margin-top:10px"></div>
       </div>
       <div class="hylcard">
-        <h3>Seasons of sound</h3>
+        <h3>Seasons of Sound</h3>
         <p class="sub2">Each genre's calendar rhythm, all years combined. Shading is relative to each genre's own peak month.</p>
         <svg id="seasonSvg" role="img" aria-label="Heatmap of genre plays by calendar month"></svg>
         <p class="caption" id="seasonCaption"></p>
@@ -697,12 +703,12 @@
   </section>
 
   <section class="panel sectiongap reveal" id="artiststories" hidden>
-    <h2>Artist stories</h2>
+    <h2>Artist Stories</h2>
     <p class="sub">The arcs inside the river — who stayed, who left and came back, the songs you
     couldn't stop playing, and the artists you never skip. Click any name to trace its trajectory.</p>
 
     <div class="hylcard">
-      <h3>Loyalty spans</h3>
+      <h3>Loyalty Spans</h3>
       <p class="sub2">First play to last play for your biggest artists. A bright right edge means they're still in rotation.</p>
       <div class="fieldtools" style="margin-bottom:2px">
         <label class="search"><span aria-hidden="true" style="color:var(--faint)">⌕</span>
@@ -715,7 +721,7 @@
 
     <div class="hylgrid">
       <div class="hylcard">
-        <h3>Left &amp; came back</h3>
+        <h3>Left &amp; Came Back</h3>
         <p class="sub2">Artists with a two-year-plus silence who returned.</p>
         <div class="redisgrid" id="redisGrid"></div>
       </div>
@@ -729,7 +735,7 @@
 
     <div class="hylgrid">
       <div class="hylcard">
-        <h3>The skip fingerprint</h3>
+        <h3>The Skip Fingerprint</h3>
         <p class="sub2">Trust and impatience, measured. Only artists with 20+ exposures count.</p>
         <div class="skipcols">
           <div>
@@ -743,7 +749,7 @@
         </div>
       </div>
       <div class="hylcard">
-        <h3>The Claude era</h3>
+        <h3>The Claude Era</h3>
         <p class="sub2" id="claudeNote"></p>
         <div class="ministats" id="claudeStats"></div>
         <p class="skiph" style="color:var(--green);margin-top:6px">Stuck — now in your listening</p>
@@ -760,7 +766,7 @@
 
     <div class="funtop">
       <div class="funcard">
-        <h3>The receipt</h3>
+        <h3>The Receipt</h3>
         <p class="sub2">One year of listening, rung up like a shop till. Pick a year.</p>
         <div class="rcpicker" id="rcPicker" role="group" aria-label="Choose a year"></div>
         <div class="rcstage" id="rcStage"></div>
@@ -769,7 +775,7 @@
       </div>
 
       <div class="funcard">
-        <h3>Milestone club</h3>
+        <h3>Milestone Club</h3>
         <p class="sub2">Total time spent inside a single song — plays × length. The ones you've truly lived in.</p>
         <div id="msList"></div>
       </div>
@@ -778,7 +784,7 @@
     <div class="jcard">
       <div class="jhead">
         <div>
-          <h3>Yearbook anthems</h3>
+          <h3>Yearbook Anthems</h3>
           <p class="sub2">One defining track for each year — the song that owned it. A mixtape of your life in music.</p>
         </div>
         <button type="button" class="copybtn" id="anthemCopy">Copy tracklist</button>
@@ -787,7 +793,7 @@
     </div>
 
     <div class="jcard">
-      <h3>Deep cut or hit?</h3>
+      <h3>Deep Cut or Hit?</h3>
       <p class="dchead" id="dcHead"></p>
       <div class="dclist" id="dcList"></div>
       <p class="dc-caption">Green dot = your most-played song's popularity. Grey dot = the artist's biggest hit.
@@ -796,7 +802,7 @@
   </section>
 
   <section class="panel sectiongap reveal" id="itunesSection">
-    <h2>Before streaming · the iTunes library, 2013–14</h2>
+    <h2>Before Streaming · The iTunes Library, 2013–14</h2>
     <p class="sub">Two library snapshots, September 2013 and April 2014 — cumulative play counts from
     the pre-streaming years, a different kind of record than the river above.</p>
     <div class="shelfgrid">
