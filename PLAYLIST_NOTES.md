@@ -10,6 +10,44 @@ the structure, and anything to tweak.
 
 ---
 
+## 🤖 Title Chain — Match Day
+**Link:** https://open.spotify.com/playlist/6qJfPTnXFEbJn2def7nLyU
+**Built:** 2026-07-19 · **Recipe:** 25 — Title chain (the wordplay game), soccer variant · **14 tracks**
+
+**Why these:** Recipe 25 as written chains titles word-to-word; this run bends the rule
+to a themed vocabulary chain instead — every title contains a word that's also a piece of
+soccer vocabulary, and the *sequence* of those words narrates one full match from kickoff
+to final whistle. Musical picks lean on your Americana/soul/classic-rock lanes so it still
+sounds like your playlist and not a novelty reel.
+
+**The chain, in order (linking soccer word in caps):**
+1. **KICK** — The Avett Brothers, Kick Drum Heart (kickoff)
+2. **PASS** — Iron & Wine, Passing Afternoon
+3. **RUN** — Bruce Springsteen, Born to Run
+4. **CROSS** — Robert Johnson, Cross Road Blues
+5. **SHOT** — Original Broadway Cast of Hamilton, My Shot
+6. **SAVE** — Jelly Roll, Save Me (the keeper comes up big)
+7. **CORNER** — Common, The Corner
+8. **HEADER** — The Fray, Over My Head (Cable Car)
+9. **FREE (KICK)** — Zac Brown Band, Free
+10. **WALL** — Pink Floyd, Another Brick in the Wall, Pt. 2 (the defensive wall)
+11. **BALL** (in the net) — Jerry Lee Lewis, Great Balls of Fire — goal!
+12. **CELEBRATION** — Kool & The Gang, Celebration
+13. **FULL TIME** — Semisonic, Closing Time
+14. **CHAMPIONS** — Queen, We Are the Champions
+
+**Seams:** order is the whole point here (match narrative, not mood arc) — energy still
+rides a natural curve: mid-tempo build through the match action, a horn-driven peak at the
+goal/celebration pair, then a wind-down through "Closing Time" into the anthemic closer.
+Cast mostly outside your usual clusters (classic rock, soul, a Broadway cut) since the
+concept needed recognizable soccer-adjacent anthems more than deep cuts — flagged in the
+description as chain order, not a taste-matched set.
+
+**Tweak ideas:** could tighten to a strict 90-minutes-elapsed structure (first half /
+halftime / second half / stoppage time) if a longer, more literal match arc is wanted later.
+
+---
+
 ## 🤖 Back in Action — a recovery story
 **Link:** https://open.spotify.com/playlist/3aHHEs8tQB3V46PyTzFAEM
 **Built:** 2026-07-16 · **Recipe:** 26 — The concept album (narrative sequence) · **10 tracks**
