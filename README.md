@@ -40,10 +40,11 @@ from my Isbell/Sturgill cluster") and Claude drives the tools below.
   create a "Claude" folder in the Spotify app once and drag them in; the Web API can't make
   folders itself) and gets a **brief description summarizing the actual artists/mood/theme**.
 
-### Use it from your phone (Phase 6, not yet deployed)
+### Use it from your phone
 - An MCP server (`mcp_server.py`) exposes the read-only discovery tools so the **Claude
-  mobile app** can drive discovery from a phone. Tooling is built and smoke-tested;
-  deploying it to the Pi is the remaining step (`DEPLOY_MCP.md` is the runbook).
+  mobile app** can drive discovery from a phone. Deployable behind any host with a
+  reverse proxy — `DEPLOY_MCP.md` is the runbook (written against a Raspberry Pi +
+  Tailscale Funnel + Caddy setup, but the pattern generalizes).
 
 ---
 
@@ -113,7 +114,7 @@ auth, so it runs offline in well under a second.
 | `lastfm.py` | Similar artists/tracks + tags (the discovery signal) |
 | `genre_map.py` | `genre-neighbors` / `genre-find` over the everynoise genre map |
 | `discovery_log.py` | Cross-session ledger of what Claude has already surfaced (dedup) |
-| `mcp_server.py` | Read-only server for the Claude mobile app (Phase 6) |
+| `mcp_server.py` | Read-only server for the Claude mobile app |
 | `probe.py` | Confirms which Spotify endpoints are dead |
 | `SETUP.md` | Set this up on your own machine / Spotify account |
 | `config/` | Per-user personalization: household filter + tag→genre buckets |
