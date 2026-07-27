@@ -10,6 +10,63 @@ the structure, and anything to tweak.
 
 ---
 
+## 🤖 Alive — a jam band set list
+**Link:** https://open.spotify.com/playlist/67FgyblAzZlAjhf3tJGYwr
+**Built:** 2026-07-27 · **Recipe:** 22 — Alive (definitive live cuts), jam-band variant · **16 tracks**
+
+**Why these:** Recipe 22 swaps the *recording*, not the song — zero-risk discovery aimed at
+the live/raw-energy preference in `discovery_heuristics.md`. This run narrows the seed pool
+to the jam-adjacent bands already in the library (Wood Brothers, Billy Strings, Tedeschi
+Trucks, Gov't Mule, Rateliff, Stringdusters, JJ Grey, Trey Anastasio, Khruangbin, The Band)
+and takes each artist's live release instead of the studio cut. The Wood Brothers earn three
+slots because they're the deepest well in the history — "I Got Loaded" is the #1 all-time
+non-household track at 135 plays, and *Live at the Barn* has both it and "Postcards from Hell."
+
+**The set, in order:**
+1. Gov't Mule — Mule (*Live at the Roseland Ballroom*) — riff opener
+2. Billy Strings — Dust in a Baggie (*Live Vol. 1*, Wilkes-Barre 12/15/23)
+3. The Infamous Stringdusters — Fork In The Road (*We'll Do It Live*)
+4. The Wood Brothers — I Got Loaded (*Live at the Barn*)
+5. The Wood Brothers — Postcards from Hell (*Live at the Barn*)
+6. Nathaniel Rateliff & The Night Sweats — Howling At Nothing (*Live at Red Rocks*)
+7. JJ Grey & Mofro — Brighter Days (*Brighter Days (Live)*) — swampy breath
+8. Tedeschi Trucks Band — Midnight In Harlem (*Everybody's Talkin'*) — first peak
+9. Khruangbin — People Everywhere (*Live at Stubb's*) — groove reset
+10. The Wood Brothers — Luckiest Man (*Live, Volume 1: Sky High*) — quiet center
+11. Billy Strings — Away From The Mire (*Live Vol. 1*, Austin 6/2/23) — the long build
+12. Trey Anastasio — First Tube (*TAB at the Fox Theater*) — instrumental peak
+13. Tedeschi Trucks Band — Space Captain (*Mad Dogs & Englishmen Revisited, LOCKN' 2015*)
+14. Gov't Mule — Soulshine (Angel Orensanz Center, NYC 12/28/2008) — lighters up
+15. Nathaniel Rateliff & The Night Sweats — S.O.B. (*Live at Red Rocks*, w/ Preservation Hall Jazz Band) — encore
+16. The Band — The Weight (*Rock of Ages*, Academy of Music 1971) — house lights
+
+**Seams:** shaped as one continuous show rather than a mood arc — barn-burner opening run,
+a soul/blues middle that breathes, an instrumental peak at First Tube into the communal
+Space Captain, then two encores and a closer. The Khruangbin cut is the one stylistic
+outlier (Thai-funk groove among roots bands) but it lands where a set needs a palate
+cleanser.
+
+**Misses:** Taj Mahal, Marcus King, Lake Street Dive and Sturgill Simpson were all seeded
+and dropped — each returned a studio album on verification (Sturgill's *Cuttin' Grass* is a
+bluegrass re-record, not a live take). Recipe 22's acceptance bar treats a wrong album as a
+miss, so they're out rather than faked.
+
+**Tweak ideas:** a Grateful Dead / Phish anchor would make this read more canonically
+"jam band," but neither is in the library — that'd be a Recipe 19 (far cry) job instead.
+If the Wood Brothers triple is too heavy, "Luckiest Man" is the droppable one.
+
+**Ledger note:** logged 0 new artists, correctly — Recipe 22 surfaces new *recordings* of
+known artists. Two Gov't Mule records slipped past `--new-only` and were purged; cause was a
+gap in `known_listened_artists()` (it never walked `top_tracks`), fixed in the same commit.
+
+**Cover:** a night festival stage bathed in amber stage-wash, empty microphone stands and a
+drum kit in a haze of lit dust, warm glow swelling outward into humid dark — Recipe 22 has no
+entry in the composition table, so it borrows "occasion / mood set" (a single immersive scene
+of the occasion). Warm amber/burnt orange against deep indigo dusk, impasto oil, no text,
+**seed 2707**.
+
+---
+
 ## 🤖 Title Chain — Match Day
 **Link:** https://open.spotify.com/playlist/6qJfPTnXFEbJn2def7nLyU
 **Built:** 2026-07-19 · **Recipe:** 25 — Title chain (the wordplay game), soccer variant · **14 tracks**

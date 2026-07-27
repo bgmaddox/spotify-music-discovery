@@ -62,3 +62,39 @@ def test_load_missing_file_is_empty(tmp_path, monkeypatch):
     _use_tmp(tmp_path, monkeypatch)
     assert discovery_log.load() == []
     assert discovery_log.surfaced_artists() == set()
+
+
+def _write_taste(tmp_path, monkeypatch, dump):
+    """Point DATA_DIR at a tmp dir holding one taste dump and no history summary."""
+    import json
+
+    monkeypatch.setattr(discovery_log, "DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(discovery_log, "HISTORY_SUMMARY_PATH", str(tmp_path / "nope.json"))
+    (tmp_path / "taste_20260720T000000Z.json").write_text(json.dumps(dump), encoding="utf-8")
+
+
+def test_known_artists_includes_top_tracks_artists(tmp_path, monkeypatch):
+    """An artist known only through top *tracks* still counts as already-listened.
+
+    Regression: the guard walked top_artists/saved_tracks/recently_played but not
+    top_tracks, so a current favorite (Gov't Mule) was logged as a new discovery.
+    """
+    _write_taste(
+        tmp_path,
+        monkeypatch,
+        {"top_tracks": {"short_term": [{"artists": [{"name": "Gov't Mule"}]}]}},
+    )
+    assert "gov't mule" in discovery_log.known_listened_artists()
+
+
+def test_filter_new_drops_top_tracks_only_artist(tmp_path, monkeypatch):
+    _write_taste(
+        tmp_path,
+        monkeypatch,
+        {"top_tracks": {"medium_term": [{"artists": [{"name": "Gov't Mule"}]}]}},
+    )
+    new, skipped = discovery_log.filter_new(
+        [{"artist": "Gov't Mule"}, {"artist": "Some Unknown Band"}]
+    )
+    assert [r["artist"] for r in new] == ["Some Unknown Band"]
+    assert skipped == ["Gov't Mule"]

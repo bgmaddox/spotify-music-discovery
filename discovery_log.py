@@ -70,6 +70,14 @@ def known_listened_artists() -> set[str]:
                 for a in tier:
                     if a.get("name"):
                         known.add(a["name"].lower())
+            # top_tracks is tiered like top_artists (short/medium/long_term), but its
+            # values are tracks — an artist the user knows only through individual
+            # songs (never a top *artist*, never saved) lives here and nowhere else.
+            for tier in taste.get("top_tracks", {}).values():
+                for t in tier:
+                    for a in t.get("artists", []) or []:
+                        if isinstance(a, dict) and a.get("name"):
+                            known.add(a["name"].lower())
             for section in ("saved_tracks", "recently_played"):
                 for t in taste.get(section, []):
                     for a in t.get("artists", []) or []:
