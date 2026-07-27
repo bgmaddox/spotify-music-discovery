@@ -98,7 +98,12 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   newest taste dump) so only genuinely-new artists land in the ledger; logging whole
   playlists unfiltered is what mislabeled long-time favorites (Childers, Sturgill, Kendrick…)
   as "found" and inflated the timeline's "surfaced" count (audited + purged 2026-07-18,
-  194→156).
+  194→156). **The guard had a blind spot until 2026-07-27:** `known_listened_artists()`
+  walked `top_artists`/`saved_tracks`/`recently_played` but never `top_tracks`, so an artist
+  known only through individual songs (Gov't Mule, in short- *and* medium-term top tracks)
+  still logged as a genuine discovery. Fixed + locked by two regression tests in
+  `tests/test_discovery_log.py`; the known set grew 420→436. Spot-check `--new-only`'s
+  "skipped" line against the taste dump when a pick looks suspiciously familiar.
   (4) **CLI drift fixed** — `genre-find` is now exposed in `cli.py` (was module-only). (5)
   **Hygiene** — dumps self-prune to newest 5 (`prune_dumps`), Last.fm CLI prints clean errors
   instead of tracebacks, `import html` hoisted in `genre_map.py`. All five primitives + new

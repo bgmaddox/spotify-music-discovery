@@ -58,6 +58,7 @@ weather, architecture. Avoid faces/figures (AI mangles them).
 | Deep cuts (anti-hits)   | subterranean, nocturnal, hidden-underground imagery       |
 | Discovery ladder        | a path winding outward from a warm glowing center        |
 | Occasion / mood set     | a single immersive scene of that occasion (dinner, drive) |
+| Live cuts (Recipe 22)   | one immersive stage/venue scene — instruments and light, no crowd |
 
 ## Conventions
 
