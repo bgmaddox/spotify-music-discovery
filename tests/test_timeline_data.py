@@ -689,3 +689,112 @@ def test_build_includes_v3_keys_and_keeps_v2_shape(tmp_path, monkeypatch):
     assert result["behavior"]["rediscoveries"][0]["artist"] == "Spoon"
     assert result["loyalty"][0]["name"] == "Spoon"
     assert result["discovery"]["events"][0]["stuck"] is True
+
+
+# ============================================ multi-service provenance (service_meta / coverage)
+
+
+def _minimal_build(tmp_path, monkeypatch, summary):
+    """Run build_timeline against a synthetic summary with everything stubbed."""
+    itunes = {"totals": {}, "top_artists_by_plays": [], "top_tracks_by_plays": [], "top_genres_by_plays": []}
+    sp = tmp_path / "history_summary.json"
+    ip = tmp_path / "itunes_history.json"
+    sp.write_text(json.dumps(summary))
+    ip.write_text(json.dumps(itunes))
+    monkeypatch.setattr(btd, "HISTORY_SUMMARY_PATH", str(sp))
+    monkeypatch.setattr(btd, "ITUNES_PATH", str(ip))
+    monkeypatch.setattr(btd, "TIMELINE_PATH", str(tmp_path / "taste_timeline.json"))
+    monkeypatch.setattr(btd, "DISCOVERY_LOG_PATH", str(tmp_path / "no_ledger.jsonl"))
+    monkeypatch.setattr(btd, "_latest_taste_dump", lambda: None)
+    monkeypatch.setattr(
+        btd,
+        "_load_now_panel",
+        lambda: {"dump_path": "fake.json", "generated_at": "2026-01-01", "top_artists_long_term": [], "top_genres": []},
+    )
+    return btd.build_timeline(fetch_tags_fn=lambda a: [])
+
+
+def _summary_with_provenance():
+    return {
+        "generated_at": "2026-07-28T00:00:00Z",
+        "per_year": {
+            "2016": {"plays": 6000, "hours": 300.0, "skips": 10, "top_artists": []},
+            "2020": {"plays": 5000, "hours": 250.0, "skips": 10, "top_artists": []},
+        },
+        "all_time_artists": [],
+        "all_time_tracks": [],
+        "forgotten_favorites": [],
+        "service_meta": {
+            "services": ["apple", "spotify"],
+            "include_apple": True,
+            "by_service": {
+                "apple": {"plays": 6000, "first_play": "2015-08-17T00:24:17Z", "last_play": "2018-10-15T14:58:06Z"},
+                "spotify": {"plays": 5000, "first_play": "2015-06-06T19:58:11Z", "last_play": "2026-07-14T11:37:02Z"},
+            },
+            "by_year": {"2016": {"apple": {"plays": 6000}}, "2020": {"spotify": {"plays": 5000}}},
+            # build-time audit trail — must NOT be forwarded into the page payload
+            "artist_name_merges": {"note": "x" * 500},
+        },
+        "coverage": {
+            "services_by_year": {"2016": ["apple"], "2020": ["spotify"]},
+            "spotify_only_sections": {"intentionality": "Apple has no reason_start."},
+            "sections": {"per_year": {"services": ["apple", "spotify"], "years_covered": ["2016", "2020"]}},
+        },
+    }
+
+
+def test_service_meta_forwarded_into_timeline(tmp_path, monkeypatch):
+    result = _minimal_build(tmp_path, monkeypatch, _summary_with_provenance())
+    sm = result["service_meta"]
+    assert sm["services"] == ["apple", "spotify"]
+    assert sm["by_service"]["apple"]["last_play"].startswith("2018-10-15")
+    assert sm["by_year"]["2016"]["apple"]["plays"] == 6000
+
+
+def test_service_meta_drops_build_time_audit_trail(tmp_path, monkeypatch):
+    """artist_name_merges is ~7 KB of provenance the page never reads."""
+    result = _minimal_build(tmp_path, monkeypatch, _summary_with_provenance())
+    assert "artist_name_merges" not in result["service_meta"]
+
+
+def test_coverage_forwarded_into_timeline(tmp_path, monkeypatch):
+    result = _minimal_build(tmp_path, monkeypatch, _summary_with_provenance())
+    cov = result["coverage"]
+    assert cov["services_by_year"]["2016"] == ["apple"]
+    assert "intentionality" in cov["spotify_only_sections"]
+    assert cov["sections"]["per_year"]["years_covered"] == ["2016", "2020"]
+
+
+def test_provenance_stubs_when_summary_is_single_service(tmp_path, monkeypatch):
+    """A pre-merge summary still yields the same keys, as graceful stubs."""
+    summary = {
+        "generated_at": "2026-07-16T00:00:00Z",
+        "per_year": {"2020": {"plays": 5000, "hours": 250.0, "skips": 0, "top_artists": []}},
+        "all_time_artists": [],
+        "all_time_tracks": [],
+        "forgotten_favorites": [],
+    }
+    result = _minimal_build(tmp_path, monkeypatch, summary)
+    assert result["service_meta"]["services"] == ["spotify"]
+    assert result["service_meta"]["by_service"] == {}
+    assert result["coverage"]["services_by_year"] == {}
+    assert result["coverage"]["sections"] == {}
+
+
+def test_sparse_flag_is_play_count_driven_not_hardcoded_years(tmp_path, monkeypatch):
+    """A well-populated 2015/2016 must NOT be reported as thin any more."""
+    result = _minimal_build(tmp_path, monkeypatch, _summary_with_provenance())
+    # 2016 has 6,000 plays — well over the threshold, so no "sparse" note fires.
+    # (Years with no data at all are still reported as plain gaps.)
+    assert [g["year"] for g in result["gaps"] if g.get("sparse")] == []
+    assert "Thin year" not in [a["label"] for a in result["annotations"]]
+
+
+def test_sparse_flag_still_fires_below_threshold(tmp_path, monkeypatch):
+    summary = _summary_with_provenance()
+    summary["per_year"]["2016"]["plays"] = btd.SPARSE_PLAYS_THRESHOLD - 1
+    result = _minimal_build(tmp_path, monkeypatch, summary)
+    sparse = {g["year"] for g in result["gaps"] if g.get("sparse")}
+    assert sparse == {"2016"}
+    thin = [a for a in result["annotations"] if a["label"] == "Thin year"]
+    assert [a["year"] for a in thin] == ["2016"]

@@ -35,6 +35,11 @@ DISCOVERY_LOG_PATH = os.path.join(DATA_DIR, "discovery_log.jsonl")
 SIMILARITY_EDGES_PATH = os.path.join(DATA_DIR, "similarity_edges.json")
 TRACK_ALBUM_META_PATH = os.path.join(DATA_DIR, "track_album_meta.json")
 
+# A year with fewer plays than this across ALL imported services is reported as
+# "sparse" rather than drawn as a real year. Data-driven, so a later export that
+# fills a thin year silently promotes it.
+SPARSE_PLAYS_THRESHOLD = 200
+
 # ------------------------------------------------------------------ genre buckets
 
 # Maps messy Last.fm tag strings (lowercased) → canonical bucket names.
@@ -896,6 +901,45 @@ def _load_network(edges_path: str) -> dict:
     }
 
 
+def _service_meta(summary: dict) -> dict:
+    """Forward history_summary's per-service provenance into the timeline.
+
+    Returns a single-service "spotify" stub when the summary predates the
+    multi-service merge, so the front end can always read the same shape.
+    """
+    sm = summary.get("service_meta")
+    if isinstance(sm, dict) and sm.get("by_service"):
+        # `artist_name_merges` is a build-time audit trail (~7 KB) that the page
+        # never reads — it stays in history_summary.json, out of the inlined page.
+        return {k: v for k, v in sm.items() if k != "artist_name_merges"}
+    return {
+        "note": "No service_meta in history_summary — assuming a Spotify-only export.",
+        "services": ["spotify"],
+        "include_apple": False,
+        "by_service": {},
+        "by_year": {},
+    }
+
+
+def _coverage(summary: dict) -> dict:
+    """Forward history_summary's per-section coverage map into the timeline.
+
+    `services_by_year` lets the page answer "does year X have data for this
+    section?" from the JSON instead of a hardcoded year list;
+    `spotify_only_sections` names the sections Apple cannot feed. Absent →
+    an empty stub, which the front end reads as "assume everything covered".
+    """
+    cov = summary.get("coverage")
+    if isinstance(cov, dict) and cov.get("sections"):
+        return cov
+    return {
+        "note": "No coverage block in history_summary — no per-section gaps recorded.",
+        "services_by_year": {},
+        "spotify_only_sections": {},
+        "sections": {},
+    }
+
+
 def build_timeline(
     fetch_tags_fn=None,
     *,
@@ -1013,30 +1057,29 @@ def build_timeline(
     }
 
     # --- data gaps and annotations ---
-    all_spotify_years = set(summary["per_year"].keys())
+    # Derived from the merged (multi-service) history, never hardcoded years:
+    # a year is a GAP if no service logged it at all, and SPARSE if it is present
+    # but below SPARSE_PLAYS_THRESHOLD plays (too thin to read as a real year).
+    all_history_years = set(summary["per_year"].keys())
     expected_years = {str(y) for y in range(2015, 2027)}
-    missing_years = sorted(expected_years - all_spotify_years)
+    missing_years = sorted(expected_years - all_history_years)
 
     gaps = [
         {
             "year": y,
-            "note": (
-                "Absent from GDPR export — Spotify has no play data for this year."
-                if y == "2017"
-                else "Year missing from streaming export."
-            ),
+            "note": "No listening data for this year in any imported export.",
         }
         for y in missing_years
     ]
-    # 2015–16 are present but sparse; add a sparse note
-    for yr in ["2015", "2016"]:
-        if yr in all_spotify_years:
+    for yr in sorted(all_history_years):
+        plays = (summary["per_year"].get(yr) or {}).get("plays", 0)
+        if plays < SPARSE_PLAYS_THRESHOLD:
             gaps.append(
                 {
                     "year": yr,
                     "note": (
-                        "Present but sparse — pre-Spotify era; "
-                        "most listening was still on iTunes."
+                        f"Present but sparse — only {plays} plays logged "
+                        "across all imported services."
                     ),
                     "sparse": True,
                 }
@@ -1045,20 +1088,11 @@ def build_timeline(
 
     annotations = [
         {
-            "year": "2017",
-            "label": "Data gap",
-            "note": "No Spotify streaming data for 2017 (absent from GDPR export).",
-        },
-        {
-            "year": "2015",
-            "label": "Transition era",
-            "note": "Sparse Spotify plays; heavy iTunes use continued into this year.",
-        },
-        {
-            "year": "2016",
-            "label": "Transition era",
-            "note": "Sparse Spotify plays; transition from iTunes to streaming ongoing.",
-        },
+            "year": g["year"],
+            "label": "Thin year" if g.get("sparse") else "Data gap",
+            "note": g["note"],
+        }
+        for g in gaps
     ]
 
     # --- 2026 "now" panel ---
@@ -1114,6 +1148,8 @@ def build_timeline(
             "streaming_history_generated_at": summary.get("generated_at"),
             "taste_dump_generated_at": now.get("generated_at"),
         },
+        "service_meta": _service_meta(summary),
+        "coverage": _coverage(summary),
         "itunes_era": itunes_era,
         "years": years_out,
         "artists": artists_out,

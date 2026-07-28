@@ -18,8 +18,11 @@ session can drive each primitive with a single uniform command:
     python cli.py artist-tags "Colter Wall" [--limit 10]
     python cli.py genre-neighbors "indie folk" [--limit 15]
     python cli.py genre-find "americana"
-    python cli.py history-build          # GDPR export -> data/history_summary.json
+    python cli.py history-build          # GDPR + Apple exports -> data/history_summary.json
+    python cli.py history-build --no-apple   # Spotify-only aggregate
     python cli.py history-snapshot [--year YYYY]   # lean multi-year history digest
+    python cli.py apple-build            # Apple Media Services export -> data/apple_history_events.json
+    python cli.py apple-unresolved       # unresolved-artist report -> data/apple_unresolved.md
     python cli.py log-add --artist "Tyler Childers" [--title T --uri U --recipe 6 --playlist URL]
     python cli.py log-artists          # artists already surfaced (cross-session dedup)
     python cli.py log-recent [--limit 20]
@@ -58,6 +61,7 @@ from build_timeline_data import _cmd_timeline_build, _cmd_timeline_inject
 from enrich_meta import _cmd_enrich
 from build_similarity_data import _cmd_similarity_build
 from tools import _cmd_build_playlist, _cmd_search_verify, _cmd_set_playlist_image
+import apple_history
 
 
 def _latest_taste_dump() -> str | None:
@@ -265,9 +269,15 @@ def main() -> int:
 
     hb = sub.add_parser(
         "history-build",
-        help="Aggregate the GDPR extended streaming export into data/history_summary.json.",
+        help="Aggregate the GDPR extended streaming export into data/history_summary.json "
+             "(merges the Apple Music export when data/apple_history_events.json exists).",
     )
     hb.add_argument("--src", default=streaming_history.EXPORT_DIR)
+    hb.add_argument(
+        "--no-apple",
+        action="store_true",
+        help="Build the Spotify-only aggregate (skip the Apple Music merge).",
+    )
     hb.set_defaults(func=_cmd_history_build)
 
     hs = sub.add_parser(
@@ -317,6 +327,19 @@ def main() -> int:
         "--verbose", "-v", action="store_true", help="Print per-artist fetch progress."
     )
     sb.set_defaults(func=_cmd_similarity_build)
+
+    ab = sub.add_parser(
+        "apple-build",
+        help="Parse the Apple Media Services export into data/apple_history_events.json.",
+    )
+    ab.add_argument("--src", default=apple_history.APPLE_DIR)
+    ab.set_defaults(func=apple_history._cmd_apple_build)
+
+    au = sub.add_parser(
+        "apple-unresolved",
+        help="Write a human-readable report of still-unresolved Apple artists to data/apple_unresolved.md.",
+    )
+    au.set_defaults(func=apple_history._cmd_apple_unresolved)
 
     la = sub.add_parser(
         "log-add", help="Record surfaced artist(s)/track(s) in the discovery ledger."

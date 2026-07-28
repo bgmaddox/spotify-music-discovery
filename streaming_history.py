@@ -9,11 +9,52 @@ session actually reasons over (per-era top artists, true all-time counts,
 forgotten favorites).
 
     python cli.py history-build                     # raw export -> summary JSON
+    python cli.py history-build --no-apple          # Spotify-only (regression baseline)
     python cli.py history-snapshot                  # lean all-time digest
     python cli.py history-snapshot --year 2019      # zoom into one year
 
 Play counting follows Spotify's own royalty convention: an event counts as a
-play at >= 30s listened; under that it counts toward the skip rate.
+play at >= 30s listened; under that it counts toward the skip rate. That rule
+is service-agnostic: `ms_played` means the same thing in both exports, so skip
+accounting needs no per-service special-casing.
+
+## Multi-service merge (Apple Music)
+
+`apple_history.py` parses the Apple Media Services export into the SAME event
+schema (16,606 events, Aug 2015 → Oct 2018) and this module merges that stream
+into `_iter_events()` — one unified history, every event tagged with a
+`service` field ("spotify" / "apple"). Apple fills a real hole: Spotify's own
+export has 14 plays in 2015, 1 in 2016, nothing at all in 2017.
+
+The merged stream is **materialized and sorted by `ts`** before it is yielded.
+This is load-bearing, not cosmetic: `_detect_album_sessions()` groups by the
+gap between consecutive events and the obsession detector uses a sliding
+window, so chaining Apple's 2015–18 events after Spotify's 2026 ones would
+corrupt both. Cost measured against the real data: ~65.5k merged events,
+~104 MB peak — acceptable at this scale (and the Spotify half was already
+being `json.load`ed a year-file at a time anyway). `include_apple=False`
+short-circuits the merge AND the sort, so the Spotify-only aggregate is
+reproduced byte-for-byte.
+
+The two services disagree on artist-name capitalization ("OutKast" vs
+"Outkast", "Florence + the Machine" vs "Florence + The Machine"), which would
+split one artist's plays across two entries. Names differing ONLY by case are
+collapsed at the same seam — most plays wins the display name, ties break
+toward the Spotify spelling — so every section downstream sees one identity.
+Case-only by design; no fuzzy/punctuation matching. Every merge is recorded in
+`service_meta.artist_name_merges`.
+
+Apple genuinely does not record `reason_start` or `shuffle` (they are `None`
+on every Apple event), and its rows carry no `spotify_track_uri`. Rather than
+guess, the sections that depend on those fields stay **Spotify-only**, and the
+new top-level `coverage` block records exactly which section has which
+service/years behind it — so a front end can tell "2017 has no intentionality
+data" apart from "2017 was 100% other". Sections excluding Apple:
+`intentionality` and `albums.album_sessions`. Everything else (plays, artists,
+tracks, clock, seasonality, platforms, skips, obsessions, rediscoveries,
+albums' own play totals, track stories) counts both services. Provenance —
+per-service and per-year-per-service counts, date ranges, and the Apple
+parser's own stats — lives in the top-level `service_meta` block.
 
 v2 additions (additive — v1 keys and snapshot() shape unchanged):
   clock            — plays by hour × weekday, overall + per streaming era
@@ -64,13 +105,48 @@ try:
 except ImportError:
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
+import apple_history
 from household import HOUSEHOLD_ARTISTS, is_household
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 EXPORT_DIR = os.path.join(DATA_DIR, "Spotify Extended Streaming History")
 SUMMARY_PATH = os.path.join(DATA_DIR, "history_summary.json")
 
+# Service tags. Every event in the merged stream carries one.
+SERVICE_SPOTIFY = "spotify"
+SERVICE_APPLE = "apple"
+
+# Sections deliberately restricted to Spotify events, and why.
+# Consumed verbatim by the `coverage` block in the output summary.
+SPOTIFY_ONLY_SECTIONS: dict[str, str] = {
+    "intentionality": (
+        "Apple's export records no reason_start and no shuffle flag, so every "
+        "Apple play would classify as 'other'. Apple years are omitted entirely "
+        "rather than reported as 100% 'other'."
+    ),
+    "album_sessions": (
+        "Front-to-back session detection requires reason_start == 'trackdone' on "
+        "continuation plays. Apple has no reason_start, so Apple events are not "
+        "fed to the detector. Album PLAY totals (albums.top_albums) do include "
+        "Apple; only the session counts are Spotify-only."
+    ),
+}
+
 PLAY_MS = 30_000  # >= 30s listened counts as a play (Spotify's own threshold)
+
+# How many artists `all_time_artists` carries. This is NOT just a display cap:
+# `discovery_log.known_listened_artists()` reads this exact list to decide whether
+# an artist is someone the user already listens to, so anything below the cutoff
+# can be mislabeled a genuine Claude discovery.
+#
+# Raised 200 → 400 when the Apple Music merge landed. The merge pushed ~44
+# Apple-era heavy hitters into the top 200 and pushed the same number OUT,
+# 30 of which weren't covered by the taste dump either — Iron & Wine, My Morning
+# Jacket, Tyler The Creator, Lizzo, Greensky Bluegrass and friends silently
+# stopped counting as "known". That is the same class of bug as the 2026-07-27
+# top_tracks blind spot, arriving by a different route. 400 moves the cutoff from
+# 44 plays to 22 and costs ~33 KB in a file that never reaches the browser.
+ALL_TIME_ARTISTS_TOP_N = 400
 FORGOTTEN_MIN_PLAYS = 40  # lifetime plays needed to call an artist a past favorite
 FORGOTTEN_QUIET_YEARS = 2  # no plays in this many recent years => "forgotten"
 
@@ -241,9 +317,17 @@ def _track_season_concentration(month_counts: dict[int, int]) -> tuple[str | Non
     return None, 0.0
 
 # ------------------------------------------------------------------ era definitions
-# Mirror the CHAPTERS array in docs/history.html (streaming years only: 2018+).
+# Mirror the CHAPTERS array in docs/history.html.
 # Each era is identified by a short slug used as a JSON key.
+#
+# "2015-2017" is the pre-Spotify Apple Music era: the account's Spotify export
+# has 14 plays in 2015, 1 in 2016 and nothing in 2017, so before the Apple merge
+# these years had no era at all. It is prepended rather than folded into "2018"
+# so every EXISTING slug keeps its exact year range — the front end's chapter
+# keys must not shift. 2018 itself is genuinely both services (Apple runs to
+# October 2018, Spotify starts in earnest that year) and stays one era.
 STREAMING_ERAS: list[dict] = [
+    {"slug": "2015-2017", "from": 2015, "to": 2017},
     {"slug": "2018",      "from": 2018, "to": 2018},
     {"slug": "2019-2020", "from": 2019, "to": 2020},
     {"slug": "2021-2022", "from": 2021, "to": 2022},
@@ -353,24 +437,230 @@ def _classify_intent(reason_start: str, shuffle: bool) -> str:
 # ------------------------------------------------------------------ _iter_events
 
 
-def _iter_events(src_dir: str = EXPORT_DIR):
+def _iter_spotify_events(src_dir: str = EXPORT_DIR):
     """Yield music play events from every Streaming_History_Audio_*.json.
 
     Podcast/audiobook events (no spotify_track_uri) are dropped — this toolkit
-    only reasons about music.
+    only reasons about music. Each event is tagged ``service="spotify"`` in
+    place so downstream accounting can attribute it.
     """
     for path in sorted(glob.glob(os.path.join(src_dir, "Streaming_History_Audio_*.json"))):
         with open(path) as f:
             for e in json.load(f):
                 if e.get("spotify_track_uri") and e.get("master_metadata_album_artist_name"):
+                    e["service"] = SERVICE_SPOTIFY
                     yield e
+
+
+def _elect_canonical_names(events: list[dict]) -> tuple[dict[str, str], list[dict]]:
+    """Collapse artist names that differ ONLY by letter case into one identity.
+
+    The two exports disagree on capitalization for the same acts — Apple
+    lowercases articles and prepositions where Spotify title-cases them. Left
+    alone, that silently splits an artist's play count in two:
+    ``Florence + the Machine`` (Apple) 246 + ``Florence + The Machine``
+    (Spotify) 119, or ``OutKast`` 45 + ``Outkast`` 473. Both halves then rank
+    below where the artist actually belongs.
+
+    Election rule: group names by ``casefold()``; within a group the variant
+    with the most PLAYS wins the display name. Ties break toward the spelling
+    that appears in Spotify events — Spotify is the larger and ongoing corpus,
+    so its spelling is what future data will keep using — and then toward the
+    lexicographically first name so the result is deterministic regardless of
+    input order.
+
+    Scope is deliberately CASE-ONLY. Punctuation, ``&``/``and``, "feat."
+    variants and any other fuzzy matching are a much riskier class (they can
+    merge genuinely distinct acts) and are NOT attempted here.
+
+    Returns ``(aliases, merges)``:
+      - ``aliases``  {non-canonical name: canonical name} — canonical names are
+        absent from this map, so ``aliases.get(n, n)`` is the rename function.
+      - ``merges``   provenance records, one per collapsed group.
+    """
+    # {casefold key: {exact name: {"plays", "events", "services"}}}
+    groups: dict[str, dict[str, dict]] = defaultdict(dict)
+    for e in events:
+        name = e["master_metadata_album_artist_name"]
+        variants = groups[name.casefold()]
+        d = variants.get(name)
+        if d is None:
+            d = variants[name] = {"plays": 0, "events": 0, "services": set()}
+        d["events"] += 1
+        d["services"].add(e.get("service") or SERVICE_SPOTIFY)
+        if (e.get("ms_played") or 0) >= PLAY_MS:
+            d["plays"] += 1
+
+    aliases: dict[str, str] = {}
+    merges: list[dict] = []
+
+    for _key, variants in groups.items():
+        if len(variants) < 2:
+            continue
+        ranked = sorted(
+            variants.items(),
+            key=lambda kv: (
+                -kv[1]["plays"],                                   # most plays wins
+                0 if SERVICE_SPOTIFY in kv[1]["services"] else 1,  # tie → Spotify spelling
+                kv[0],                                             # tie → deterministic
+            ),
+        )
+        canonical, canon_d = ranked[0]
+        losers = ranked[1:]
+        for name, _d in losers:
+            aliases[name] = canonical
+        merges.append({
+            "canonical": canonical,
+            "merged_from": [name for name, _ in losers],
+            "combined_plays": sum(d["plays"] for _, d in ranked),
+            "variants": [
+                {
+                    "name": name,
+                    "plays": d["plays"],
+                    "events": d["events"],
+                    "services": sorted(d["services"]),
+                }
+                for name, d in ranked
+            ],
+        })
+
+    merges.sort(key=lambda m: -m["combined_plays"])
+    return aliases, merges
+
+
+def _default_apple_path(src_dir: str) -> str:
+    """Where to look for the Apple events file, given the Spotify export dir.
+
+    Resolved as a sibling of the export directory (i.e. inside the same data
+    folder), NOT as the hard-coded ``apple_history.APPLE_EVENTS_PATH``. With the
+    real layout the two are identical — ``data/Spotify Extended Streaming
+    History/`` sits inside ``data/``, so this returns
+    ``data/apple_history_events.json``.
+
+    The indirection matters for correctness of *any* non-default corpus: a build
+    pointed at a different export directory (a test's synthetic dir, a second
+    account's export) must aggregate that corpus's own Apple events or none at
+    all — never silently splice in the personal 16k-event Apple file. That would
+    make every test that calls ``build_history(tmp_dir)`` read real, gitignored
+    personal data and assert against it.
+    """
+    return os.path.join(
+        os.path.dirname(os.path.abspath(src_dir)),
+        os.path.basename(apple_history.APPLE_EVENTS_PATH),
+    )
+
+
+def _iter_events(
+    src_dir: str = EXPORT_DIR,
+    include_apple: bool = True,
+    apple_events_path: str | None = None,
+    collect: dict | None = None,
+    verbose: bool = False,
+):
+    """Yield the unified, chronologically ordered play-event stream.
+
+    Spotify's export (tagged ``service="spotify"``) is merged with the Apple
+    Music export built by ``apple_history.build_apple_history()`` (already
+    tagged ``service="apple"``), then sorted ascending by ``ts``. The Apple
+    file is looked up next to ``src_dir`` — see ``_default_apple_path()``.
+
+    The sort is required, not decorative: ``_detect_album_sessions()`` measures
+    the gap between *consecutive* events and the obsession detector walks a
+    sliding window, so a naive chain (all Spotify 2015→2026, then all Apple
+    2015→2018) would fabricate one enormous 8-year "gap" and then replay the
+    early years out of order. Both `ts` formats are the identical
+    ``%Y-%m-%dT%H:%M:%SZ`` UTC string, so a lexicographic sort is a correct
+    chronological sort.
+
+    Materializing the merged list costs ~104 MB peak for the real ~65.5k-event
+    corpus (measured, not assumed) — fine for a once-per-export batch job.
+
+    Once both services are in hand, artist names that differ only by letter case
+    are collapsed to a single identity (see ``_elect_canonical_names``). This
+    happens HERE, at the seam, precisely so every downstream section — artists,
+    tracks, albums, seasonality, skips, obsessions, rediscoveries — sees one
+    identity without any per-section patching.
+
+    ``include_apple=False`` skips the Apple load, the sort AND the
+    canonicalization, streaming the Spotify events lazily exactly as before, so
+    the Spotify-only aggregate stays a clean pre-merge regression baseline.
+
+    ``collect``, if given, is populated with merge metadata (``artist_merges``)
+    that the caller cannot otherwise recover from a generator.
+    """
+    if collect is not None:
+        collect["artist_merges"] = []
+
+    if not include_apple:
+        yield from _iter_spotify_events(src_dir)
+        return
+
+    path = (
+        apple_events_path if apple_events_path is not None
+        else _default_apple_path(src_dir)
+    )
+    apple_events = [
+        e
+        for e in apple_history.iter_apple_events(path)
+        if e.get("ts") and e.get("master_metadata_album_artist_name")
+    ]
+    if not apple_events:
+        # Nothing to merge (export not built yet) — keep the lazy Spotify path.
+        yield from _iter_spotify_events(src_dir)
+        return
+
+    for e in apple_events:
+        e.setdefault("service", SERVICE_APPLE)
+
+    merged = list(_iter_spotify_events(src_dir))
+    merged.extend(apple_events)
+    merged.sort(key=lambda e: e["ts"])
+
+    # Collapse case-only artist-name variants across the two services.
+    aliases, merges = _elect_canonical_names(merged)
+    if aliases:
+        for e in merged:
+            canonical = aliases.get(e["master_metadata_album_artist_name"])
+            if canonical is not None:
+                e["master_metadata_album_artist_name"] = canonical
+        if verbose:
+            for m in merges:
+                by_name = {v["name"]: v for v in m["variants"]}
+                losers = ", ".join(
+                    f"{n!r} ({by_name[n]['plays']} plays, "
+                    f"{'/'.join(by_name[n]['services'])})"
+                    for n in m["merged_from"]
+                )
+                canon = by_name[m["canonical"]]
+                print(
+                    f"  artist merge: {losers} → {m['canonical']!r} "
+                    f"({canon['plays']} plays, {'/'.join(canon['services'])}) "
+                    f"= {m['combined_plays']} plays",
+                    file=sys.stderr,
+                )
+    if collect is not None:
+        collect["artist_merges"] = merges
+
+    yield from merged
 
 
 # ------------------------------------------------------------------ build_history
 
 
-def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> dict:
-    """Aggregate the raw export into one summary dict and write it to out_path."""
+def build_history(
+    src_dir: str = EXPORT_DIR,
+    out_path: str = SUMMARY_PATH,
+    include_apple: bool = True,
+    apple_events_path: str | None = None,
+    verbose: bool = False,
+) -> dict:
+    """Aggregate the raw export(s) into one summary dict and write it to out_path.
+
+    ``include_apple=False`` builds the Spotify-only aggregate (the pre-merge
+    behavior, kept as a reversible switch and a regression baseline).
+    ``verbose`` logs each case-variant artist merge to stderr.
+    """
+    stream_meta: dict = {}
 
     # ---- v1 accumulators ----
     artists: dict[str, dict] = defaultdict(
@@ -382,6 +672,19 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
     years: dict[str, dict] = defaultdict(lambda: {"plays": 0, "ms": 0, "skips": 0})
     n_events = 0
     first_ts, last_ts = None, None
+
+    # ---- provenance accumulators (all artists, incl. household) ----
+    # {service: {"events","plays","skips","ms","first_ts","last_ts"}}
+    service_stats: dict[str, dict] = defaultdict(
+        lambda: {"events": 0, "plays": 0, "skips": 0, "ms": 0,
+                 "first_ts": None, "last_ts": None}
+    )
+    # {year: {service: {"events","plays"}}}
+    service_by_year: dict[str, dict[str, dict[str, int]]] = defaultdict(
+        lambda: defaultdict(lambda: {"events": 0, "plays": 0})
+    )
+    # Years that actually contributed a counted play to each Spotify-only section.
+    intentionality_years: set[str] = set()
 
     # ---- v2 accumulators (household-excluded) ----
     household_excluded_plays = 0
@@ -455,7 +758,9 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
     )
 
     # ---- single pass ----
-    for e in _iter_events(src_dir):
+    for e in _iter_events(src_dir, include_apple=include_apple,
+                          apple_events_path=apple_events_path,
+                          collect=stream_meta, verbose=verbose):
         n_events += 1
         ts = e["ts"]
         year = ts[:4]
@@ -463,9 +768,26 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
         artist = e["master_metadata_album_artist_name"]
         title = e.get("master_metadata_track_name") or "?"
         uri = e.get("spotify_track_uri") or ""
+        service = e.get("service") or SERVICE_SPOTIFY
 
         first_ts = ts if first_ts is None or ts < first_ts else first_ts
         last_ts = ts if last_ts is None or ts > last_ts else last_ts
+
+        # --- provenance (all artists, including household) ---
+        svc = service_stats[service]
+        svc["events"] += 1
+        svc["ms"] += ms
+        if svc["first_ts"] is None or ts < svc["first_ts"]:
+            svc["first_ts"] = ts
+        if svc["last_ts"] is None or ts > svc["last_ts"]:
+            svc["last_ts"] = ts
+        sby = service_by_year[year][service]
+        sby["events"] += 1
+        if ms >= PLAY_MS:
+            svc["plays"] += 1
+            sby["plays"] += 1
+        else:
+            svc["skips"] += 1
 
         # --- v1 accounting (all artists, including household) ---
         a = artists[artist]
@@ -479,7 +801,13 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
             t = tracks[(artist, title)]
             t["plays"] += 1
             t["ms"] += ms
-            t["uri"] = uri
+            # Only overwrite with a real URI. Apple events carry
+            # spotify_track_uri=None, and a track played on BOTH services would
+            # otherwise have its Spotify URI blanked by whichever Apple play
+            # happened to come last in the merged stream. No-op for the
+            # Spotify-only path (every Spotify event has a URI by construction).
+            if uri:
+                t["uri"] = uri
             t["years"].add(year)
         else:
             a["skips"] += 1
@@ -507,14 +835,19 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
             if era_slug is not None:
                 clock_raw[era_slug][weekday][hour] += 1
 
-        # --- intentionality (plays only) ---
-        if ms >= PLAY_MS:
+        # --- intentionality (plays only, SPOTIFY ONLY) ---
+        # Apple records neither reason_start nor shuffle, so every Apple play
+        # would land in "other" and drown the 2015–18 chart in a meaningless
+        # bucket. Apple-only years emit no intentionality row at all; the
+        # `coverage` block below tells the front end which years are real.
+        if ms >= PLAY_MS and service == SERVICE_SPOTIFY:
             reason_start = e.get("reason_start") or "unknown"
             shuffle = bool(e.get("shuffle"))
             bucket = _classify_intent(reason_start, shuffle)
             ir = intentionality_raw[year]
             ir[bucket] += 1
             ir["reason_start_counts"][reason_start] += 1
+            intentionality_years.add(year)
 
         # --- seasonality (plays only) ---
         if ms >= PLAY_MS:
@@ -559,13 +892,20 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
                 if uri:
                     tr["uri"] = uri
             # Accumulate for session detection (need reason_start + ts + album).
-            album_session_events.append({
-                "ts": ts,
-                "ms_played": ms,
-                "master_metadata_album_album_name": album_name,
-                "master_metadata_album_artist_name": artist,
-                "reason_start": e.get("reason_start") or "",
-            })
+            # SPOTIFY ONLY: continuation plays must prove reason_start ==
+            # "trackdone", which Apple never records. Feeding Apple events in
+            # would not produce false sessions (they'd all break the run), but
+            # it would let an Apple play sit *between* two Spotify plays and
+            # silently split a genuine Spotify session. Excluding them keeps
+            # the detector's input a clean single-service sequence.
+            if service == SERVICE_SPOTIFY:
+                album_session_events.append({
+                    "ts": ts,
+                    "ms_played": ms,
+                    "master_metadata_album_album_name": album_name,
+                    "master_metadata_album_artist_name": artist,
+                    "reason_start": e.get("reason_start") or "",
+                })
 
         # --- v3: track_stories (plays only, household-excluded) ---
         if ms >= PLAY_MS:
@@ -588,7 +928,9 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
     def _hours(ms: int) -> float:
         return round(ms / 3_600_000, 1)
 
-    top_artists = sorted(artists.items(), key=lambda kv: -kv[1]["plays"])[:200]
+    top_artists = sorted(
+        artists.items(), key=lambda kv: -kv[1]["plays"]
+    )[:ALL_TIME_ARTISTS_TOP_N]
     all_time_artists = [
         {
             "name": name,
@@ -608,7 +950,9 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
             "artist": artist,
             "title": title,
             "plays": d["plays"],
-            "uri": d["uri"],
+            # "" (never None) for tracks only ever played on Apple — every other
+            # uri field in this summary is a string, and consumers do string ops.
+            "uri": d["uri"] or "",
             "years": sorted(d["years"]),
         }
         for (artist, title), d in top_tracks
@@ -700,8 +1044,14 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
             "else reason_start in {clickrow,playbtn,backbtn,remote} → 'deliberate'; "
             "else reason_start in {trackdone,appload,fwdbtn} → 'passive'; "
             "else → 'other'. "
-            "Household artists excluded. Plays only (ms_played >= 30000)."
+            "Household artists excluded. Plays only (ms_played >= 30000). "
+            "SPOTIFY EVENTS ONLY — Apple's export records no reason_start/shuffle, "
+            "so Apple-era years are ABSENT from by_year rather than reported as "
+            "100% 'other'. A missing year means 'no data', not 'no intent'. "
+            "See the top-level `coverage` block."
         ),
+        "services": [SERVICE_SPOTIFY],
+        "years_covered": sorted(intentionality_years),
         "by_year": intentionality_out,
     }
 
@@ -976,6 +1326,13 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
         ),
         "top_albums": top_albums_out,
         "album_sessions": {
+            "note": (
+                "SPOTIFY EVENTS ONLY — session detection needs reason_start, which "
+                "Apple does not record. Album play totals in top_albums DO include "
+                "Apple. A year with no entry here has no session data, not zero "
+                "album listening."
+            ),
+            "services": [SERVICE_SPOTIFY],
             "total_sessions": len(all_sessions),
             "by_year": dict(sorted(session_by_year.items())),
             "session_albums": session_albums,
@@ -1163,6 +1520,155 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
         "anthems": yearbook_anthems_out,
     }
 
+    # ======================================================================
+    # Provenance + coverage (multi-service merge)
+    # ======================================================================
+
+    services_present = sorted(service_stats)
+
+    # Per-year, per-service breakdown: {year: {service: {events, plays}}}
+    service_by_year_out: dict[str, dict[str, dict[str, int]]] = {}
+    for yr in sorted(service_by_year):
+        service_by_year_out[yr] = {
+            svc_name: dict(counts)
+            for svc_name, counts in sorted(service_by_year[yr].items())
+        }
+
+    by_service_out: dict[str, dict] = {}
+    for svc_name in services_present:
+        d = service_stats[svc_name]
+        by_service_out[svc_name] = {
+            "events": d["events"],
+            "plays": d["plays"],
+            "skips": d["skips"],
+            "hours": _hours(d["ms"]),
+            "first_play": d["first_ts"],
+            "last_play": d["last_ts"],
+        }
+
+    # The Apple parser's own stats dict, carried through verbatim for auditing
+    # (row counts, drop reasons, artist-resolution rate, ms clamps).
+    apple_parser_stats: dict | None = None
+    if include_apple and SERVICE_APPLE in services_present:
+        _apple_path = (
+            apple_events_path if apple_events_path is not None
+            else _default_apple_path(src_dir)
+        )
+        try:
+            with open(_apple_path) as f:
+                apple_parser_stats = json.load(f).get("stats")
+        except (OSError, ValueError):
+            apple_parser_stats = None
+
+    service_meta = {
+        "note": (
+            "Provenance for the unified multi-service history. Every event carries a "
+            "`service` tag; counts here include household artists (unlike the v2/v3 "
+            "behavioral sections). apple_parser_stats is apple_history.py's own stats "
+            "dict, carried through verbatim."
+        ),
+        "services": services_present,
+        "include_apple": include_apple,
+        "by_service": by_service_out,
+        "by_year": service_by_year_out,
+        "apple_parser_stats": apple_parser_stats,
+        "artist_name_merges": {
+            "note": (
+                "Artist names that differed ONLY by letter case were collapsed to one "
+                "identity at the merge seam, before any section was computed. The "
+                "variant with the most plays wins the display name; ties break toward "
+                "the Spotify spelling, then lexicographically. CASE-ONLY by design — no "
+                "punctuation, '&'/'and', or fuzzy matching is attempted. Every merge is "
+                "listed here so the decision is auditable and reversible."
+            ),
+            "count": len(stream_meta.get("artist_merges", [])),
+            "merges": stream_meta.get("artist_merges", []),
+        },
+    }
+
+    # Which years have real data from which service (plays > 0).
+    services_by_year = {
+        yr: sorted(
+            svc for svc, counts in svcs.items() if counts.get("plays", 0) > 0
+        )
+        for yr, svcs in service_by_year_out.items()
+    }
+    spotify_years = sorted(
+        yr for yr, svcs in services_by_year.items() if SERVICE_SPOTIFY in svcs
+    )
+    all_data_years = sorted(services_by_year)
+
+    def _section(services: list[str], years: list[str], note: str) -> dict:
+        return {"services": services, "years_covered": years, "note": note}
+
+    _both = services_present
+
+    coverage = {
+        "note": (
+            "Per-section data provenance. `services` = which services feed the section; "
+            "`years_covered` = the years that actually have data in it. A year missing "
+            "from years_covered means NO DATA for that section — never zero/'other'. "
+            "Render accordingly."
+        ),
+        "services_by_year": services_by_year,
+        "spotify_only_sections": SPOTIFY_ONLY_SECTIONS,
+        "sections": {
+            # --- both services ---
+            "per_year": _section(_both, all_data_years,
+                                 "Plays/hours/skips/top artists — service-agnostic."),
+            "all_time_artists": _section(_both, all_data_years,
+                                         "Artist play totals across both services."),
+            "all_time_tracks": _section(
+                _both, all_data_years,
+                "Track totals across both services. `uri` is empty for tracks only ever "
+                "played on Apple (no spotify_track_uri exists for them)."),
+            "forgotten_favorites": _section(_both, all_data_years,
+                                            "Derived from per-year artist plays."),
+            "clock": _section(_both, all_data_years,
+                              "Derived from `ts` only — uniform across services."),
+            "seasonality": _section(_both, all_data_years,
+                                    "Derived from `ts` only — uniform across services."),
+            "platforms": _section(
+                _both, all_data_years,
+                "Both services. Apple contributes a small fixed vocabulary "
+                "(iOS/Macintosh/Windows/Android/unknown) that maps into the existing "
+                "mobile/desktop buckets; 'unknown' falls into 'other'. Apple's buckets "
+                "are coarser than Spotify's — no web/speaker_tv is distinguishable."),
+            "artist_skip": _section(
+                _both, all_data_years,
+                "Both services. Skips are derived from ms_played < 30000, which means "
+                "the same thing in both exports — no per-service special-casing needed."),
+            "obsession_episodes": _section(_both, all_data_years,
+                                           "Derived from play dates only."),
+            "rediscoveries": _section(_both, all_data_years,
+                                      "Derived from per-year play years only."),
+            "track_stories": _section(
+                _both, all_data_years,
+                "Both services. `uri` is empty for Apple-only tracks."),
+            "track_seasons": _section(_both, all_data_years, "Derived from play months."),
+            "per_year_tracks": _section(
+                _both, all_data_years,
+                "Both services. `uri` is empty for Apple-only tracks."),
+            "yearbook_anthems": _section(
+                _both, all_data_years,
+                "Both services. `uri` is empty for an Apple-only anthem."),
+            "albums.top_albums": _section(
+                _both, all_data_years,
+                "Album play totals include both services. `session_count` does not — "
+                "see albums.album_sessions."),
+            "albums.one_track_wonders": _section(
+                _both, all_data_years,
+                "Both services (play-count based)."),
+            # --- Spotify only ---
+            "intentionality": _section(
+                [SERVICE_SPOTIFY], sorted(intentionality_years),
+                SPOTIFY_ONLY_SECTIONS["intentionality"]),
+            "albums.album_sessions": _section(
+                [SERVICE_SPOTIFY], spotify_years,
+                SPOTIFY_ONLY_SECTIONS["album_sessions"]),
+        },
+    }
+
     # ---- assemble output ----
     summary = {
         # v1 keys (unchanged)
@@ -1179,6 +1685,9 @@ def build_history(src_dir: str = EXPORT_DIR, out_path: str = SUMMARY_PATH) -> di
         "all_time_artists": all_time_artists,
         "all_time_tracks": all_time_tracks,
         "forgotten_favorites": forgotten,
+        # multi-service keys (additive)
+        "service_meta": service_meta,
+        "coverage": coverage,
         # v2 keys (additive)
         "v2_meta": {
             "household_excluded_plays": household_excluded_plays,
@@ -1269,13 +1778,25 @@ def _cmd_history_build(args) -> int:
     if not glob.glob(os.path.join(args.src, "Streaming_History_Audio_*.json")):
         print(f"no Streaming_History_Audio_*.json under {args.src}", file=sys.stderr)
         return 1
-    s = build_history(args.src)
+    include_apple = not getattr(args, "no_apple", False)
+    s = build_history(args.src, include_apple=include_apple, verbose=True)
     print(SUMMARY_PATH)
     print(
         f"  {s['events']} events → {s['total_plays']} plays, {s['total_hours']}h, "
         f"{s['unique_artists']} artists, {s['first_play'][:10]}→{s['last_play'][:10]}",
         file=sys.stderr,
     )
+    for svc, d in s["service_meta"]["by_service"].items():
+        print(
+            f"  {svc}: {d['events']} events, {d['plays']} plays, "
+            f"{d['first_play'][:10]}→{d['last_play'][:10]}",
+            file=sys.stderr,
+        )
+    n_merges = s["service_meta"]["artist_name_merges"]["count"]
+    if n_merges:
+        print(f"  {n_merges} case-variant artist names canonicalized", file=sys.stderr)
+    if not include_apple:
+        print("  (--no-apple: Spotify-only aggregate)", file=sys.stderr)
     return 0
 
 
@@ -1296,6 +1817,11 @@ def main() -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("build")
     b.add_argument("--src", default=EXPORT_DIR)
+    b.add_argument(
+        "--no-apple",
+        action="store_true",
+        help="Build the Spotify-only aggregate (skip the Apple Music merge).",
+    )
     b.set_defaults(func=_cmd_history_build)
     sn = sub.add_parser("snapshot")
     sn.add_argument("--year", default=None)

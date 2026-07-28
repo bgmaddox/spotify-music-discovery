@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Taste timeline — 13 years of listening</title>
+<title>Taste timeline — 14 years of listening</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='42' fill='%231db954'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -213,7 +213,10 @@
   /* ---------- how you listen ---------- */
   .hylgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
   @media (max-width:980px){.hylgrid{grid-template-columns:1fr}}
-  .hylcard{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:16px}
+  /* grid tracks default to minmax(auto,1fr), so a track's floor is its content's
+     min-content width — without this the skip/stuck cards blow past a 390px viewport */
+  .hylgrid>*{min-width:0}
+  .hylcard{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
   .hylcard h3{margin:0 0 2px;font-size:14.5px;letter-spacing:-.01em}
   .hylcard .sub2{color:var(--faint);font-size:12px;margin:0 0 12px}
   #clockSvg,#intentSvg,#platSvg,#seasonSvg,#obsSvg{display:block;width:100%}
@@ -250,6 +253,7 @@
   .rediscard .arc em{color:var(--amber);font-style:normal;font-weight:600}
   .skipcols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}
   @media (max-width:520px){.skipcols{grid-template-columns:1fr}}
+  .skipcols>*{min-width:0}
   .skiph{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin:0 0 7px}
   .skiprow{display:flex;align-items:center;gap:8px;border:0;background:none;width:100%;padding:3px 0;font:inherit;color:var(--text);font-size:12.5px;cursor:pointer;text-align:left}
   .skiprow:hover .sname{color:var(--green)}
@@ -257,7 +261,8 @@
   .srate{color:var(--faint);font-size:11.5px;flex:none;width:74px;text-align:right}
   .sdot{width:8px;height:8px;border-radius:50%;flex:none}
   .stuckwrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-  .stuckchip{font-size:12px;background:var(--panel);border:1px solid rgba(29,185,84,.35);color:var(--text);border-radius:999px;padding:3px 11px;cursor:pointer;font-family:inherit}
+  .stuckchip{font-size:12px;background:var(--panel);border:1px solid rgba(29,185,84,.35);color:var(--text);border-radius:999px;padding:3px 11px;cursor:pointer;font-family:inherit;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .stuckchip:hover{border-color:var(--green)}
 
   /* ---------- taste network ---------- */
@@ -504,10 +509,10 @@
     <div>
       <span class="eyebrow">Listening history · 2013–2026</span>
       <h1>Taste <span class="accent">Timeline</span></h1>
-      <p class="lede">Thirteen years of listening, read from every angle. The streaming years rise as one
-      genre river, then fan out into the artists behind it — mapped, sized, and linked — with the records
-      and songs underneath and the hours and habits of how you actually listen. The iTunes library that
-      came before is shelved at the end; click any artist, anywhere, to trace their arc.</p>
+      <p class="lede">Fourteen years of listening, read from every angle. Apple Music and Spotify rise
+      together as one genre river, then fan out into the artists behind it — mapped, sized, and linked —
+      with the records and songs underneath and the hours and habits of how you actually listen. The
+      iTunes library that came before is shelved at the end; click any artist, anywhere, to trace their arc.</p>
     </div>
     <div class="header-tools">
       <a class="navchip" href="/discovery">← Discovery</a>
@@ -537,9 +542,9 @@
 
   <section class="panel reveal" id="riverSection">
     <h2>Genre River · The Streaming Years</h2>
-    <p class="sub">Plays per year by genre, 2018–2026. Streaming only — the iTunes era lives in its
-    own shelf below, and the thin 2015–17 years are noted there rather than drawn.</p>
-    <div class="river-scroll"><svg id="river" role="img" aria-label="Streamgraph of listening by genre, 2018 to 2026"></svg></div>
+    <p class="sub" id="riverSub">Plays per year by genre — Apple Music and Spotify merged into one
+    river. The iTunes library that came before has its own shelf at the end.</p>
+    <div class="river-scroll"><svg id="river" role="img" aria-label="Streamgraph of listening by genre, year by year"></svg></div>
     <div class="legend" id="legend"></div>
   </section>
 
@@ -618,6 +623,7 @@
         <h3>Album People or Singles People?</h3>
         <p class="sub2" id="sessSub"></p>
         <div id="sessChart"></div>
+        <p class="caption" id="sessCaption"></p>
         <details class="crate-details">
           <summary id="sessSummary"></summary>
           <div class="crate-list" id="sessList"></div>
@@ -701,6 +707,7 @@
         <p class="sub2">Devices per year — share of plays.</p>
         <svg id="platSvg" role="img" aria-label="Stacked bars of platform share per year"></svg>
         <div class="legend" id="platLegend" style="margin-top:10px"></div>
+        <p class="caption" id="platCaption"></p>
       </div>
       <div class="hylcard">
         <h3>Seasons of Sound</h3>
@@ -825,11 +832,13 @@
     <p class="bridge" id="bridge"></p>
   </section>
 
-  <p class="prov"><b>About this data.</b> 2018–2026 come from Spotify’s GDPR extended streaming
-  history (a play = ≥30 seconds listened). The 2013–14 shelf comes from two iTunes library XML
-  snapshots with cumulative play counts. In between is thin ground: 2015–16 saw only a handful of
-  streams and 2017 is absent from the export entirely, so those years are reported, not drawn.
-  Household plays (kids’ shows, lullaby white noise, the Frozen soundtrack) are tagged and hidden
+  <p class="prov"><b>About this data.</b> The play-by-play record is merged from two exports —
+  <span id="provServices">an Apple Music export and Spotify’s GDPR extended streaming history. </span>
+  A play means the same thing in both: ≥30 seconds listened. The 2013–14 shelf is a different kind
+  of record — two iTunes library XML snapshots with cumulative play counts and no dates. Apple’s
+  export is thinner than Spotify’s: it logs no shuffle flag, no reason a track started, and only a
+  coarse device name, so the panels that need those are marked unavailable for the Apple years
+  rather than drawn as zero. Household plays (kids’ shows, lullaby white noise, the Frozen soundtrack) are tagged and hidden
   by default — flip the toggle to see the full house. Part of the
   <a href="/discovery">Discovery</a> showcase.</p>
 
@@ -870,15 +879,64 @@ const COLORS = {
   "metal/punk":"#7d8a99", "soundtrack":"#6b6f9e", "other":"#55555f",
   "kids/household":"#b9b9c4"
 };
-const YEARS = Object.keys(TIMELINE.years).map(Number).filter(y => y >= 2018).sort().map(String);
+/* Every year the merged history actually covers — never a hardcoded floor.
+   A future export that reaches further back widens the river on its own. */
+const YEARS = Object.keys(TIMELINE.years).map(Number).sort((a,b) => a-b).map(String);
+const YEAR_NUMS = YEARS.map(Number);
+const FIRST_YEAR = YEARS[0];
 const LAST_YEAR = YEARS[YEARS.length - 1];
+
+/* ---------- provenance: which services cover which years ---------- */
+const SERVICE_META = TIMELINE.service_meta || {};
+const COVERAGE = TIMELINE.coverage || {};
+const SERVICES_BY_YEAR = COVERAGE.services_by_year || {};
+const SPOTIFY_ONLY_SECTIONS = COVERAGE.spotify_only_sections || {};
+
+function servicesFor(y){ return SERVICES_BY_YEAR[String(y)] || []; }
+/* Share of a year's plays that came from Spotify (1 when we have no breakdown,
+   so a Spotify-only export behaves exactly as it did before the Apple merge). */
+function spotifyShare(y){
+  const row = (SERVICE_META.by_year || {})[String(y)];
+  if (!row) return 1;
+  let sp = 0, all = 0;
+  for (const [svc, v] of Object.entries(row)){
+    const n = (v && v.plays) || 0;
+    all += n;
+    if (svc === "spotify") sp += n;
+  }
+  return all ? sp / all : 1;
+}
+/* A year is "not measurable" for a Spotify-only section when almost none of its
+   plays came from Spotify — those years must render as a gap, never as zero. */
+const SPOTIFY_ONLY_MIN_SHARE = 0.10;
+function spotifyOnlyGapYears(byYear){
+  return YEARS.filter(y => !(byYear || {})[y] || spotifyShare(y) < SPOTIFY_ONLY_MIN_SHARE);
+}
+/* Years measured but only partially — the Spotify slice of a split year. */
+function spotifyPartialYears(byYear){
+  return YEARS.filter(y => (byYear || {})[y]
+    && spotifyShare(y) >= SPOTIFY_ONLY_MIN_SHARE && spotifyShare(y) < 0.9);
+}
+function yearRangeLabel(list){
+  const ys = [...list].map(Number).sort((a,b) => a-b);
+  if (!ys.length) return "";
+  const out = []; let start = ys[0], prev = ys[0];
+  for (const y of ys.slice(1)){
+    if (y === prev + 1){ prev = y; continue; }
+    out.push(start === prev ? String(start) : `${start}–${prev}`);
+    start = prev = y;
+  }
+  out.push(start === prev ? String(start) : `${start}–${prev}`);
+  return out.join(", ");
+}
 const HOUSEHOLD = new Set(TIMELINE.artists.filter(a => a.household).map(a => a.name));
 const FORGOTTEN = new Set((TIMELINE.forgotten_favorites || []).map(f => f.name));
 
 /* Era chapters — the musical moves, grounded in the per-year data */
 const CHAPTERS = [
-  {from:2018, to:2018, title:"Hip hop opens the tap", focus:"2018",
-   blurb:"The first real streaming year belongs to Outkast and Childish Gambino, with Queen and Guster along the edges."},
+  {from:2015, to:2017, title:"The Apple years", focus:"2016", blurb:"Logged on Apple Music, not Spotify. The Avett Brothers and the Decemberists share the room with Macklemore and CHVRCHES; by 2017 Childish Gambino and Leon Bridges are running away with it."},
+  {from:2018, to:2018, title:"The handoff", focus:"2018",
+   blurb:"Apple’s log stops in October and Spotify’s takes over. Childish Gambino, the Decemberists and CHVRCHES carry straight across the seam, with Frank Ocean and Guster along the edges."},
   {from:2019, to:2020, title:"The americana turn", focus:"2019",
    blurb:"Sturgill Simpson and Tyler Childers open the lane; the Avett Brothers come back around and the river starts running amber."},
   {from:2021, to:2022, title:"Roots and soul", focus:"2021",
@@ -922,13 +980,40 @@ function renderStats(){
   const spotPlays = YEARS.reduce((t,y) => t + (TIMELINE.years[y].plays||0), 0);
   const spotHours = YEARS.reduce((t,y) => t + (TIMELINE.years[y].hours||0), 0);
   const it = TIMELINE.itunes_era.totals || {};
+  /* years with any data at all: the iTunes shelf era plus every logged year */
+  const eraYears = ((TIMELINE.itunes_era.era || "").match(/\d{4}/g) || []).map(Number);
+  const eraFirst = eraYears.length ? Math.min(...eraYears) : +FIRST_YEAR;
+  const covered = new Set(YEAR_NUMS);
+  for (let y = eraFirst; y <= (eraYears.length ? Math.max(...eraYears) : eraFirst); y++) covered.add(y);
   document.getElementById("stats").innerHTML = [
-    ["13 yrs","2013 – 2026"],
-    [fmt(spotPlays), "streamed plays"],
-    [Math.round(spotHours).toLocaleString() + " h", "streamed hours"],
+    [covered.size + " yrs", eraFirst + " – " + LAST_YEAR],
+    [fmt(spotPlays), "logged plays"],
+    [Math.round(spotHours).toLocaleString() + " h", "listening hours"],
     [fmt(it.total_plays || 0), "iTunes-era plays"],
     [fmt(TIMELINE.artists.length) + "+", "artists tracked"]
   ].map(([b,s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+
+  /* river subtitle + provenance sentence, both derived from the data */
+  const rs = document.getElementById("riverSub");
+  if (rs){
+    rs.innerHTML = `Plays per year by genre, ${FIRST_YEAR}–${LAST_YEAR} — Apple Music and Spotify
+      merged into one river. The iTunes library that came before has its own shelf at the end.`;
+  }
+  const ps = document.getElementById("provServices");
+  if (ps){
+    const by = SERVICE_META.by_service || {};
+    const span = k => {
+      const s = by[k];
+      if (!s || !s.first_play) return null;
+      const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const f = d => `${m[+d.slice(5,7) - 1]} ${d.slice(0,4)}`;
+      return `${f(s.first_play)} – ${f(s.last_play)}`;
+    };
+    const parts = [];
+    if (span("apple")) parts.push(`an Apple Music export (${span("apple")})`);
+    if (span("spotify")) parts.push(`Spotify’s GDPR extended streaming history (${span("spotify")})`);
+    if (parts.length) ps.textContent = parts.join(" and ") + ". ";
+  }
 }
 
 /* ---------- the river ---------- */
@@ -941,7 +1026,12 @@ function drawRiver(){
   W = Math.max(700, box.width);
   H = window.innerWidth < 700 ? 380 : 450;
   svg.attr("viewBox", `0 0 ${W} ${H}`).attr("width", W).attr("height", H);
-  x = d3.scaleLinear().domain([2017.75, 2026.25]).range([M.left, W - M.right]);
+  /* domain follows the data: quarter-year of breathing room on each end */
+  x = d3.scaleLinear()
+    .domain([YEAR_NUMS[0] - 0.25, YEAR_NUMS[YEAR_NUMS.length - 1] + 0.25])
+    .range([M.left, W - M.right]);
+  svg.attr("aria-label",
+    `Streamgraph of listening by genre, ${FIRST_YEAR} to ${LAST_YEAR}`);
   const innerH = H - M.top - M.bottom;
   const yMid = M.top + innerH / 2;
   const maxTotal = d3.max(YEARS, yearTotal) || 1;
@@ -953,8 +1043,8 @@ function drawRiver(){
   /* chapter highlight */
   if (highlightSpan){
     g.append("rect")
-      .attr("x", x(Math.max(highlightSpan[0], 2018) - 0.42)).attr("y", M.top - 8)
-      .attr("width", x(highlightSpan[1] + 0.42) - x(Math.max(highlightSpan[0], 2018) - 0.42))
+      .attr("x", x(Math.max(highlightSpan[0], +FIRST_YEAR) - 0.42)).attr("y", M.top - 8)
+      .attr("width", x(Math.min(highlightSpan[1], +LAST_YEAR) + 0.42) - x(Math.max(highlightSpan[0], +FIRST_YEAR) - 0.42))
       .attr("height", innerH + 16)
       .attr("fill", "rgba(29,185,84,.05)").attr("stroke", "rgba(29,185,84,.25)")
       .attr("rx", 10);
@@ -985,7 +1075,7 @@ function drawRiver(){
     .filter(a => !a.household)
     .slice(0, 34)
     .map(a => {
-      const peak = Object.entries(a.by_year || {}).filter(([y]) => +y >= 2018 && TIMELINE.years[y])
+      const peak = Object.entries(a.by_year || {}).filter(([y]) => TIMELINE.years[y])
         .sort((p,q) => q[1]-p[1])[0];
       return peak ? {name:a.name, year:+peak[0], plays:peak[1], bucket:a.bucket} : null;
     })
@@ -1002,7 +1092,7 @@ function drawRiver(){
     ly += (n % 2 ? 1 : -1) * Math.ceil(n / 2) * 15;                  // 0,+15,-15,+30…
     g.append("text").attr("class","riverlabel")
       .attr("x", x(L.year)).attr("y", ly)
-      .attr("text-anchor", L.year >= 2025 ? "end" : (L.year === 2018 ? "start" : "middle"))
+      .attr("text-anchor", L.year >= +LAST_YEAR - 1 ? "end" : (L.year === +FIRST_YEAR ? "start" : "middle"))
       .text(L.name);
   }
 
@@ -1038,7 +1128,7 @@ function drawRiver(){
     const a = artistByName(selectedArtist);
     if (a && a.by_year){
       const pts = Object.entries(a.by_year).map(([y,p]) => ({y:+y, p}))
-        .filter(d => d.y >= 2018).sort((m,n) => m.y-n.y);
+        .filter(d => TIMELINE.years[String(d.y)]).sort((m,n) => m.y-n.y);
       if (pts.length){
         const maxP = d3.max(pts, d => d.p) || 1;
         const ty = d3.scaleLinear().domain([0, maxP]).range([M.top + 112, M.top + 6]);
@@ -1191,7 +1281,7 @@ function drawSpark(a){
   const el = d3.select("#spark");
   const bw = el.node().getBoundingClientRect().width || 400;
   el.attr("viewBox", `0 0 ${bw} 86`);
-  const years = d3.range(2018, 2027);
+  const years = YEAR_NUMS;
   const vals = years.map(y => ({y, p:(a.by_year||{})[String(y)] || 0}));
   const bx = d3.scaleBand().domain(years).range([4, bw-4]).padding(0.25);
   const maxP = d3.max(vals, d => d.p) || 1;
@@ -1317,11 +1407,24 @@ function renderShelf(){
   document.querySelectorAll(".shelfrow").forEach(b =>
     b.addEventListener("click", () => selectArtist(b.getAttribute("data-name"), true)));
 
-  const y15 = TIMELINE.years["2015"], y16 = TIMELINE.years["2016"];
-  document.getElementById("bridge").innerHTML =
-    `<b>The thin years.</b> Between this shelf and the river: ${fmt((y15&&y15.plays)||0)} Spotify plays in 2015,
-     ${fmt((y16&&y16.plays)||0)} in 2016, and nothing at all for 2017 (absent from the export).
-     Streaming picks the story back up in 2018.`;
+  /* the handoff: where this shelf stops and the play-by-play river starts */
+  const by = SERVICE_META.by_service || {};
+  const MON = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const when = d => d ? `${MON[+d.slice(5,7) - 1]} ${d.slice(0,4)}` : null;
+  const appleFrom = when((by.apple || {}).first_play);
+  const appleTo   = when((by.apple || {}).last_play);
+  const appleRow  = YEARS.filter(y => servicesFor(y).includes("apple"));
+  const applePlays = appleRow.reduce((t, y) => {
+    const r = (SERVICE_META.by_year || {})[y] || {};
+    return t + ((r.apple && r.apple.plays) || 0);
+  }, 0);
+  document.getElementById("bridge").innerHTML = appleFrom
+    ? `<b>The handoff.</b> These snapshots are counts, not timestamps — the play-by-play record starts
+       ${appleFrom}, when Apple Music began logging every listen. Apple carries the story through
+       ${appleTo} (${fmt(applePlays)} plays), Spotify takes over from there, and the river above runs
+       both as one.`
+    : `<b>The handoff.</b> These snapshots are counts, not timestamps — the play-by-play record in the
+       river above starts in ${FIRST_YEAR}.`;
 }
 
 /* ---------- how you listen (behavior — household excluded at build time) ---------- */
@@ -1350,7 +1453,25 @@ function hourLabel(h){
   if (h === 12) return "12p";
   return (h - 12) + "p";
 }
-function eraLabel(k){ return k === "overall" ? "All years" : k.replace("-", "–"); }
+function eraLabel(k){
+  if (k === "overall") return "All years";
+  const span = k.replace("-", "–");
+  /* name the service behind an era when it isn't the usual Spotify one */
+  const ys = k.split("-").map(Number);
+  const covered = YEARS.filter(y => +y >= ys[0] && +y <= (ys[1] || ys[0]));
+  if (!covered.length) return span;
+  let sp = 0, all = 0;
+  for (const y of covered){
+    const row = (SERVICE_META.by_year || {})[y] || {};
+    for (const [svc, v] of Object.entries(row)){
+      const n = (v && v.plays) || 0;
+      all += n;
+      if (svc === "spotify") sp += n;
+    }
+  }
+  if (all && sp / all < SPOTIFY_ONLY_MIN_SHARE) return `${span} · Apple era`;
+  return span;
+}
 
 function renderClockChips(){
   const el = document.getElementById("clockChips");
@@ -1407,10 +1528,37 @@ function drawClock(){
     `Peak: <b>${DAYS_FULL[peak.wd]}s around ${hrLong}</b> — ${fmt(peak.n)} plays in that hour${clockEra === "overall" ? " across all years" : " in " + eraLabel(clockEra)}.`;
 }
 
-function drawStackedYears(svgId, byYear, keys, meta){
-  /* shared 100%-stacked vertical bars for intent + platforms; returns per-year shares */
+let _hatchSeq = 0;
+function hatchFill(el){
+  /* Define the "not recorded" hatch inside the chart's OWN <svg>, not once at the
+     document root. The ⤓ PNG export captures only the card's subtree, so a
+     root-level pattern doesn't travel with it and the gap columns export blank —
+     which reads as "zero listening", the exact misreading the hatch prevents.
+     Each svg gets its own id (duplicate ids across svgs would be invalid HTML). */
+  let id = el.attr("data-hatch-id");
+  if (!id){ id = "gapHatch-" + (++_hatchSeq); el.attr("data-hatch-id", id); }
+  if (el.select("#" + id).empty()){
+    /* callers clear with selectAll("*").remove(), so re-add on every redraw */
+    const p = el.append("defs").append("pattern")
+      .attr("id", id).attr("width", 6).attr("height", 6)
+      .attr("patternUnits", "userSpaceOnUse").attr("patternTransform", "rotate(45)");
+    p.append("rect").attr("width", 6).attr("height", 6).attr("fill", "var(--panel-2)");
+    p.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 6)
+      .attr("stroke", "var(--faint)").attr("stroke-width", 1.3).attr("opacity", .5);
+  }
+  return "url(#" + id + ")";
+}
+
+function drawStackedYears(svgId, byYear, keys, meta, opts){
+  /* shared 100%-stacked vertical bars for intent + platforms; returns per-year shares.
+     opts.gapYears     — years the source cannot measure at all: drawn as a hatched
+                         "no data" column, never as an empty/zero bar.
+     opts.partialYears — years only partly measured: marked with * on the axis. */
+  opts = opts || {};
+  const gaps = new Set(opts.gapYears || []);
+  const partial = new Set(opts.partialYears || []);
   const el = d3.select(svgId);
-  const years = YEARS.filter(y => byYear[y]);
+  const years = YEARS.filter(y => byYear[y] || gaps.has(y));
   const bw = Math.max(300, el.node().parentElement.getBoundingClientRect().width - 34);
   const h = 176, top = 8, bottom = 20;
   el.attr("viewBox", `0 0 ${bw} ${h}`).attr("width", bw).attr("height", h);
@@ -1418,6 +1566,19 @@ function drawStackedYears(svgId, byYear, keys, meta){
   const bx = d3.scaleBand().domain(years).range([4, bw - 4]).padding(0.22);
   const shares = {};
   for (const y of years){
+    if (gaps.has(y)){
+      el.append("rect")
+        .attr("x", bx(y)).attr("width", bx.bandwidth())
+        .attr("y", top).attr("height", h - top - bottom)
+        .attr("fill", hatchFill(el)).attr("rx", 1.5)
+        .on("mousemove", (ev) => showTip(ev,
+          `<b>${y} · not recorded</b><br><span class="t-muted">${esc(opts.gapTip || "No data for this year.")}</span>`))
+        .on("mouseleave", hideTip);
+      el.append("text").attr("class","axistick")
+        .attr("x", bx(y) + bx.bandwidth() / 2).attr("y", h - 6)
+        .attr("text-anchor","middle").attr("opacity", .55).text("’" + y.slice(2));
+      continue;
+    }
     const d = byYear[y];
     const total = keys.reduce((t, k) => t + (d[k] || 0), 0) || 1;
     shares[y] = {};
@@ -1439,7 +1600,7 @@ function drawStackedYears(svgId, byYear, keys, meta){
     }
     el.append("text").attr("class","axistick")
       .attr("x", bx(y) + bx.bandwidth() / 2).attr("y", h - 6)
-      .attr("text-anchor","middle").text("’" + y.slice(2));
+      .attr("text-anchor","middle").text("’" + y.slice(2) + (partial.has(y) ? "*" : ""));
   }
   return shares;
 }
@@ -1451,7 +1612,14 @@ function legendHTML(keys, meta){
 
 function drawIntent(){
   const byYear = BEH.intentionality.by_year;
-  const shares = drawStackedYears("#intentSvg", byYear, INTENTS, INTENT_META);
+  /* Apple's export carries no shuffle flag and no start reason, so Apple-era
+     years cannot be measured at all — hatch them rather than draw a zero bar. */
+  const gapYears = spotifyOnlyGapYears(byYear);
+  const partialYears = spotifyPartialYears(byYear);
+  const shares = drawStackedYears("#intentSvg", byYear, INTENTS, INTENT_META, {
+    gapYears, partialYears,
+    gapTip: "Apple Music’s export records no shuffle flag or start reason."
+  });
   document.getElementById("intentLegend").innerHTML = legendHTML(INTENTS.slice(0, 3), INTENT_META);
   /* caption: overall self-starting share + biggest YoY swing in deliberate share */
   const years = Object.keys(shares).sort();
@@ -1471,12 +1639,32 @@ function drawIntent(){
   if (swing && Math.abs(swing.delta) >= 0.03){
     cap += ` Biggest shift: <b>${swing.from} → ${swing.to}</b>, deliberate plays went ${Math.round(swing.a * 100)}% → ${Math.round(swing.b * 100)}%.`;
   }
+  if (gapYears.length){
+    cap += ` <span class="t-muted">Hatched: <b>${yearRangeLabel(gapYears)}</b> can't be measured —
+      ${esc(SPOTIFY_ONLY_SECTIONS.intentionality
+        ? "Apple Music’s export records no shuffle flag and no start reason, so those years are absent here, not zero."
+        : "no start-reason data for those years.")}</span>`;
+  }
+  if (partialYears.length){
+    cap += ` <span class="t-muted">* ${yearRangeLabel(partialYears)} is split between the two
+      services — only the Spotify part of the year is counted.</span>`;
+  }
   document.getElementById("intentCaption").innerHTML = cap;
 }
 
 function drawPlatforms(){
   drawStackedYears("#platSvg", BEH.platforms.by_year, PLATS, PLAT_META);
   document.getElementById("platLegend").innerHTML = legendHTML(PLATS, PLAT_META);
+  /* Apple logs devices, but with a coarser vocabulary than Spotify. */
+  const coarse = YEARS.filter(y => servicesFor(y).includes("apple"));
+  const el = document.getElementById("platCaption");
+  if (el){
+    el.innerHTML = coarse.length
+      ? `<b>${yearRangeLabel(coarse)}</b> come from Apple Music, which only distinguishes phone,
+         computer and Android — a smart speaker or a web player logged there is counted as one of
+         those, so “Speakers &amp; TV” and “Web player” only start where Spotify does.`
+      : "";
+  }
 }
 
 function drawSeasonality(){
@@ -1906,24 +2094,38 @@ function recCover(a, cls){
   return `<span class="crate-cover ${cls||""}"><span class="crate-fallback">${esc(ch)}</span></span>`;
 }
 
-function recBarChart(byYear, color, chartH){
-  const years = d3.range(2018, 2027);
-  const vals = years.map(y => ({y, p:(byYear||{})[String(y)] || 0}));
+function recBarChart(byYear, color, chartH, opts){
+  opts = opts || {};
+  const gaps = new Set(opts.gapYears || []);
+  const years = YEAR_NUMS;
+  const vals = years.map(y => ({y, p:(byYear||{})[String(y)] || 0, gap:gaps.has(String(y))}));
   const W = 400, H = chartH + 18;
   const svg = d3.create("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("preserveAspectRatio","xMidYMid meet");
   const bx = d3.scaleBand().domain(years).range([4, W-4]).padding(0.25);
   const maxP = d3.max(vals, d => d.p) || 1;
   const by = d3.scaleLinear().domain([0, maxP]).range([0, chartH - 8]);
-  svg.selectAll("rect").data(vals).join("rect")
+  /* years the source can't measure get a hatched full-height column, so an
+     unmeasurable year never reads as "he did none of this that year" */
+  svg.selectAll("rect.gap").data(vals.filter(d => d.gap)).join("rect")
+    .attr("class","gap")
+    .attr("x", d => bx(d.y)).attr("width", bx.bandwidth())
+    .attr("y", 2).attr("height", chartH - 2)
+    .attr("fill", hatchFill(svg)).attr("rx", 2)
+    .on("mousemove", (ev, d) => showTip(ev,
+      `<b>${d.y} · not recorded</b><br><span class="t-muted">${esc(opts.gapTip || "No data for this year.")}</span>`))
+    .on("mouseleave", hideTip);
+  svg.selectAll("rect.bar").data(vals.filter(d => !d.gap)).join("rect")
+    .attr("class","bar")
     .attr("x", d => bx(d.y)).attr("width", bx.bandwidth())
     .attr("y", d => chartH - by(d.p))
     .attr("height", d => Math.max(by(d.p), d.p > 0 ? 2 : 0))
     .attr("fill", color).attr("opacity", .85).attr("rx", 2)
     .on("mousemove", (ev, d) => showTip(ev, `<b>${d.y}</b><br><span class="t-muted">${fmt(d.p)}</span>`))
     .on("mouseleave", hideTip);
-  svg.selectAll("text").data(years).join("text")
-    .attr("class","axistick").attr("x", y => bx(y) + bx.bandwidth()/2).attr("y", H - 4)
-    .attr("text-anchor","middle").text(y => "’" + String(y).slice(2));
+  svg.selectAll("text").data(vals).join("text")
+    .attr("class","axistick").attr("x", d => bx(d.y) + bx.bandwidth()/2).attr("y", H - 4)
+    .attr("text-anchor","middle").attr("opacity", d => d.gap ? .55 : 1)
+    .text(d => "’" + String(d.y).slice(2));
   return svg.node();
 }
 
@@ -2008,7 +2210,21 @@ function initRecords(){
   const ss = ALB.session_score || {total:0, by_year:{}};
   document.getElementById("sessSub").textContent =
     `A full-album session = four or more tracks of the same record in a row, each one rolling into the next. You've done that ${fmt(ss.total)} times.`;
-  document.getElementById("sessChart").appendChild(recBarChart(ss.by_year, "var(--blue)", 90));
+  /* session detection needs Spotify's "track ran to its end" flag — Apple-era
+     years can't be scored, so they're hatched rather than shown as zero */
+  const sessGaps = spotifyOnlyGapYears(ss.by_year);
+  document.getElementById("sessChart").appendChild(recBarChart(ss.by_year, "var(--blue)", 90, {
+    gapYears: sessGaps,
+    gapTip: "Apple Music’s export can’t tell a finished track from a skipped one."
+  }));
+  const sessCap = document.getElementById("sessCaption");
+  if (sessCap){
+    sessCap.innerHTML = sessGaps.length
+      ? `Hatched: <b>${yearRangeLabel(sessGaps)}</b> can’t be scored — detecting a front-to-back
+         run needs Apple Music’s export to say a track played to the end, and it doesn’t. Those
+         records still count in the crate above; only their sessions are unmeasurable.`
+      : "";
+  }
   const sa = ALB.session_albums || [];
   document.getElementById("sessSummary").textContent = `All ${fmt(sa.length)} records played front-to-back`;
   document.getElementById("sessList").innerHTML = sa.map(r =>
@@ -2102,7 +2318,7 @@ function initSongs(){
     if (!xMin || m < xMin) xMin = m;
     if (!xMax || m > xMax) xMax = m;
   }));
-  if (!xMin){ xMin = new Date(2018, 0, 1); xMax = new Date(); }
+  if (!xMin){ xMin = new Date(+FIRST_YEAR, 0, 1); xMax = new Date(); }
 
   // lifeline small-multiples (build DOM once; search toggles display only)
   const grid = document.getElementById("lifeGrid");
@@ -2146,14 +2362,16 @@ function initSongs(){
   const dev = [...SNG.tracks].sort((a, b) =>
     (b.devotion_years - a.devotion_years) || (b.plays - a.plays)).slice(0, 12);
   document.getElementById("devList").innerHTML = dev.map(t => {
-    const url = trackUrl(t.uri);
+    /* Apple-only tracks have no Spotify URI — render them as a plain row, not a dead link */
+    const id = trackId(t.uri), tag = id ? "a" : "div";
+    const attrs = id ? ` href="${trackUrl(t.uri)}" target="_blank" rel="noopener"` : "";
     const y0 = (t.year_span && t.year_span[0]) || "";
     const y1 = (t.year_span && t.year_span[1]) ? "’" + String(t.year_span[1]).slice(2) : "";
     const yrs = t.devotion_years;
-    return `<a class="devrow" target="_blank" rel="noopener" href="${url}">
+    return `<${tag} class="devrow"${attrs}>
       <span class="dv-main"><span class="dv-title">${esc(t.title)}</span><span class="dv-artist">${esc(t.artist)}</span></span>
       <span class="dv-span">${y0} → ${y1} · <em>${yrs} yr${yrs === 1 ? "" : "s"}</em> · ${fmt(t.plays)} plays</span>
-    </a>`;
+    </${tag}>`;
   }).join("");
 
   // track seasons
@@ -2165,10 +2383,12 @@ function initSongs(){
     seasonEl.innerHTML = seasons.map(s => {
       const lbl = (s.season_label || "").charAt(0).toUpperCase() + (s.season_label || "").slice(1);
       const pct = Math.round((s.concentration || 0) * 100);
-      return `<a class="seasoncard" target="_blank" rel="noopener" href="${trackUrl(s.uri)}">
+      const sid = trackId(s.uri), stag = sid ? "a" : "div";
+      const sattrs = sid ? ` href="${trackUrl(s.uri)}" target="_blank" rel="noopener"` : "";
+      return `<${stag} class="seasoncard"${sattrs}>
         <div class="sc-line"><b>${esc(s.title)}</b> — ${esc(s.artist)} is a <span class="sc-month">${esc(lbl)}</span> song.</div>
         <div class="sc-sub">${pct}% of its ${fmt(s.plays)} plays land in ${esc(lbl)}.</div>
-      </a>`;
+      </${stag}>`;
     }).join("");
   }
 

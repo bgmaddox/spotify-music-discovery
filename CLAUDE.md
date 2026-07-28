@@ -114,8 +114,11 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   sessions read only `cli.py history-snapshot [--year YYYY]` (~2k tokens: per-year top
   artists, true all-time counts, forgotten favorites). **Never read the raw export
   files** — 40 MB and they contain IPs/device strings; re-run `history-build` if a
-  newer export lands. Known gaps: 2017 absent, 2015–16 nearly empty (the pre-Spotify
-  era is the iTunes 2013–14 layer). Caveat: a heavy kids-music layer (CoComelon = #1
+  newer export lands. ~~Known gaps: 2017 absent, 2015–16 nearly empty~~ — **closed
+  2026-07-28 by the Apple Music layer below**; the Spotify export alone still has those
+  gaps, so always reason from the merged `history_summary.json`, never from Spotify-only
+  counts. Before that, the pre-2018 record was only the iTunes 2013–14 layer.
+  Caveat: a heavy kids-music layer (CoComelon = #1
   all-time artist) is household plays, not taste signal — filter it out when reasoning.
   Tests in `tests/test_streaming_history.py`.
 - **Taste timeline page — DEPLOYED, 2026-07-16.** `docs/history.html` is an interactive
@@ -213,6 +216,60 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   DOM order). Phase 4 done by Fable directly (high breakage surface), Playwright verify
   by a Sonnet subagent: both widths clean, 0 console messages, no overflow, all 9 nav
   jumps land, cross-section clicks fire.
+- **Apple Music layer (2015–2018 gap fill) — done, 2026-07-28.** An Apple Media Services
+  export (`data/Apple_Media_Services/`, gitignored) filled the hole the Spotify export
+  left. **`apple_history.py` + `cli.py apple-build`** parse `Apple Music Play Activity.csv`
+  into `data/apple_history_events.json` using the EXACT Spotify event schema, so the merge
+  happens at the `_iter_events` seam and every downstream section gained the years for free.
+  Per-year plays before→after: **2015 14→1,598 · 2016 1→6,026 · 2017 absent→2,979 ·
+  2018 876→3,125**; totals 43,850→56,687 plays, 6,957→7,934 artists. Only the music files
+  are read — `Stores Activity/`, billing, TV/podcasts/books are ignored (payment data + IPs).
+  - **Apple's export has no artist column** (`Container Artist Name` is populated in 2 of
+    17,928 rows). The artist is recovered by joining `Song Name` against the `"Artist - Title"`
+    strings in `Play History Daily Tracks.csv` + `Track Play History.csv` — 96.8% resolve.
+    Gaps are closed by **`config/apple_artist_overrides.json`** (tracked per-user seed, same
+    convention as `household_artists.txt`), which the parser consults before dropping an
+    event; the map join always wins over an override. **`cli.py apple-unresolved`** writes
+    `data/apple_unresolved.md` (gitignored) listing what's still unresolved with play counts
+    and **album hints** — the album name is what makes a mystery title identifiable. 207 plays
+    across 138 songs remain, mostly remixes/EP singles whose album is just the song title again.
+  - **Weak fields stay null, never guessed.** Apple records no `shuffle` and no `reason_start`,
+    so Apple events are **excluded from `intentionality` entirely** (absent, not zeroed) and
+    from album-session detection (an interleaved Apple play would also *split* a genuine
+    Spotify session). A new **`coverage`** block records which sections have real data for
+    which years; the page drives its hatched "not recorded" columns off it rather than
+    hardcoding years. `skipped` needs no special case — skips are `ms_played < 30s` for both
+    services. `platform` comes from `Client Device Name` reduced to a fixed 5-token vocabulary
+    (iOS 10.3k / Macintosh 6.1k / Android 173) — **never the raw user-agent**, which carries
+    device/build fingerprints that would flow into the publicly deployed page.
+  - **27 case-variant artist names canonicalized** at the merge seam (Apple lowercases
+    articles): `Outkast`/`OutKast` → 523 plays, `Florence + the Machine` → 365, plus
+    `twenty one pilots`, `Cage the Elephant`, `The War on Drugs`, `TV on the Radio`… Election
+    = most plays wins, ties go to the Spotify spelling. **Case-only** — no fuzzy/punctuation
+    matching (`&` vs `and`, feat. variants) — that class is riskier and stays unauthorized.
+  - **`ALL_TIME_ARTISTS_TOP_N` 200 → 400.** The merge initially *regressed*
+    `known_listened_artists()` (456→442) by pushing 44 Apple-era artists out of the capped
+    list — the Gov't Mule blind spot reintroduced by a different route. Now **598 known**.
+    Note this doubles the timeline's artist roster, so the page payload grew (859→883 KB).
+  - **Bug found + fixed en route:** the v1 `tracks` accumulator did an unguarded
+    `t["uri"] = uri`, so a track played on both services had its Spotify URI blanked by
+    whichever Apple play sorted last (silently breaking cover art). Now guarded.
+  - **Rebuild order is now: `apple-build` → `history-build` → `enrich-meta` →
+    `timeline-build` → `timeline-inject` → scp.** 272 tests green (+70).
+    Orchestration: parse Sonnet, aggregator + front-end Opus, verify Sonnet.
+- **PNG-export hatch fix — 2026-07-28.** The ⤓ card export rendered the "not recorded"
+  gap years **blank**, because `gapHatch` lived in a root-level `<svg><defs>` outside the
+  subtree `html-to-image` captures — a shared image would have read as "zero listening",
+  the exact misreading the hatch exists to prevent. `hatchFill(el)` now defines the pattern
+  inside each chart's own `<svg>` with a per-svg unique id, re-added after each redraw
+  (callers clear via `selectAll("*").remove()`). Verified by decoding the exported PNG:
+  hatch column samples 30 distinct colors vs 1 for a flat bar and 1 for background.
+- **Known, pre-existing (not caused by the Apple work):** at 390px the page reports
+  `scrollWidth` 489. Culprit isolated — the **"The Skip Fingerprint"** and **"The Claude
+  Era"** cards in Artist Stories render 446.5px wide; their `.hylgrid` media query collapses
+  to one column correctly, but the track's default `minmax(auto,1fr)` floors at the
+  min-content width of `.skiprow`/`.stuckwrap`, clipping percentages ("1.1%"→"1."). Fix is
+  `min-width:0` on the grid item plus wrapping rules inside the rows.
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 - **Showcase page — done, 2026-07-14.** `docs/recipes.html` is now a tabbed
