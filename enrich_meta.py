@@ -71,6 +71,13 @@ import urllib.request
 from typing import Any
 
 from auth import get_client
+from name_match import (
+    album_core,
+    album_similarity,
+    artist_key,
+    artist_matches,
+    normalize,
+)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Constants
@@ -88,6 +95,20 @@ TRACK_BATCH = 50   # Spotify /tracks accepts up to 50 ids
 ALBUM_BATCH = 20   # Spotify /albums accepts up to 20 ids
 THUMB_CAP = 40     # max albums to download + base64 the 64 px thumbnail
 ARTIST_CAP = 50    # max distinct artists to fetch top-tracks for
+
+# Name-search fallback (albums with no Spotify track URI — Apple-Music-only
+# listening). A wrong cover is worse than a blank tile, so both gates are hard:
+# the candidate's primary artist must be the same act (name_match.artist_matches)
+# AND the album-name cores must be at least this similar. 0.87 accepts edition
+# noise that survives core-stripping and rejects near-misses like
+# "Coming Home (Deluxe)" vs "Coming Home Live" (0.815).
+ALBUM_SEARCH_MIN_RATIO = 0.87
+ALBUM_SEARCH_LIMIT = 10   # candidates to consider per query
+ALBUM_SEARCH_CAP = 25     # max name searches per enrich() run
+# How many top albums the crate shows — keep in sync with
+# build_timeline_data._build_albums_key(top_n=35). Only these are worth a
+# name search, since only these get rendered.
+ALBUM_CRATE_N = 35
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -245,22 +266,65 @@ def _download_thumb_b64(url: str | None) -> str | None:
         return None
 
 
-def fetch_albums(sp, album_ids: list[str], thumb_count: int = 0) -> dict[str, dict]:
+def fetch_albums(
+    sp, album_ids: list[str], thumb_count: int = 0, refill_thumbs: bool = True
+) -> dict[str, dict]:
     """Fetch album metadata for a list of album ids; returns dict keyed by album id.
 
     Downloads the 64 px thumbnail for the first (THUMB_CAP - thumb_count) albums
     not already caching a thumb; the 300 px URL is always stored for progressive upgrade.
+
+    `refill_thumbs` re-fetches albums whose CACHED record has no `thumb_b64`
+    (the thumb cap was hit on an earlier run, or the CDN download failed) while
+    budget remains. `album_ids` arrives in display order — crate albums first —
+    so the refill spends its budget on the tiles the user actually sees. Without
+    this, an album that missed the cap once stayed permanently thumb-less and
+    rendered as a letter placeholder until the CDN swap finished.
     """
     result: dict[str, dict] = {}
     missing_ids: list[str] = []
+    refill_ids: list[str] = []
     thumb_downloaded = thumb_count
 
-    for aid in album_ids:
+    for idx, aid in enumerate(album_ids):
         cached = _cache_read("album", aid)
         if cached is not None:
             result[aid] = cached
+            # Only the leading THUMB_CAP ids are ever rendered as tiles, so only
+            # those are worth a refill — this also keeps repeat runs from slowly
+            # back-filling a thumbnail for every album ever seen.
+            if refill_thumbs and idx < THUMB_CAP and not cached.get("thumb_b64"):
+                refill_ids.append(aid)
         else:
             missing_ids.append(aid)
+
+    # Refill first: cached crate albums missing their thumbnail get first claim
+    # on the budget, since those are the tiles that render blank.
+    budget = max(THUMB_CAP - thumb_downloaded, 0)
+    refill_ids = refill_ids[:budget]
+    if refill_ids:
+        for chunk in _chunks(refill_ids, ALBUM_BATCH):
+            try:
+                resp = sp.albums(chunk)
+            except Exception as e:  # noqa: BLE001 — refill is best-effort
+                print(f"  album thumb refill error: {e}", file=sys.stderr)
+                continue
+            for album in (resp.get("albums") or []):
+                if not album:
+                    continue
+                aid = album.get("id")
+                if not aid or aid not in result:
+                    continue
+                thumb_b64 = _download_thumb_b64(_pick_image(album.get("images") or [], 64))
+                if not thumb_b64:
+                    continue
+                rec = dict(result[aid])
+                rec["thumb_b64"] = thumb_b64
+                if not rec.get("image_url"):
+                    rec["image_url"] = _pick_image(album.get("images") or [], 300)
+                _cache_write("album", aid, rec)
+                result[aid] = rec
+                thumb_downloaded += 1
 
     if not missing_ids:
         return result
@@ -300,6 +364,136 @@ def fetch_albums(sp, album_ids: list[str], thumb_count: int = 0) -> dict[str, di
             result[aid] = rec
 
     return result
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Album-art fallback: resolve an album by NAME when there is no track URI
+# ──────────────────────────────────────────────────────────────────────────────
+
+def album_name_key(artist: str | None, name: str | None) -> str:
+    """Stable lookup key for the name-search index: `<artist_key>||<normalized name>`.
+
+    `build_timeline_data` recomputes this from the history summary to find the
+    album a name search resolved, so both sides MUST use this one function.
+
+    The key normalizes but does NOT strip edition qualifiers: the crate can hold
+    both `Coming Home` and `Coming Home (Deluxe)` by the same artist, and those
+    are different records that must not collide. (Edition-stripping still happens
+    inside the *matching* logic, where it belongs.)
+    """
+    return f"{artist_key(artist)}||{normalize(name)}"
+
+
+def _score_album_candidate(
+    artist: str, name: str, cand: dict
+) -> tuple[bool, float, str]:
+    """Judge one Spotify /search album hit. Returns (accepted, ratio, reason)."""
+    cand_artists = cand.get("artists") or []
+    cand_artist = (cand_artists[0].get("name") if cand_artists else None) or ""
+    cand_name = cand.get("name") or ""
+    if not artist_matches(artist, cand_artist):
+        return False, 0.0, f"artist mismatch (got {cand_artist!r})"
+    ratio = album_similarity(name, cand_name)
+    if ratio < ALBUM_SEARCH_MIN_RATIO:
+        return (
+            False,
+            ratio,
+            f"album name too different (got {cand_name!r}, ratio {ratio:.2f} "
+            f"< {ALBUM_SEARCH_MIN_RATIO})",
+        )
+    return True, ratio, "ok"
+
+
+def search_album_by_name(sp, artist: str, name: str) -> dict:
+    """Find a Spotify album id for (artist, album name) via plain `search`.
+
+    Used for albums the user only ever played on Apple Music: those events carry
+    `spotify_track_uri = None` by design, so there is no URI to reach the album
+    (and hence its cover art) through. Search needs no OAuth scope.
+
+    Returns a record that is ALWAYS cached, including the negative case, so a
+    miss doesn't re-hit the API on every rebuild:
+
+        {"matched": True, "album_id": ..., "matched_name": ..., "matched_artist": ...,
+         "confidence": 0.0-1.0, "query": "...", "reason": "ok"}
+        {"matched": False, "reason": "why it was rejected/not found"}
+
+    Low confidence deliberately yields a MISS (blank tile) rather than a guess —
+    a wrong cover is worse than no cover.
+    """
+    key = album_name_key(artist, name)
+    cached = _cache_read("album_search", key)
+    if cached is not None:
+        return cached
+
+    core = album_core(name)
+    queries = [
+        f'album:"{core}" artist:"{artist}"',
+        f"{artist} {core}",
+    ]
+    best: dict | None = None
+    best_ratio = 0.0
+    rejections: list[str] = []
+
+    for q in queries:
+        try:
+            res = sp.search(q=q, type="album", limit=ALBUM_SEARCH_LIMIT)
+        except Exception as e:  # noqa: BLE001 — one bad query must not kill the run
+            rejections.append(f"search error: {e}")
+            continue
+        items = ((res.get("albums") or {}).get("items")) or []
+        for cand in items:
+            if not cand:
+                continue
+            ok, ratio, reason = _score_album_candidate(artist, name, cand)
+            if not ok:
+                if len(rejections) < 3:
+                    rejections.append(reason)
+                continue
+            if ratio > best_ratio:
+                best_ratio = ratio
+                cand_artists = cand.get("artists") or []
+                best = {
+                    "matched": True,
+                    "album_id": cand.get("id"),
+                    "matched_name": cand.get("name"),
+                    "matched_artist": (
+                        cand_artists[0].get("name") if cand_artists else None
+                    ),
+                    "confidence": round(ratio, 3),
+                    "query": q,
+                    "reason": "ok",
+                }
+        if best is not None and best_ratio >= 0.999:
+            break  # exact core match — no need for the looser query
+
+    rec = best or {
+        "matched": False,
+        "reason": "; ".join(rejections) or "no album search results",
+    }
+    _cache_write("album_search", key, rec)
+    return rec
+
+
+def resolve_albums_by_name(
+    sp, wanted: list[tuple[str, str]], cap: int = ALBUM_SEARCH_CAP
+) -> dict[str, dict]:
+    """Run `search_album_by_name` over (artist, album) pairs lacking a URI.
+
+    Returns `{album_name_key: record}` for every pair attempted — matched and
+    unmatched alike, so the output file records *why* a tile stayed blank.
+    """
+    out: dict[str, dict] = {}
+    for artist, name in wanted[:cap]:
+        key = album_name_key(artist, name)
+        if key in out:
+            continue
+        rec = search_album_by_name(sp, artist, name)
+        rec = dict(rec)
+        rec["artist"] = artist
+        rec["album"] = name
+        out[key] = rec
+    return out
 
 
 def fetch_artist_top_tracks(sp, artist_ids: list[str]) -> dict[str, dict]:
@@ -414,6 +608,62 @@ def enrich(
     thumb_count = sum(1 for a in albums_data.values() if a.get("thumb_b64"))
     print(f"  Got {len(albums_data)} album records ({thumb_count} thumbs)", file=sys.stderr)
 
+    # 4b. Name-search fallback for albums with no resolvable URI.
+    # An album the user only ever played on Apple Music has no
+    # `spotify_track_uri` anywhere in the history, so steps 3–4 can never reach
+    # it and its crate tile renders blank. Search Spotify by artist + album name
+    # instead, under strict artist/name gates (see search_album_by_name).
+    unresolved_pairs: list[tuple[str, str]] = []
+    for a in summary.get("albums", {}).get("top_albums", [])[:ALBUM_CRATE_N]:
+        su = a.get("sample_uri")
+        aid = (tracks_data.get(su) or {}).get("album_id") if su else None
+        if aid and aid in albums_data:
+            continue
+        if a.get("artist") and a.get("name"):
+            unresolved_pairs.append((a["artist"], a["name"]))
+
+    album_name_lookup: dict[str, dict] = {}
+    name_search_ids: set[str] = set()
+    if unresolved_pairs:
+        print(
+            f"  {len(unresolved_pairs)} album(s) have no track URI — "
+            f"trying the name-search fallback …",
+            file=sys.stderr,
+        )
+        album_name_lookup = resolve_albums_by_name(sp, unresolved_pairs)
+        found_ids = [
+            r["album_id"]
+            for r in album_name_lookup.values()
+            if r.get("matched") and r.get("album_id")
+        ]
+        if found_ids:
+            # Fetch their metadata/art the normal way, now that we have ids.
+            extra = fetch_albums(sp, found_ids, thumb_count=thumb_count)
+            albums_data.update(extra)
+            name_search_ids.update(found_ids)
+        n_ok = sum(1 for r in album_name_lookup.values() if r.get("matched"))
+        print(
+            f"  name search resolved {n_ok}/{len(album_name_lookup)}",
+            file=sys.stderr,
+        )
+        for r in album_name_lookup.values():
+            if r.get("matched"):
+                print(
+                    f"    ✓ {r['artist']} — {r['album']}  →  "
+                    f"{r['matched_artist']} — {r['matched_name']} "
+                    f"(conf {r['confidence']})",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    f"    ✗ {r['artist']} — {r['album']}: {r['reason']}",
+                    file=sys.stderr,
+                )
+
+    # Provenance: how each album's art was reached, so a wrong cover is auditable.
+    for aid, rec in albums_data.items():
+        rec["art_source"] = "name_search" if aid in name_search_ids else "uri"
+
     # 5. Collect unique artist ids (across all track records, cap at ARTIST_CAP)
     artist_ids_ordered: list[str] = []
     seen_artists: set[str] = set()
@@ -445,10 +695,15 @@ def enrich(
             "tracks": len(tracks_data),
             "albums": len(albums_data),
             "artists": len(artists_data),
+            "albums_via_name_search": len(name_search_ids),
         },
         "tracks": tracks_data,
         "albums": albums_data,
         "artists": artists_data,
+        # {album_name_key: record} — every URI-less album we attempted by name,
+        # matched or not (with the rejection reason). build_timeline_data reads
+        # this to hang cover art off name matches; humans read it to audit them.
+        "album_name_lookup": album_name_lookup,
     }
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w") as f:

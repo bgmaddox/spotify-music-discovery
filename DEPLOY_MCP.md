@@ -184,6 +184,26 @@ scp docs/history.local.html rachett:/var/www/discovery/history.html
 curl -s -o /dev/null -w "%{http_code}\n" https://rachett.tail504ae5.ts.net/discovery/history  # 200
 ```
 
+**Compression (added 2026-07-28).** The page outgrew the ≤800 KB budget once the Apple
+Music layer landed (950 KB self-contained, mostly base64 album thumbs). Caddy was serving
+it uncompressed, so `encode zstd gzip` was added **inside the `@discovery` and `@history`
+handle blocks only** — deliberately NOT at the site level, because `encode` on the MCP
+routes can buffer streaming/SSE responses. Effect: 972 KB → **336 KB** over the wire.
+
+```
+handle @history {
+    encode zstd gzip          # ← scoped here, not site-wide
+    root * /var/www/discovery
+    rewrite * /history.html
+    file_server
+}
+```
+
+After any Caddyfile edit: `sudo caddy validate --config /etc/caddy/Caddyfile` →
+`sudo systemctl reload caddy` → verify BOTH the page (200, and a smaller
+`size_download` with `-H "Accept-Encoding: gzip"`) and the MCP `initialize` (200).
+A dated backup is written to `/etc/caddy/Caddyfile.bak-YYYYMMDD`.
+
 If the underlying data changes, rebuild first, then the inject + `scp` above. Full
 pipeline (a fresh GDPR export needs all of it; a taste-dump refresh only the tail):
 `history-build` → `enrich-meta` (Spotify track/album metadata + cover thumbs, cached

@@ -23,6 +23,7 @@ session can drive each primitive with a single uniform command:
     python cli.py history-snapshot [--year YYYY]   # lean multi-year history digest
     python cli.py apple-build            # Apple Media Services export -> data/apple_history_events.json
     python cli.py apple-unresolved       # unresolved-artist report -> data/apple_unresolved.md
+    python cli.py apple-resolve [--apply]  # propose artists for those songs via Spotify search
     python cli.py log-add --artist "Tyler Childers" [--title T --uri U --recipe 6 --playlist URL]
     python cli.py log-artists          # artists already surfaced (cross-session dedup)
     python cli.py log-recent [--limit 20]
@@ -62,6 +63,7 @@ from enrich_meta import _cmd_enrich
 from build_similarity_data import _cmd_similarity_build
 from tools import _cmd_build_playlist, _cmd_search_verify, _cmd_set_playlist_image
 import apple_history
+from apple_resolve import _add_apple_resolve_args, _cmd_apple_resolve
 
 
 def _latest_taste_dump() -> str | None:
@@ -340,6 +342,14 @@ def main() -> int:
         help="Write a human-readable report of still-unresolved Apple artists to data/apple_unresolved.md.",
     )
     au.set_defaults(func=apple_history._cmd_apple_unresolved)
+
+    ar = sub.add_parser(
+        "apple-resolve",
+        help="Propose artists for unresolved Apple songs via Spotify search "
+             "→ data/apple_overrides_proposed.json (--apply merges the confident ones).",
+    )
+    _add_apple_resolve_args(ar)
+    ar.set_defaults(func=_cmd_apple_resolve)
 
     la = sub.add_parser(
         "log-add", help="Record surfaced artist(s)/track(s) in the discovery ledger."

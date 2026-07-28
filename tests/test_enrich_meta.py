@@ -214,7 +214,7 @@ def test_album_cache_hit_skips_api(tmp_path, monkeypatch):
 
     aid = "alb_cached"
     rec = {"name": "CachedAlb", "artist": "X", "total_tracks": 8,
-           "release_year": 2018, "thumb_b64": None, "image_url": "http://cdn/x.jpg"}
+           "release_year": 2018, "thumb_b64": "AAA", "image_url": "http://cdn/x.jpg"}
     enrich_meta._cache_write("album", aid, rec)
 
     sp = FakeSp()
@@ -222,6 +222,58 @@ def test_album_cache_hit_skips_api(tmp_path, monkeypatch):
 
     assert sp.album_batches == []
     assert result[aid]["total_tracks"] == 8
+
+
+def test_cached_album_without_thumb_is_refilled(tmp_path, monkeypatch):
+    """A cached album that missed the thumb cap earlier gets its thumb back.
+
+    Regression: crate tiles rendered as letter placeholders forever because the
+    first enrich run hit THUMB_CAP before reaching them, and the thumb-less
+    record was then served from cache on every later run.
+    """
+    monkeypatch.setattr(enrich_meta, "CACHE_DIR", str(tmp_path / "cache"))
+    monkeypatch.setattr(enrich_meta, "_download_thumb_b64",
+                        lambda url: base64.b64encode(b"fake").decode() if url else None)
+
+    aid = "alb1"
+    enrich_meta._cache_write("album", aid, {
+        "name": "Album-alb1", "artist": "X", "total_tracks": 8,
+        "release_year": 2018, "thumb_b64": None, "image_url": "http://cdn/x.jpg",
+    })
+
+    sp = FakeSp(album_objs=[_make_album_obj(aid)])
+    result = enrich_meta.fetch_albums(sp, [aid])
+
+    assert sp.album_batches == [[aid]]          # one refill call
+    assert result[aid]["thumb_b64"]             # thumb restored
+    assert result[aid]["total_tracks"] == 8     # rest of the record untouched
+    # ...and persisted, so the next run is a clean cache hit
+    assert enrich_meta._cache_read("album", aid)["thumb_b64"]
+    sp2 = FakeSp(album_objs=[_make_album_obj(aid)])
+    enrich_meta.fetch_albums(sp2, [aid])
+    assert sp2.album_batches == []
+
+
+def test_refill_respects_thumb_cap(tmp_path, monkeypatch):
+    """Refill never exceeds the remaining thumb budget."""
+    monkeypatch.setattr(enrich_meta, "CACHE_DIR", str(tmp_path / "cache"))
+    monkeypatch.setattr(enrich_meta, "THUMB_CAP", 1)
+    monkeypatch.setattr(enrich_meta, "_download_thumb_b64",
+                        lambda url: base64.b64encode(b"fake").decode() if url else None)
+
+    ids = ["a1", "a2", "a3"]
+    for aid in ids:
+        enrich_meta._cache_write("album", aid, {
+            "name": f"Album-{aid}", "artist": "X", "total_tracks": 8,
+            "release_year": 2018, "thumb_b64": None, "image_url": "http://cdn/x.jpg",
+        })
+
+    sp = FakeSp(album_objs=[_make_album_obj(a) for a in ids])
+    result = enrich_meta.fetch_albums(sp, ids)
+
+    assert sp.album_batches == [["a1"]]  # only the budgeted one, in display order
+    assert result["a1"]["thumb_b64"]
+    assert not result["a2"]["thumb_b64"]
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -377,3 +429,106 @@ def test_pick_image_returns_closest():
     assert enrich_meta._pick_image(images, 300) == "med.jpg"
     assert enrich_meta._pick_image(images, 64) == "small.jpg"
     assert enrich_meta._pick_image([], 300) is None
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Album-art fallback: resolving an album by NAME when it has no track URI
+# (Apple-Music-only listening → spotify_track_uri is None by design)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class FakeSearchSp:
+    """Fake client whose `search` returns canned album items, and records queries."""
+
+    def __init__(self, album_items):
+        self._items = album_items
+        self.queries: list[str] = []
+
+    def search(self, q, type="album", limit=10):
+        self.queries.append(q)
+        return {"albums": {"items": self._items}}
+
+
+def _alb_item(aid, name, artist):
+    return {"id": aid, "name": name, "artists": [{"name": artist}]}
+
+
+def test_album_name_key_separates_editions():
+    """`Coming Home` and `Coming Home (Deluxe)` are different crate records."""
+    k1 = enrich_meta.album_name_key("Leon Bridges", "Coming Home")
+    k2 = enrich_meta.album_name_key("Leon Bridges", "Coming Home (Deluxe)")
+    assert k1 != k2
+    # ...but the key is still normalization-stable
+    assert k1 == enrich_meta.album_name_key("leon  bridges", "coming home")
+
+
+def test_search_album_by_name_matches_deluxe_edition(tmp_path, monkeypatch):
+    monkeypatch.setattr(enrich_meta, "CACHE_DIR", str(tmp_path / "cache"))
+    sp = FakeSearchSp([_alb_item("a1", "Coming Home (Deluxe)", "Leon Bridges")])
+
+    rec = enrich_meta.search_album_by_name(sp, "Leon Bridges", "Coming Home (Deluxe)")
+
+    assert rec["matched"] is True
+    assert rec["album_id"] == "a1"
+    assert rec["confidence"] == 1.0
+
+
+def test_search_album_by_name_rejects_wrong_artist(tmp_path, monkeypatch):
+    """A same-titled album by someone else must NOT supply the cover."""
+    monkeypatch.setattr(enrich_meta, "CACHE_DIR", str(tmp_path / "cache"))
+    sp = FakeSearchSp([_alb_item("a9", "Surf", "The Beach Boys")])
+
+    rec = enrich_meta.search_album_by_name(sp, "Nico Segal", "Surf")
+
+    assert rec["matched"] is False
+    assert "artist mismatch" in rec["reason"]
+
+
+def test_search_album_by_name_rejects_weak_name_match(tmp_path, monkeypatch):
+    """Right artist, near-miss album name → blank tile, not a wrong cover."""
+    monkeypatch.setattr(enrich_meta, "CACHE_DIR", str(tmp_path / "cache"))
+    sp = FakeSearchSp([_alb_item("a2", "Coming Home Live", "Leon Bridges")])
+
+    rec = enrich_meta.search_album_by_name(sp, "Leon Bridges", "Coming Home (Deluxe)")
+
+    assert rec["matched"] is False
+    assert "too different" in rec["reason"]
+
+
+def test_album_name_search_negative_result_is_cached(tmp_path, monkeypatch):
+    """A miss must not re-hit the API on every rebuild."""
+    monkeypatch.setattr(enrich_meta, "CACHE_DIR", str(tmp_path / "cache"))
+    sp = FakeSearchSp([])
+
+    enrich_meta.search_album_by_name(sp, "Nico Segal", "Surf")
+    n_first = len(sp.queries)
+    assert n_first > 0
+
+    enrich_meta.search_album_by_name(sp, "Nico Segal", "Surf")
+    assert len(sp.queries) == n_first  # served from cache
+
+
+def test_resolve_albums_by_name_records_every_attempt(tmp_path, monkeypatch):
+    """Both matched and unmatched pairs land in the index, with reasons."""
+    monkeypatch.setattr(enrich_meta, "CACHE_DIR", str(tmp_path / "cache"))
+    sp = FakeSearchSp([_alb_item("a1", "Surf", "Nico Segal")])
+
+    out = enrich_meta.resolve_albums_by_name(
+        sp, [("Nico Segal", "Surf"), ("Nobody At All", "Nothing")]
+    )
+
+    assert len(out) == 2
+    hit = out[enrich_meta.album_name_key("Nico Segal", "Surf")]
+    miss = out[enrich_meta.album_name_key("Nobody At All", "Nothing")]
+    assert hit["matched"] and hit["album_id"] == "a1"
+    assert miss["matched"] is False and miss["reason"]
+    # provenance for the audit trail
+    assert hit["artist"] == "Nico Segal" and hit["album"] == "Surf"
+
+
+def test_resolve_albums_by_name_respects_cap(tmp_path, monkeypatch):
+    monkeypatch.setattr(enrich_meta, "CACHE_DIR", str(tmp_path / "cache"))
+    sp = FakeSearchSp([])
+    out = enrich_meta.resolve_albums_by_name(
+        sp, [("A One", "Album One"), ("A Two", "Album Two")], cap=1
+    )
+    assert len(out) == 1

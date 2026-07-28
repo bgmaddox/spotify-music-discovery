@@ -257,7 +257,38 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   - **Rebuild order is now: `apple-build` → `history-build` → `enrich-meta` →
     `timeline-build` → `timeline-inject` → scp.** 272 tests green (+70).
     Orchestration: parse Sonnet, aggregator + front-end Opus, verify Sonnet.
-- **PNG-export hatch fix — 2026-07-28.** The ⤓ card export rendered the "not recorded"
+- **Two Spotify name-search fallbacks — 2026-07-28.** New shared module **`name_match.py`**
+  (pure, no I/O) holds the normalization + accept/reject gates both use: smart-quote/accent
+  folding, edition-suffix stripping (`(Deluxe)`, `(Bonus Track Version)`, `(2007 Remaster)`,
+  `- EP`), feature-credit stripping, and `artist_matches`, which accepts connector-joined
+  extensions (`Nathaniel Rateliff` ↔ `… & The Night Sweats`) but rejects bare substrings
+  (`The Band` ≠ `The Band Perry`).
+  - **(1) Album art by name** (`enrich_meta.search_album_by_name` / `resolve_albums_by_name`).
+    An album played only on Apple Music has no `spotify_track_uri` anywhere, so the
+    URI→album→cover path can't reach it. `enrich-meta` now searches artist+album name for
+    those, gated on artist match AND album-core similarity ≥ **0.87** (accepts `Coming Home
+    (Deluxe)`, rejects `Coming Home Live` at 0.815) — low confidence stays blank rather than
+    guessing. Results (including negatives) cache under `.cache_spotify_meta/album_search/`;
+    the output gains an **`album_name_lookup`** index plus `art_source` (`uri` |
+    `name_search`) on every album so a wrong cover is auditable. `build_timeline_data`
+    consumes it via the shared `album_name_key()` (both sides MUST use that one function).
+    Also fixed the real cause of the *other* blank tiles: `fetch_albums` now **refills
+    thumbnails** for cached albums that missed `THUMB_CAP` on an earlier run (they were
+    permanently thumb-less and rendered as letter placeholders).
+  - **(2) `cli.py apple-resolve` / `apple_resolve.py`** proposes artists for the songs
+    `apple-build` still drops, searching title + **album hint**. Writes
+    `data/apple_overrides_proposed.json` (gitignored) with per-song evidence and a tier;
+    **nothing is written to `config/apple_artist_overrides.json` without `--apply`**, which
+    only applies the `high` tier and never overwrites an existing key (manual override wins;
+    the map join still beats both). `high` = informative hint (not just the song title again)
+    + title AND album agreement + all qualifying hits agree on one artist. Deliberate
+    rejections: remix/EP singles (`Collide (Remixes) - EP`) → `ambiguous_hint`; cover/karaoke
+    collisions (`21 Questions` also on a "GhetSoul Tapes" release) → `review`; tribute records
+    that merely share a prefix (`Lioness: Hidden Treasures, But Piano`) → `review`. Only a
+    **parenthesized** annotation counts as the same release (`Spring Awakening (Original
+    Broadway Cast Recording)`). First run: 138 songs → **52 high (applied) / 43 ambiguous /
+    29 review / 14 no-match**; after `apple-build`, unresolved dropped **138→86 songs,
+    207→141 plays**, resolution **96.8%→98.0%**, +66 plays recovered. 311 tests green (+39). The ⤓ card export rendered the "not recorded"
   gap years **blank**, because `gapHatch` lived in a root-level `<svg><defs>` outside the
   subtree `html-to-image` captures — a shared image would have read as "zero listening",
   the exact misreading the hatch exists to prevent. `hatchFill(el)` now defines the pattern

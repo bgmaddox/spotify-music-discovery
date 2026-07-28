@@ -23,6 +23,7 @@ import sys
 from datetime import datetime, timezone
 
 import taste_profile
+from enrich_meta import album_name_key
 from lastfm import LastfmError, artist_tags
 
 # ------------------------------------------------------------------ paths
@@ -585,9 +586,15 @@ def _build_albums_key(summary: dict, meta: dict | None, top_n: int = 35) -> dict
     uri_to_meta: dict[str, dict] = {}  # uri → track meta record
     album_id_to_meta: dict[str, dict] = {}  # album_id → album meta record
 
+    # Name-search fallback index (enrich_meta.resolve_albums_by_name): albums the
+    # user only played on Apple Music have no track URI anywhere, so cover art is
+    # reached by artist+name search instead. Absent on older/forker meta files.
+    name_lookup: dict[str, dict] = {}
+
     if meta is not None:
         uri_to_meta = meta.get("tracks", {})
         album_id_to_meta = meta.get("albums", {})
+        name_lookup = meta.get("album_name_lookup", {}) or {}
 
     # Build album_id → set of distinct played URIs (from track_stories)
     album_played_uris: dict[str, set[str]] = {}
@@ -604,11 +611,21 @@ def _build_albums_key(summary: dict, meta: dict | None, top_n: int = 35) -> dict
         sample_uri = alb.get("sample_uri")
         album_id = None
         alb_enrichment: dict = {}
+        art_source = None
 
         if meta is not None and sample_uri and sample_uri in uri_to_meta:
             album_id = uri_to_meta[sample_uri].get("album_id")
             if album_id and album_id in album_id_to_meta:
                 alb_enrichment = album_id_to_meta[album_id]
+                art_source = "uri"
+
+        # No URI path (Apple-Music-only album) → try the name-search index.
+        if meta is not None and not alb_enrichment and name_lookup:
+            hit = name_lookup.get(album_name_key(alb.get("artist"), alb.get("name")))
+            if hit and hit.get("matched") and hit.get("album_id") in album_id_to_meta:
+                album_id = hit["album_id"]
+                alb_enrichment = album_id_to_meta[album_id]
+                art_source = "name_search"
 
         # Completion: distinct played URIs ÷ total_tracks
         total_tracks = alb_enrichment.get("total_tracks") if alb_enrichment else None
@@ -632,6 +649,8 @@ def _build_albums_key(summary: dict, meta: dict | None, top_n: int = 35) -> dict
                 "completion": completion,
                 "thumb_b64": alb_enrichment.get("thumb_b64"),
                 "image_url": alb_enrichment.get("image_url"),
+                # "uri" | "name_search" | None — how the cover was resolved.
+                "art_source": art_source,
             }
         )
 
@@ -644,6 +663,10 @@ def _build_albums_key(summary: dict, meta: dict | None, top_n: int = 35) -> dict
             hit_album_id = uri_to_meta[hit_uri].get("album_id")
             if hit_album_id and hit_album_id in album_id_to_meta:
                 wonder_enrichment = album_id_to_meta[hit_album_id]
+        if meta is not None and not wonder_enrichment and name_lookup:
+            hit = name_lookup.get(album_name_key(w.get("artist"), w.get("album")))
+            if hit and hit.get("matched") and hit.get("album_id") in album_id_to_meta:
+                wonder_enrichment = album_id_to_meta[hit["album_id"]]
         wonders_out.append(
             {
                 "album": w["album"],

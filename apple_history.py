@@ -621,6 +621,14 @@ def write_unresolved_report(
         "the `Album Name` seen on those rows — usually enough to identify "
         "the artist even for an ambiguous title.",
         "",
+        "**Or automate the easy ones:** `.venv/bin/python cli.py apple-resolve` "
+        "searches Spotify by title + album hint and writes tiered proposals "
+        "with evidence to `data/apple_overrides_proposed.json`; re-run it with "
+        "`--apply` to merge the high-confidence ones into the overrides file "
+        "(hand-written entries are never overwritten). What's left below is "
+        "mostly remix/EP singles whose album hint is just the song title "
+        "again — those need a human.",
+        "",
         f"**{len(unresolved)} unresolved songs, "
         f"{sum(u['plays'] for u in unresolved)} plays, "
         f"{round(sum(u['minutes'] for u in unresolved), 1)} minutes total.**",

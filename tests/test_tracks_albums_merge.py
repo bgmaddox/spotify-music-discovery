@@ -518,3 +518,83 @@ def test_deep_cuts_sorted_deep_cuts_first():
     non_deep = [i for i in items if not i["is_deep_cut"]]
     deep = [i for i in items if i["is_deep_cut"]]
     assert items[: len(deep)] == deep
+
+
+# ============================================ album-art fallback (name search)
+
+
+def _uriless_summary() -> dict:
+    """An Apple-Music-only album: no sample_uri anywhere, so no URI→art path."""
+    summary = _sample_summary()
+    summary["albums"]["top_albums"].append(
+        {
+            "name": "Coming Home (Deluxe)",
+            "artist": "Leon Bridges",
+            "plays": 162,
+            "by_year": {"2016": 162},
+            "session_count": 1,
+            "top_track": {"name": "River", "plays": 20, "uri": None},
+            "sample_uri": "",
+        }
+    )
+    return summary
+
+
+def _meta_with_name_lookup() -> dict:
+    meta = _sample_meta()
+    meta["albums"]["album_deluxe"] = {
+        "name": "Coming Home (Deluxe)",
+        "artist": "Leon Bridges",
+        "total_tracks": 15,
+        "release_year": 2015,
+        "thumb_b64": "b64_deluxe==",
+        "image_url": "https://example.com/deluxe.jpg",
+    }
+    import enrich_meta
+
+    meta["album_name_lookup"] = {
+        enrich_meta.album_name_key("Leon Bridges", "Coming Home (Deluxe)"): {
+            "matched": True,
+            "album_id": "album_deluxe",
+            "matched_name": "Coming Home (Deluxe)",
+            "matched_artist": "Leon Bridges",
+            "confidence": 1.0,
+        }
+    }
+    return meta
+
+
+def test_albums_art_falls_back_to_name_search():
+    """An album with no track URI still gets its cover via the name index."""
+    result = btd._build_albums_key(_uriless_summary(), _meta_with_name_lookup())
+    alb = result["top_albums"][-1]
+    assert alb["name"] == "Coming Home (Deluxe)"
+    assert alb["thumb_b64"] == "b64_deluxe=="
+    assert alb["image_url"] == "https://example.com/deluxe.jpg"
+    assert alb["art_source"] == "name_search"
+    # URI-resolved albums stay labelled as such — the join is auditable
+    assert result["top_albums"][0]["art_source"] == "uri"
+
+
+def test_albums_art_stays_blank_when_name_search_missed():
+    """A recorded miss must NOT borrow some other album's art."""
+    meta = _meta_with_name_lookup()
+    import enrich_meta
+
+    key = enrich_meta.album_name_key("Leon Bridges", "Coming Home (Deluxe)")
+    meta["album_name_lookup"][key] = {"matched": False, "reason": "artist mismatch"}
+
+    result = btd._build_albums_key(_uriless_summary(), meta)
+    alb = result["top_albums"][-1]
+    assert alb["thumb_b64"] is None
+    assert alb["image_url"] is None
+    assert alb["art_source"] is None
+
+
+def test_albums_key_tolerates_meta_without_name_lookup():
+    """Older meta files (and forkers') have no album_name_lookup key at all."""
+    meta = _sample_meta()
+    assert "album_name_lookup" not in meta
+    result = btd._build_albums_key(_uriless_summary(), meta)
+    assert result["top_albums"][-1]["art_source"] is None
+    assert result["top_albums"][0]["art_source"] == "uri"
