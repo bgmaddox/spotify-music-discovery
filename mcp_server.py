@@ -21,6 +21,7 @@ Run locally for a smoke test:
 
 from __future__ import annotations
 
+import re
 import glob
 import json
 import os
@@ -155,7 +156,13 @@ def taste_snapshot() -> dict:
     Reads the newest data/taste_*.json on the server (refreshed out-of-band); does not
     hit Spotify. Returns {error: ...} if no dump is present.
     """
-    paths = glob.glob(os.path.join(taste_profile.DATA_DIR, "taste_*.json"))
+    # Timestamped dumps only — taste_timeline.json (the viz build's output) also
+    # matches taste_*.json and would shadow the newest real dump. See cli.py.
+    paths = [
+        p
+        for p in glob.glob(os.path.join(taste_profile.DATA_DIR, "taste_*.json"))
+        if re.search(r"taste_\d{8}T\d{6}Z\.json$", p)
+    ]
     if not paths:
         return {"error": "no taste dump on server; run dump-taste and sync data/"}
     d = json.load(open(max(paths, key=os.path.getmtime)))

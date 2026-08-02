@@ -59,6 +59,7 @@ weather, architecture. Avoid faces/figures (AI mangles them).
 | Discovery ladder        | a path winding outward from a warm glowing center        |
 | Occasion / mood set     | a single immersive scene of that occasion (dinner, drive) |
 | Live cuts (Recipe 22)   | one immersive stage/venue scene — instruments and light, no crowd |
+| Instrument portrait (30)| the instrument itself, single and central, against a horizon that shifts across scenes left-to-right |
 
 ## Conventions
 

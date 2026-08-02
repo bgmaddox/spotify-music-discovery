@@ -349,7 +349,7 @@
   <div id="statsPanel"></div>
 
   <footer id="foot">
-    Built from <code>RECIPES.md</code> + <code>PLAYLIST_NOTES.md</code> + the taste dump · 29 recipes · 24 playlists · stats · self-contained, no network needed.
+    Built from <code>RECIPES.md</code> + <code>PLAYLIST_NOTES.md</code> + the taste dump · 35 recipes · 30 playlists · stats · self-contained, no network needed.
   </footer>
 </div>
 
@@ -814,6 +814,103 @@ const RECIPES = [
             "<b>Receipt</b> — UGK's \"Int'l Players Anthem\": 60 plays, peak 2022.",
             "Household noise filtered — the white-noise and Frozen-score \"favorites\" never make the cut."],
        built:"🤖 Back in rotation — forgotten favorites"}},
+
+  {n:30, accent:"#e0a458", cat:["ordered","discover"], tag:"Instrument",
+   title:"Instrument portrait", goal:"Pick one instrument and hold it fixed while genre, era and geography all move — a sequenced tour of what a single sound has meant in different musical worlds.",
+   why:"Recipe 14 walks one genre through time, 17 holds a place, 18 follows people. This holds the timbre — an axis crowd-similarity structurally cannot reach, since scrobble data clusters by scene and will never link two artists who share only an instrument.",
+   steps:[
+     "Choose an instrument with a real migration story — banjo, pedal steel, fiddle, Hammond B3, kora. An instrument that never left one genre has no story.",
+     "Sketch the lineage first, tracks second: 6–10 stations (origin → migration → canonical form → divergence → modern reinterpretation). The ordering is the argument.",
+     "Pick tracks where the instrument leads — search can confirm a track exists, never that an instrument is audible. Prefer instrumentalist-led artists over \"the one with the great solo.\"",
+     "Cap the far stations at 2–3 of 10. The failure mode is a museum tour: correct, respected, never replayed.",
+     "Verify, build, and report what the instrument is <i>doing</i> at each station — rhythmic vs. melodic vs. drone — not just who plays it."],
+   accept:"≥8 verified tracks in lineage order, each naming its station and the instrument's role, ≥3 distinct genre worlds, no pick resting only on a remembered solo.",
+   ex:{say:"\"Do a playlist that follows the banjo around the world.\"",
+       got:["<b>Origin</b> — Malian ngoni playing, the instrument before the name.",
+            "<b>Canon</b> — Scruggs-style bluegrass, the three-finger roll as engine.",
+            "<b>Return</b> — Béla Fleck's <i>Throw Down Your Heart</i>, the loop closed on purpose."],
+       built:"🤖 One instrument, many worlds — banjo"}},
+
+  {n:31, accent:"#5b8def", cat:["discover"], tag:"Credits",
+   title:"Producer / label signature", goal:"A set built around the person or imprint behind the records — one producer's fingerprint across unrelated acts, or one small label's roster as a curated scene.",
+   why:"Every other recipe organizes by artist, sound or theme. This follows the credit, which is why it surfaces artists no similarity graph connects: a producer's records share a room, a mic chain and a set of instincts long before they share a genre tag.",
+   steps:[
+     "Pick the throughline from records already loved — a producer run across 6–10 records, or a small imprint with a tight aesthetic. A major label is not a scene.",
+     "Confirm the credit before building on it. Misattribution is this recipe's signature failure; drop any anchor you can't state confidently rather than guessing.",
+     "One track per record, favoring the cut where the production choice is audible — the room sound, the drum treatment — over the biggest single.",
+     "Filter against <code>taste-snapshot</code> and <code>log-artists</code>; the point is the unheard half of the roster. Keep 1–2 known anchors as evidence the thread is real.",
+     "Verify, build, and report the fingerprint: the 2–3 production traits that recur, plus each track's year, so the run reads as a career."],
+   accept:"≥8 verified tracks sharing one producer or label, credits stated per track, ≥5 by artists new to the user, 2–3 named recurring traits.",
+   ex:{say:"\"Who produced that record I love, and what else did they touch?\"",
+       got:["<b>Thread</b> — one producer, six records, three genres, one unmistakable drum sound.",
+            "<b>New</b> — five of eight artists never played before; the A&R did the taste-matching.",
+            "<b>Anchor</b> — the album that started it stays in, as proof the thread is real."],
+       built:"🤖 Same hands — a producer's run"}},
+
+  {n:32, accent:"#e3a008", cat:["inward"], tag:"Behavior",
+   title:"Your own patterns", goal:"Build from measured listening behavior — when you listen, what you never skip, what only ever plays in one month of the year.",
+   why:"Recipe 29 mines what was played; this mines how. The result is unreproducible by anyone else — not a taste claim, a receipt. Three variants: the clock (your peak listening cell), the season (tracks that cluster in one month), and the never-skip canon.",
+   steps:[
+     "Refresh if needed: <code>apple-build</code> → <code>history-build</code>.",
+     "Extract only the section you need — the behavioral blocks aren't in <code>history-snapshot</code>, and the summary is ~600 KB. Never read it whole.",
+     "Respect the exposure guard: a 0% skip rate over three plays is noise. Never rank on a rate without checking the denominator.",
+     "Exclude the household layer — it's loud in the behavioral sections and it is not taste. Check the coverage block before claiming a year.",
+     "Curate, don't transcribe: the data ranks, the session sequences. A playlist sorted by play count is a spreadsheet.",
+     "Verify every URI, build, and report the receipts — the cell, the concentration, or the skip rate behind each pick."],
+   accept:"≥10 verified tracks, each backed by a cited number from the history layer, exposure guard respected, household plays excluded, sequenced rather than rank-ordered.",
+   ex:{say:"\"Make me the playlist for how I actually listen on a Saturday afternoon.\"",
+       got:["<b>Cell</b> — Saturdays around 4 pm is the peak; the artists that own that cell aren't the all-time top.",
+            "<b>Verdict</b> — the never-skip list: 900+ exposures, almost no skips. That's a preference, not a play.",
+            "<b>Season</b> — the tracks that only ever happen in October."],
+       built:"🤖 Saturday, 4 pm — how you actually listen"}},
+
+  {n:33, accent:"#38bdf8", cat:["discover"], tag:"Blind spot",
+   title:"Wordless", goal:"A set with no lead vocal — post-rock, spiritual jazz, string-band instrumentals, film score, Nordic folk. Aimed at a lyric-forward listener's most durable blind spot.",
+   why:"Recipe 19 reaches for far; this reaches for one specific missing axis. A narrative-songwriting spine means the wordless half of music is under-sampled by habit, not taste. Remove the lyric, keep every other preference — a clean one-axis experiment that lands more often than a true anti-bubble reach.",
+   steps:[
+     "Name what the lyric was carrying — narrative, intimacy, a voice in the room — and pick playing that supplies it another way. Melody-led phrasing, not texture-only ambient.",
+     "Build outward from instruments already loved: fiddle/mandolin/pedal-steel instrumentals are one step from the library; spiritual jazz and post-rock are two or three.",
+     "Watch the traps — a vocal track with a long intro is not an instrumental, and \"instrumental version\" karaoke masters are a hard no. The album field is the tell.",
+     "Verify, build, and report the substitution per track: which loved quality survives, and what stands in for the voice."],
+   accept:"≥8 verified tracks with no lead vocal, no karaoke masters, each mapped to a preference it preserves, ambient capped at 2.",
+   ex:{say:"\"I only ever listen to lyrics. Fix that.\"",
+       got:["<b>One step out</b> — string-band instrumentals: the same players, no singer.",
+            "<b>Two steps</b> — spiritual jazz and cosmic-americana guitar that phrases like singing.",
+            "<b>Guard</b> — karaoke \"instrumental versions\" rejected at verify."],
+       built:"🤖 Wordless — the missing half"}},
+
+  {n:34, accent:"#ec4899", cat:["discover"], tag:"Language",
+   title:"Other tongues", goal:"Hold the storyteller-with-a-guitar form and change only the language — nueva trova, chanson, MPB, fado, Russian bard song, griot song.",
+   why:"Recipe 17 moves geography but usually stays Anglophone; Recipe 9's region shift holds a sound. This holds the songwriting tradition and drops the thing a lyric-forward listener leans on hardest — comprehension — and finds that delivery and arrangement carried most of it anyway.",
+   steps:[
+     "Pick 3–5 traditions with a real singer-songwriter canon, one or two tracks each. A ten-country tasting menu has no center.",
+     "Choose the entry point, not the masterpiece — the melodically immediate track first; the seven-minute career summary can wait.",
+     "Translate the hook briefly. One line on what the song is about is what makes this playable rather than decorative — and say plainly when you're unsure of a lyric.",
+     "Verify carefully: non-Latin scripts and accented names are where search misses most. Try the native spelling and the romanization before calling it a miss.",
+     "Build and report per track: tradition, era, and the one-line subject."],
+   accept:"≥8 verified non-English tracks across ≥3 traditions, each with a one-line subject and tradition named, transliteration misses documented.",
+   ex:{say:"\"Same kind of songwriting I love, but not in English.\"",
+       got:["<b>Tradition</b> — nueva trova, chanson, MPB: three canons, three entry points.",
+            "<b>Subject line</b> — one sentence on what each song is actually about.",
+            "<b>Verify note</b> — accented and transliterated names are where the misses cluster."],
+       built:"🤖 Other tongues — the same song, elsewhere"}},
+
+  {n:35, accent:"#0ea5e9", cat:["discover","ordered"], tag:"Canon",
+   title:"Canon crawl", goal:"Take a published critics' greatest-albums list as a closed pool and build a path through it that only makes sense for this listener.",
+   why:"Every other recipe generates candidates — Last.fm adjacency, genre coordinates, personnel graphs, the listening history. This one starts from a canon somebody else already fixed, so it adds nothing by finding albums; it adds value by navigating. A 300-album list is a wall, and the deliverable is a door. The method is the tiering: sort the list against real play history into lived-in (≥15 plays), brushed (1–14, usually one shuffle hit), near-miss (artist known and loved, album never opened) and unheard. The near-miss tier is why the recipe exists — Dolly Parton at 66 plays with zero of Coat of Many Colors is a better candidate than either a record already worn out or a total stranger.",
+   steps:[
+     "Read the pool with cli.py canon-snapshot — never the raw list JSON, it's 300 rows.",
+     "Sequence outward, not by rank and not chronologically: 2–3 lived-in anchors to open, the middle in near-miss, the end in unheard. The listener shouldn't be able to name the moment it stopped being familiar.",
+     "One track per album, and it must represent the record — this is an albums list, so take the center of gravity, often not the single.",
+     "Enforce quotas before verifying: ≥3 non-Anglophone, ≤2 per artist, ≤4 Anglophone albums per decade, ≥1 from the list's bottom third.",
+     "Verify every track, and confirm the album on the match too — canon records are heavily reissued. A remaster is fine; a compilation, live re-recording or tribute is a miss.",
+     "Report per track: rank, album, tier, and the receipt (artist plays / album plays)."],
+   accept:"≥12 verified tracks, all from the list; every tier represented; all three quotas met; each pick reported with rank and tier.",
+   ex:{say:"\"Only pick from this list of 300 albums — I've tried some of them.\"",
+       got:["<b>Tiering</b> — 218 of the 300 artists already known, but only 31 albums genuinely worn in and 46 true near-misses.",
+            "<b>The ascent</b> — Isbell and Kacey, then Dolly / Willie / Innervisions / Blonde on Blonde, ending in Brazil, Korea, flamenco and Japanese ambient.",
+            "<b>Verify saves</b> — 'Living for the City' first resolved to a compilation, not Innervisions; the Korean entry returned two tribute covers before the 1974 pressing."],
+       built:"🤖 Canon crawl — a path through the 300"}},
 ];
 
 // Hand-transcribed from PLAYLIST_NOTES.md (newest first). `reconstructed` marks the
@@ -821,6 +918,30 @@ const RECIPES = [
 // inferred, not captured live. `cat` reuses the recipe filter taxonomy so the chips work
 // on both tabs.
 const PLAYLISTS = [
+  {name:"🤖 Canon crawl — a path through the 300", url:"https://open.spotify.com/playlist/5r923jFJaJAPxKyWLNtdI2",
+   date:"2026-08-02", recipe:"35 — Canon crawl (first run)", tag:"Canon",
+   tracks:16, cat:["discover","ordered"], accent:"#0ea5e9", reconstructed:false,
+   why:`The first run of Recipe 35, built from Paste Magazine's 300 Greatest Albums of All Time. The pool is closed — every pick must come from that list — so the value is navigation, not discovery. Tiering the list against 13 years of merged history turned out to be more interesting than the list itself: 218 of the 300 artists are already known, but only 31 albums have real depth, 103 were brushed once on shuffle, and 46 are near-misses — artist demonstrably loved, record never opened. Dolly Parton at 66 plays with zero of Coat of Many Colors. Stevie at 52 with zero of Innervisions. Dr. Dre 31/0 on The Chronic, Willie 26/0 on Red Headed Stranger, Sgt. Pepper 47/0. Near-zero risk, high payoff, and 46 of them, so the recipe re-runs for a long time without repeating.`,
+   structure:`Three acts, walking outward, so the moment it stops being familiar is hard to name. Home: Isbell's "Elephant" from Southeastern and Kacey's "Slow Burn," then Nina Simone's "Ne Me Quitte Pas" as the hinge — a record already in rotation, but the track is in French, so the turn outward happens on home ground. The near-miss core: Dolly's "Coat of Many Colors," Willie's "Time of the Preacher," Dylan's "Visions of Johanna," Billie Holiday's "I'm a Fool to Want You," "Living for the City" from Innervisions, Fiona Apple's "Paper Bag." Then the far end, entirely unheard: Badu's "On & On," D'Angelo's "Untitled," Clube da Esquina, Shin Joong Hyun's 미인 from the 1974 Korean psych record, Camarón's "La Leyenda del Tiempo," Alice Coltrane's "Journey in Satchidananda," and Hiroshi Yoshimura's "Blink" for an ambient close with no exit music.`,
+   tweaks:`Quotas all met: 4 non-Anglophone against a floor of 3, 16 distinct artists, 5 picks from the list's bottom third, all four tiers represented. Two verification saves — "Living for the City" first resolved to The Definitive Collection rather than Innervisions, and the Korean entry returned a 1987 greatest-hits and two Tribute To 신중현 covers before the original 1974 pressing; release year is what settles it. The middle act could be a whole playlist on its own: The Chronic, Sgt. Pepper, Lemonade, At Folsom Prison, Amazing Grace, Reasonable Doubt and Hejira all qualify and none made this cut. A pure Act-III run — all 120 unheard, no anchors — would be the hard version. Mahmoud Ahmed's Éthiopiques Vol. 7 was skipped deliberately: the saxophone playlist had just visited Vol. 14 and it would read as a rerun.`,
+   cover:`a weathered stone staircase climbing from a warm lamplit valley floor up through cool mist to a luminous far ridge — the discovery-ladder composition, a path winding outward from a warm glowing center; amber and gold at the base shifting to deep indigo and pale dawn at the summit, impasto oil, no text, seed 300`},
+
+  {name:"🤖 Before the banjo — your 2015–2018 self", url:"https://open.spotify.com/playlist/5bX9OtIxDuSLbgghUk7Ffj",
+   date:"2026-07-31", recipe:"29 — Forgotten-favorites revival, era-anchored variant", tag:"Rediscovery",
+   tracks:22, cat:["inward","ordered"], accent:"#7c6cf0", reconstructed:false,
+   why:`The Apple Music merge didn't just patch a hole in a chart — it recovered a version of the listener that the Spotify-only record couldn't see. 2015–2018 went from 891 plays to 13,700, and what surfaced was someone who listened to almost none of what they listen to now: no americana in the top ranks, no outlaw country, no bluegrass. Instead Scottish synth-pop, London dance producers, Yeezus, and the 2015 soul revival. The selection rule was arithmetic, not taste — count each artist's plays in 2015–2018 against 2023–2026 and keep only the cliff-falls. Macklemore & Ryan Lewis 300 → 0. Cherub 200 → 0. Jamie xx 136 → 0. Disclosure 76 → 0. Artists who survived the era transition were cut even with huge early counts: Childish Gambino (588 early but 168 recent), the Avetts, Guster, Daft Punk, Outkast. They aren't forgotten, so they aren't the story.`,
+   structure:`Five movements, sequenced by mood rather than play count. Synth-pop opening — Empire of the Sun, CHVRCHES ("The Mother We Share" was the era's #1 non-household track at 57 plays), Passion Pit, M83's "Midnight City" at 56. The dance floor — Major Lazer, Jamie xx's "I Know There's Gonna Be (Good Times)" (57) and Disclosure's "Latch" (52), both at literally zero since 2022, into Cherub. Hip-hop and late night — Big Grams, "Blood On the Leaves" (53) with Kanye at 254 early plays against 3 recent, Nico Segal's Surf, Frank Ocean's Blonde, The xx. Soul and rock — Alabama Shakes, St. Paul & The Broken Bones (the one thread that connects forward to where the taste actually ended up), Muse, alt-J. Then the drift out — Grimes, Beach House, In The Valley Below's "Peaches" (36 plays and the only track by that band ever played), First Aid Kit, and Edward Sharpe's "Home" to close, because it's the one song here that already sounds like the direction things were heading.`,
+   tweaks:`Every pick is the listener's own most-played track by that artist in the window, counted directly off the merged event stream rather than the summary's top-150 — the tail artists never reach that list. 22/22 verified, zero match drift, and --new-only correctly skipped all 22 as already-known: this recipe revives, it doesn't discover. Deliberate cuts: The Chainsmokers' "Closer" (27 plays — era-accurate but it dates the playlist rather than flattering it), Marky Mark's "Good Vibrations" (36, a party artifact), Pogo's "Wishery" (35, a Disney mashup that breaks the arc), and Hamilton (40 plays in 2016, but a cast recording isn't a mood). For a harder-edged version swap the closing three for Justice's "Genesis," St. Vincent's "Birth In Reverse," and Radiohead's "Daydreaming." A 2019–2021 sequel would be a genuinely different record — that's the window where the americana turn actually happens.`,
+   cover:`distant neon city lights glowing far across a wide expanse of dark still water, seen from a shadowed empty near shore — a receding-vista composition for a rediscovery recipe, the past lit but held at a distance; neon blue, violet and cool city dusk, impasto oil, no text, seed 2016`},
+
+  {name:"🤖 One horn, many worlds — the saxophone", url:"https://open.spotify.com/playlist/6gBkNK9dMlhippO0gpa8Kz",
+   date:"2026-07-29", recipe:"30 — Instrument portrait (first run)", tag:"Instrument",
+   tracks:15, cat:["ordered","discover"], accent:"#e0a458", reconstructed:false,
+   why:`The first run of Recipe 30 — hold one timbre fixed and let genre, era and geography all move. The saxophone is close to the ideal test case: invented in the 1840s for military bands, rejected by the orchestra, then adopted in turn by nearly every Black American vernacular music before traveling to Lagos, Douala and Addis Ababa. That's a lineage, not a genre — and it's an axis crowd-similarity can't reach, since scrobble data would never connect Coleman Hawkins to Getatchew Mekuria. 11 of the 15 artists are new on both axes (taste dump and ledger); Coltrane, Hawkins, Springsteen and Kendrick are the known anchors that prove the thread is real.`,
+   structure:`Strict lineage order, so the energy arc is a consequence rather than a design. Origins and ascent — Sidney Bechet's New Orleans soprano, Hawkins' 1939 "Body and Soul" making the tenor a solo instrument, Parker's bebop, Coltrane's "Acknowledgement," Pharoah Sanders overblowing into pure cry. Track 6 deliberately breaks the reverence: King Curtis' "Memphis Soul Stew" is the honk, the same horn as a party engine, into Jr. Walker's Motown swagger. Then the widest turn — Manu Dibango's "Soul Makossa," Fela's "Zombie," and Getatchew Mekuria's "Shellela," the hinge of the whole set: he learned the horn without ever hearing American jazz phrasing, so it plays a warrior's vocal chant instead. Home again through Clemons on "Jungleland" and Terrace Martin's bebop panic on Kendrick's "For Free?", then the players carrying it now — Kamasi, Sons of Kemet — before Colin Stetson's solo bass sax dissolves the instrument into texture.`,
+   tweaks:`Deliberate omissions: the smooth-jazz/pop-sax station (Rafferty, Kenny G) is a real chapter that would read as a joke here, and Gato Barbieri would have been a fourth "far" station past the recipe's cap of three. Swap Kamasi for Nubya Garcia to push the London end newer. One verification catch worth remembering — searching Getatchew's "Aynotchesh Yeregal" returned a different track of his, which the recipe counts as a miss; "Shellela" was the exact match.`,
+   cover:`a single brass saxophone resting across a panoramic dusk horizon that shifts from a New Orleans street through a smoky club and a golden-hour market to a moonlit boardwalk — candlelit amber, deep teal and smoky brass, impasto oil, no text, seed 3041`},
+
   {name:"🤖 Alive — a jam band set list", url:"https://open.spotify.com/playlist/67FgyblAzZlAjhf3tJGYwr",
    date:"2026-07-27", recipe:"22 — Alive (definitive live cuts), jam-band variant", tag:"Live",
    tracks:16, cat:["inward","ordered"], accent:"#d97706", reconstructed:false,

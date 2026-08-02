@@ -930,6 +930,257 @@ none played in the quiet window, non-taste household plays excluded.
 
 ---
 
+## Recipe 30 — Instrument portrait (one voice, many worlds)
+
+Goal: pick **one instrument** and hold it fixed while genre, era, and geography all move —
+a sequenced tour of what a single sound has meant in different musical worlds. The banjo
+running West African ngoni → Black string bands → Appalachian clawhammer → Scruggs
+bluegrass → Béla Fleck's jazz detours → chamber-folk is the model.
+
+**Why it's different:** Recipe 14 walks *one genre* through time; Recipe 17 holds a *place*;
+Recipe 18 follows *people*. This holds the **timbre** and lets everything else vary, which
+is an axis Last.fm structurally cannot reach — scrobble similarity clusters by scene, so it
+will never connect a Rhiannon Giddens track to a Malian ngoni player even though the
+instrument is the same object.
+
+**Steps**
+
+1. **Choose an instrument with a real migration story.** Good picks for this user: banjo
+   (the richest lineage), pedal steel (country → its Hawaiian origins → ambient), fiddle
+   (Irish / Appalachian / Cajun / Nordic / Texas swing), Hammond B3 (gospel → soul-jazz →
+   jam), kora, harmonium. Weak picks: instruments that never left one genre — no travel,
+   no story.
+2. **Sketch the lineage first, tracks second.** Write the 6–10 *stations* (origin, migration,
+   canonical form, the divergence, the modern reinterpretation) before naming any track. The
+   ordering is the argument; a set of good tracks in no order is a different, worse playlist.
+3. **Pick tracks where the instrument leads.** The verification gap here is real:
+   `search_verify` confirms a track exists, never that the instrument is audible. Mitigate by
+   preferring (a) instrumentalist-led artists (Grisman, Jerry Douglas, Toumani Diabaté,
+   Susan Alcorn), or (b) tracks whose *hook* is the instrument. If the pick rests on "I recall
+   a great solo on this," downgrade it — that's exactly where session knowledge invents credits.
+4. **Cap the far stations at 2–3 of 10.** The failure mode is a museum tour: ethnomusicological
+   correctness the user respects and never replays. Anchor the majority in the user's own
+   orbit and let the distant stations be the payoff, not the bulk.
+5. **Verify with `verify_detail`**, build a private `🤖 ` playlist, and **report each station**
+   — what the instrument is *doing* differently there (rhythmic vs. melodic vs. drone), not
+   just who plays it.
+
+**Acceptance:** ≥8 verified tracks in lineage order, each naming its station and the
+instrument's role, ≥3 distinct genre worlds represented, no pick whose only evidence is a
+remembered solo.
+
+---
+
+## Recipe 31 — Producer / label signature (the invisible author)
+
+Goal: a set built around the person or imprint *behind* the records — one producer's sonic
+fingerprint across unrelated acts, or one label's roster as a curated scene. Heuristic
+angles 3 and 4 finally get a workflow.
+
+**Why it's different:** every other recipe organizes by artist, sound, or theme. This one
+follows the **credit**, which is why it surfaces artists no similarity graph connects: a
+producer's records share a room, a mic chain, and a set of instincts long before they share
+a genre tag. It's also the highest-yield low-risk angle in the book — the A&R or the producer
+already did taste-matching on the user's behalf.
+
+**Steps**
+
+1. **Pick the throughline from records the user already loves.** Two shapes work:
+   - **Producer run** — one name across 6–10 records (e.g. the person who shaped a favorite
+     album also shaped four others the user has never played).
+   - **Label run** — a small imprint with a tight aesthetic identity (roots/Americana and
+     indie-folk imprints are ideal; a major label is not a scene and makes a poor anchor).
+2. **Confirm the credit before you build on it.** Producer and label credits are session
+   knowledge, and misattribution is this recipe's signature failure — the whole premise
+   collapses if the anchor record wasn't actually produced by that person. Prefer
+   well-documented, oft-discussed credits; drop any pick you can't state confidently, and
+   say so rather than guessing.
+3. **Choose one track per record**, favoring the cut where the production choice is *audible*
+   (the room sound, the drum treatment, the arrangement habit) over the biggest single.
+4. **Filter to new.** Cross-check against `cli.py taste-snapshot` (`known_artists`) and
+   `cli.py log-artists`; the point is the unheard half of the roster. Keeping 1–2 known anchors
+   is fine — they're the evidence the thread is real.
+5. **Verify**, build a private `🤖 ` playlist, and **report the fingerprint**: name the specific
+   production traits that recur, plus each track's year, so the run reads as a career.
+6. **Log with `log-add --new-only`.**
+
+**Acceptance:** ≥8 verified tracks sharing one producer or label, credits stated per track,
+≥5 by artists new to the user, and 2–3 named recurring production traits.
+
+---
+
+## Recipe 32 — Your own patterns (behavioral evidence)
+
+Goal: build from the user's **measured listening behavior** — when they listen, what they
+never skip, what only ever plays in one month of the year. The extended-history layer
+computes all of this and no recipe reads any of it.
+
+**Why it's different:** Recipe 29 mines *what* the user played; this mines *how*. The
+resulting playlist is unreproducible by anyone else — it's not a taste claim, it's a receipt.
+Three variants share one procedure:
+
+- **The clock** — a set for the user's peak listening window (Saturdays ~4 pm), built from the
+  artists that actually dominate that cell rather than their all-time top.
+- **The season** — tracks whose plays cluster in one month/season. September has a sound;
+  play it back in September.
+- **The never-skip canon** — the tracks and artists with the lowest skip rate at real exposure.
+  Skip rate is the closest thing in this data to an honest preference signal: a play can be
+  passive, but *not skipping* 900 times is a verdict.
+
+**Steps**
+
+1. **Refresh if needed:** `cli.py apple-build` → `cli.py history-build`.
+2. **Extract only the section you need.** `history-snapshot` does **not** carry the behavioral
+   sections, and `data/history_summary.json` is ~600 KB — **never `Read` it.** Pull the one key
+   with a targeted extractor: `clock` (`data` → era → 7×24 grid), `seasonality`
+   (`artist_by_month`), `track_seasons`, `artist_skip` (`artists`, with `exposure_guard`), or
+   `track_stories.tracks`.
+3. **Respect the exposure guard.** `artist_skip` carries `SKIP_EXPOSURE_MIN=20` for a reason —
+   a 0% skip rate over three plays is noise, not devotion. Never rank on a rate without
+   checking the denominator.
+4. **Exclude the household layer** (kids' music, white noise, Christmas-as-function) — it's
+   loud in the behavioral sections and it is not taste. Apple-era events are absent from
+   `intentionality` by design; check the `coverage` block before claiming a year.
+5. **Curate, don't transcribe.** The data ranks; the session sequences. A playlist sorted by
+   descending play count is a spreadsheet.
+6. **Verify every URI via `search_verify`** — history URIs point at editions that may be
+   delisted — then build a private `🤖 ` playlist and **report the receipts**: the cell, the
+   concentration, or the skip rate behind each pick.
+
+**Acceptance:** ≥10 verified tracks, each backed by a cited number from the history layer,
+exposure guard respected, household plays excluded, sequenced rather than rank-ordered.
+
+---
+
+## Recipe 33 — Wordless (the instrumental blind spot)
+
+Goal: a set with **no lead vocal** — post-rock, spiritual jazz, string-band instrumentals,
+ambient, film score, Nordic folk. Aimed squarely at this user's most durable blind spot.
+
+**Why it's different:** Recipe 19 reaches for *far*; this reaches for *one specific missing
+axis*. The user's profile is overwhelmingly lyric-forward — narrative songwriting is the
+stated spine — which means the entire wordless half of music is under-sampled not by taste
+but by habit. Removing the lyric while keeping every other preference (acoustic string
+texture, live energy, harmonic warmth) is a clean one-axis experiment, and far more likely
+to land than a genuine anti-bubble reach.
+
+**Steps**
+
+1. **Name what the lyric was carrying** for this listener — narrative, intimacy, a voice in
+   the room — and pick instrumental music that supplies it another way: melody-led playing
+   that phrases like singing (Frisell, Jerry Douglas, Ry Cooder), not texture-only ambient.
+   Ambient earns 1–2 slots, not the set.
+2. **Build outward from instruments the user already loves.** Fiddle/mandolin/pedal-steel
+   instrumentals are one step from the library; spiritual jazz and post-rock are two or three.
+   Ladder it the way Recipe 1 does.
+3. **Watch the two trap categories:** vocal tracks with a long intro are not instrumentals,
+   and "instrumental version" karaoke masters are a hard no — `verify_detail`'s album field is
+   the tell.
+4. **Verify**, build a private `🤖 ` playlist, and **report the substitution** per track: which
+   loved quality survives, and what stands in for the voice.
+
+**Acceptance:** ≥8 verified tracks with no lead vocal, none of them karaoke/instrumental-version
+masters, each mapped to a preference it preserves, ambient capped at 2.
+
+---
+
+## Recipe 34 — Other tongues (the form, another language)
+
+Goal: hold the **storyteller-with-a-guitar form** and change only the language — Silvio
+Rodríguez, Georges Brassens, Caetano Veloso, Vysotsky, Fairuz. Same craft, no English.
+
+**Why it's different:** Recipe 17 moves geography but usually stays in an Anglophone scene;
+Recipe 9's region shift holds a *sound*. This holds the **songwriting tradition** and drops
+the one thing the user leans on hardest — comprehension. The payoff is finding that the
+delivery, the phrasing, and the arrangement carry most of what they thought the words were
+doing.
+
+**Steps**
+
+1. **Pick 3–5 traditions with a real singer-songwriter canon** — nueva trova, chanson,
+   MPB/tropicália, fado, Russian bard song, Malian griot song. One or two tracks each; a
+   ten-country tasting menu has no center.
+2. **Choose the entry point, not the masterpiece.** The canonical seven-minute career summary
+   is the wrong first exposure; pick the melodically immediate track and let the catalog wait.
+3. **Translate the hook, briefly.** One line on what the song is *about* is what makes this
+   playable rather than decorative — the user's spine is narrative, so give them the narrative.
+   Say plainly when you're unsure of a lyric's content rather than inventing a reading.
+4. **Verify** — non-Latin scripts and accented names are where `search_verify` misses most;
+   try both the native spelling and the romanization before calling it a miss.
+5. **Build** a private `🤖 ` playlist and **report per track**: tradition, era, and the
+   one-line subject.
+
+**Acceptance:** ≥8 verified non-English tracks across ≥3 traditions, each with a one-line
+subject and tradition named, transliteration misses documented.
+
+---
+
+## Recipe 35 — Canon crawl (a published list, climbed personally)
+
+Goal: take a **fixed external pool** — a published critics' greatest-albums list — and
+build a path through it that only makes sense for *this* listener. The pool is closed:
+every pick must come from the list. The judgment is which rungs to climb and in what order.
+
+**Why it's different:** every other recipe here *generates* candidates (Last.fm adjacency,
+genre coordinates, personnel graphs, the user's own history). This one starts from a
+canon somebody else already fixed, so the recipe adds nothing by finding albums — it adds
+value by **navigating**. A 300-album list is a wall; the deliverable is a door.
+
+**The tiering is the whole method.** `cli.py canon-snapshot` sorts the list against the
+merged play history into four tiers (`canon_list.py`; household plays excluded):
+
+| Tier | Meaning | Use |
+|---|---|---|
+| `lived_in` | album has ≥15 plays — genuinely worn in | Anchors. 2–3 max, only to open. |
+| `brushed` | 1–14 plays — a track came up on shuffle once | Weak signal; treat as unheard unless the count is real. |
+| `near_miss` | **artist ≥4 plays, this album zero** | The core of the playlist. |
+| `unheard` | artist never played | The far end. |
+
+`near_miss` is why the recipe exists. "Dolly Parton, 66 plays, zero of *Coat of Many
+Colors*" is a better candidate than either a record the user already wears out or a
+total stranger — the artist is proven, the record is canon-rated, and it was simply never
+opened. On the first run this tier held 45 albums, so it sustains repeat runs without
+recycling.
+
+**Steps**
+
+1. **Read the pool:** `cli.py canon-snapshot` (never `Read` the raw list JSON — it's 300
+   rows). Use `--near-miss` / `--unheard` to widen the window if a run needs more room.
+2. **Build the ascent.** Sequence *outward*, not by rank and not chronologically:
+   open on 2–3 `lived_in` anchors, spend the middle in `near_miss`, end in `unheard`.
+   The listener should not be able to name the moment it stopped being familiar.
+3. **One track per album, and it must represent the album.** This is an *albums* list, so
+   pick the record's center of gravity — often not the single. Where an album is famous for
+   one track the user already knows, take the second-most-emblematic instead.
+4. **Quotas, enforced before verification:**
+   - **≥3 non-Anglophone albums.** Non-negotiable. This list's distinguishing feature is its
+     globality (Fishmans, *Clube da Esquina*, Camarón, Deulgukhwa, Hiroshi Yoshimura); a run
+     that skips it produces something any canon list would have produced.
+   - **≤2 albums per artist**, and **≤4 Anglophone albums per decade**. The canon skews
+     1965–1979 hard; without a cap the playlist collapses into classic rock. Count only the
+     Anglophone entries against the cap — on the first run a flat per-decade cap put the
+     global quota and the decade cap in direct conflict (*Clube da Esquina*, Shin Joong
+     Hyun and Camarón are all 1972–79, as are Dolly, Willie and *Innervisions*), which
+     would have forced out exactly the picks the globality rule exists to protect.
+   - **≥1 album from the list's bottom third (rank 200+)** — the tail is where the
+     idiosyncratic picks live, and rank is critics' consensus, not personal fit.
+5. **Verify every track** via `search_verify`; drift = miss (see guardrails). Old canon
+   records are heavily reissued, so confirm the album name on the match too — a
+   remaster is fine, a live re-recording or tribute is not.
+6. **Build** a private `🤖 ` playlist. **Report per track: rank, album, tier, and the
+   receipt** (artist plays / album plays). The receipts are what make the ascent legible.
+7. **Log with `--new-only`.** Anchors and most near-misses are known artists and will be
+   skipped correctly; only the `unheard` tier should land in the ledger.
+
+**Acceptance:** ≥12 verified tracks, all from the list; every tier represented; the three
+quotas met; each pick reported with its rank and tier.
+
+**Extending:** the loader is list-agnostic — drop another parsed list into `knowledge/`
+and pass `--list-path`. Keep the schema (`rank`/`artist`/`album`/`year`) and add a
+`.gitignore` negation, since `*.json` is ignored by default.
+
+---
+
 ## Notes & guardrails
 
 - **Knowledge-cutoff guardrail:** the session's music knowledge has a training cutoff.

@@ -10,6 +10,198 @@ the structure, and anything to tweak.
 
 ---
 
+## 🤖 Canon crawl — a path through the 300
+**Link:** https://open.spotify.com/playlist/5r923jFJaJAPxKyWLNtdI2
+**Built:** 2026-08-02 · **Recipe:** 35 — Canon crawl (first run of the recipe) · **16 tracks**
+
+**Why these:** New recipe, built around Paste's *300 Greatest Albums of All Time*. The pool
+is closed — every pick must come from that list — so the recipe adds nothing by *finding*
+albums; it adds value by navigating. A 300-album list is a wall, and the deliverable is a door.
+
+**The overlap is more interesting than the list.** Tiered against 13 years of merged history
+(`cli.py canon-snapshot`): 218 of the 300 artists are already yours, but only **31** albums
+have real depth (≥15 plays), **103** were brushed once on shuffle, **46** are *near-misses* —
+artist you demonstrably love, record you never opened — and **120** are genuinely unheard.
+The near-miss tier is the find. Dolly Parton: 66 plays, zero of *Coat of Many Colors*. Stevie:
+52 plays, zero of *Innervisions*. Dr. Dre 31/0 on *The Chronic*, Willie 26/0 on *Red Headed
+Stranger*, *Sgt. Pepper* 47/0. Those are near-zero-risk, high-payoff picks and there are 46 of
+them, so the recipe re-runs for a long time without repeating.
+
+**Structured as an ascent** — three acts, walking outward, so you can't name the moment it
+stops being familiar:
+
+*Act I — home (lived-in anchors):*
+1. Jason Isbell — Elephant · *Southeastern* (#154, 126 plays)
+2. Kacey Musgraves — Slow Burn · *Golden Hour* (#177, 105 plays)
+3. Nina Simone — Ne Me Quitte Pas · *I Put a Spell on You* (#85, 17 plays) — the hinge. A
+   record you already play, but the track is in French, so the turn outward happens while
+   you're still on home ground.
+
+*Act II — near-miss (the core):*
+4. Dolly Parton — Coat of Many Colors (#267) · 66 artist plays, 0 album
+5. Willie Nelson — Time of the Preacher · *Red Headed Stranger* (#117) · 26/0
+6. Bob Dylan — Visions of Johanna · *Blonde on Blonde* (#74) · 30/0
+7. Billie Holiday — I'm a Fool to Want You · *Lady in Satin* (#32) · 25/0
+8. Stevie Wonder — Living for the City · *Innervisions* (#56) · 52/0
+9. Fiona Apple — Paper Bag · *When the Pawn…* (#269) · 14/0
+
+*Act III — unheard (the far end):*
+10. Erykah Badu — On & On · *Baduizm* (#77)
+11. D'Angelo — Untitled (How Does It Feel) · *Voodoo* (#81)
+12. Milton Nascimento & Lô Borges — Tudo O Que Você Podia Ser · *Clube da Esquina* (#9)
+13. Shin Joong Hyun & Yup Juns — 미인 (Beautiful Woman) (#281) — Korean psych, 1974
+14. Camarón — La Leyenda del Tiempo (#291) — the record that broke flamenco open
+15. Alice Coltrane — Journey in Satchidananda (#80)
+16. Hiroshi Yoshimura — Blink · *Music for Nine Post Cards* (#278) — ambient, no exit music
+
+**Quotas met:** 4 non-Anglophone (French, Portuguese, Korean, Spanish) against a floor of 3;
+≤2 per artist (all 16 distinct); 5 picks from the list's bottom third (rank 200+); all four
+tiers represented.
+
+**Misses / catches:** two verification saves. "Living for the City" first resolved to *The
+Definitive Collection* rather than *Innervisions* — a compilation isn't the album, so it was
+re-searched album-scoped. And the Korean entry returned three plausible wrong answers (a 1987
+greatest-hits, two *Tribute To 신중현* covers) before the original 1974 pressing; the release
+year is what settles it. Camarón is the 2018 remaster of the 1979 album, which the recipe
+allows (remaster fine, re-recording not).
+
+**Ledger:** 9 skipped as known, **7 logged** as genuinely new — the correct split for a recipe
+whose middle act is deliberately built from artists you already love.
+
+**A bug this run caught:** Erykah Badu tiered as *unheard* on the first pass — 1 play in 13
+years of export — but `--new-only` flagged her as known, because she's in the current taste
+dump's `top_tracks`. The export ends at its last export date; the Spotify API sees newer plays.
+`canon_list.py` now cross-checks `known_listened_artists()` so no artist you demonstrably know
+is ever reported as unheard. Locked by a regression test.
+
+**Tweak ideas:** the middle act could be a whole playlist on its own — *The Chronic*, *Sgt.
+Pepper*, *Lemonade*, *At Folsom Prison*, *Amazing Grace*, *Reasonable Doubt*, *Hejira* all
+qualify and none made this cut. A pure Act-III run (all 120 unheard, no anchors) would be the
+hard version. Deliberately skipped: Mahmoud Ahmed's *Éthiopiques Vol. 7*, because the
+saxophone playlist just visited Ethiopiques Vol. 14 and it would read as a rerun.
+
+**Cover:** a weathered stone staircase climbing from a warm lamplit valley through mist to a
+luminous ridge — the discovery-ladder composition (a path winding outward from a warm glowing
+center), amber at the base shifting to indigo at the summit. Seed 300, `covers/canon_crawl.jpg`.
+
+---
+
+## 🤖 Before the banjo — your 2015–2018 self
+**Link:** https://open.spotify.com/playlist/5bX9OtIxDuSLbgghUk7Ffj
+**Built:** 2026-07-31 · **Recipe:** 29 — Forgotten-favorites revival, *era-anchored* variant · **22 tracks**
+
+**Why these:** The Apple Music merge didn't just patch a hole in a chart — it recovered a
+version of your taste that the Spotify-only record couldn't see. 2015–2018 went from 891
+plays to 13,700, and what showed up is a person who listened to almost none of what you
+listen to now. No americana in the top ranks, no outlaw country, no bluegrass. Instead:
+Scottish synth-pop, London dance producers, *Yeezus*, and the 2015 soul revival. That
+contrast is the whole playlist — this isn't "old songs," it's a different palette entirely.
+
+**The selection rule was arithmetic, not taste.** For every artist I counted plays in
+2015–2018 against plays in 2023–2026 and kept only the ones that fell off a cliff.
+Macklemore & Ryan Lewis: 300 → 0. Cherub: 200 → 0. Jamie xx: 136 → 0. Disclosure: 76 → 0.
+Muse, Justice, The Chainsmokers, Major Lazer, alt-J, Empire of the Sun, St. Vincent, Sia,
+Pogo, Edward Sharpe — all zero in the last four years. Artists who *survived* the era
+transition got cut even when the early counts were huge: Childish Gambino (588 early, but
+168 recent), the Avetts (354/149), Guster, Daft Punk, Leon Bridges, Outkast, Taylor Swift.
+They're not forgotten, so they're not the story.
+
+**Sequenced in five movements** rather than by play count:
+
+1. **Synth-pop opening** (1–4) — Empire of the Sun, CHVRCHES, Passion Pit, M83. "The Mother
+   We Share" was your #1 non-household track of the era at 57 plays; "Midnight City" at 56.
+2. **The dance floor** (5–8) — Major Lazer, Jamie xx, Disclosure, Cherub. "I Know There's
+   Gonna Be (Good Times)" (57) and "Latch" (52) are two of the three biggest single-track
+   counts in the whole window, and both are at *literally zero* since 2022.
+3. **Hip-hop / late night** (9–13) — Big Grams, "Blood On the Leaves" (53) and Kanye at 254
+   early plays vs. 3 recent, Nico Segal's *Surf*, Frank Ocean's *Blonde*, The xx.
+4. **Soul and rock** (14–17) — Alabama Shakes, St. Paul & The Broken Bones, Muse, alt-J.
+   St. Paul is the one thread that actually connects forward to where you ended up.
+5. **The drift out** (18–22) — Grimes, Beach House, In The Valley Below, First Aid Kit,
+   Edward Sharpe. "Peaches" is a curiosity: 36 plays and it's the *only* track by that band
+   you've ever played. "Home" closes it because it's the one song here that already sounds
+   like the direction you were heading.
+
+**Receipts:** every pick is your own most-played track by that artist in the window, counted
+directly off the merged event stream (`_iter_events`, household filtered), not off the
+summary's top-150 — the tail artists don't reach that list. 22/22 verified via `search_verify`
+with zero match drift.
+
+**Ledger:** `--new-only` correctly skipped all 22 as already-known. That's the right result —
+this recipe revives, it doesn't discover, and logging it would have re-created exactly the
+mislabeling that got purged in July.
+
+**Tweak ideas:** the deliberate cuts were The Chainsmokers ("Closer", 27 plays — era-accurate
+but it dates the playlist rather than flattering it), Marky Mark's "Good Vibrations" (36 plays,
+reads as a party artifact), and Pogo's "Wishery" (35, a Disney mashup that breaks the arc).
+Hamilton is absent for the same reason — 40 plays in 2016, but it's a cast recording, not a
+mood. If you want the harder-edged version, swap the closing three for Justice's "Genesis",
+St. Vincent's "Birth In Reverse", and Radiohead's "Daydreaming". A 2019–2021 sequel would be
+a genuinely different record — that's the window where the americana turn actually happens.
+
+**Cover:** distant neon city lights across dark still water, seen from an empty near shore —
+receding-vista composition for a rediscovery recipe (the past, lit but at a distance).
+Seed 2016, `covers/before_the_banjo.jpg`.
+
+---
+
+## 🤖 One horn, many worlds — the saxophone
+**Link:** https://open.spotify.com/playlist/6gBkNK9dMlhippO0gpa8Kz
+**Built:** 2026-07-29 · **Recipe:** 30 — Instrument portrait (first run of the recipe) · **15 tracks**
+
+**Why these:** Recipe 30's premise is to hold one *timbre* fixed and let genre, era and
+geography all move. The saxophone is close to the ideal test case — it was invented in the
+1840s for military bands, was rejected by the orchestra, and then got adopted by nearly every
+Black American vernacular music in turn before traveling to Lagos, Douala and Addis Ababa.
+That's a lineage, not a genre. Almost none of it is in your library: 11 of 15 artists are
+new on both axes (taste dump *and* ledger), which is a high yield for a recipe that isn't
+even trying to be a discovery ladder.
+
+**The lineage, in order:**
+1. Sidney Bechet — Blue Horizon — New Orleans soprano; the sax's first great soloist, pre-Armstrong vibrato
+2. Coleman Hawkins — Body and Soul (1939) — the record that made the tenor a *solo* instrument
+3. Charlie Parker — Now's the Time — bebop; the sax as the fastest mind in the room
+4. John Coltrane — Acknowledgement — the modal/spiritual summit, the horn as prayer
+5. Pharoah Sanders — The Creator Has a Master Plan — free jazz; overblowing as pure cry
+6. King Curtis — Memphis Soul Stew — the honk. Same instrument, now a party engine
+7. Jr. Walker & The All Stars — Shotgun — Motown, sax as frontman rather than sideman
+8. Manu Dibango — Soul Makossa — Cameroon; the riff that crossed back to New York
+9. Fela Kuti — Zombie — Lagos; Fela's own horn inside a political machine
+10. Getatchew Mekuria — Shellela — Addis Ababa; the sax playing a *warrior's vocal chant*, no jazz phrasing at all
+11. Bruce Springsteen — Jungleland — Clarence Clemons; rock's romantic monument
+12. Kendrick Lamar — For Free? (Interlude) — Terrace Martin puts bebop panic back in the vernacular
+13. Kamasi Washington — Change of the Guard — LA, the maximalist revival
+14. Sons of Kemet — My Queen Is Harriet Tubman — London now: sax, tuba, two drummers
+15. Colin Stetson — The stars in his head — solo bass sax, circular breathing, one man as an orchestra
+
+**Seams:** strict lineage order, which means the energy arc is a *consequence* rather than a
+design — the first five build to Coltrane/Pharoah, track 6 deliberately breaks the reverence
+(the honk is the point), the African run is the widest turn, and Stetson closes by dissolving
+the instrument into texture. Track 10 is the hinge: Getatchew learned the horn without ever
+hearing American jazz phrasing, so it's the one place the instrument sounds genuinely
+un-adopted.
+
+**Anchors vs. new:** Coltrane, Hawkins, Springsteen and Kendrick are already yours — they're
+the evidence the thread is real, and `--new-only` correctly skipped all four. The other 11
+logged.
+
+**Misses / catches:** 15/15 verified, but one match drifted — searching Getatchew Mekuria's
+"Aynotchesh Yeregal" returned a *different* track of his ("Almaz yeharerwa"), which
+Recipe 30's guardrail treats as a miss. Re-verified against the Ethiopiques Vol. 14
+tracklist and "Shellela" came back as an exact title match. Two picks sit on compilations
+rather than original pressings (Bechet on a *Best Of*, Parker on *Now's The Time: The
+Genius Of…*), so the Parker cut may be the 1953 re-recording rather than the 1945 side.
+
+**Tweak ideas:** the deliberate omissions are the smooth-jazz/pop-sax station (Gerry
+Rafferty, Kenny G) — a real chapter in the instrument's story that would read as a joke
+here — and Gato Barbieri, who'd have been a fourth "far" station past the recipe's cap of
+three. Swap Kamasi for Nubya Garcia if the London section should be the newer end.
+
+**Cover:** `covers/sax_lineage.jpg`, seed **3041** — panoramic dusk street with a single
+brass horn, per the new Recipe 30 composition rule (journey across scenes).
+
+---
+
 ## 🤖 Alive — a jam band set list
 **Link:** https://open.spotify.com/playlist/67FgyblAzZlAjhf3tJGYwr
 **Built:** 2026-07-27 · **Recipe:** 22 — Alive (definitive live cuts), jam-band variant · **16 tracks**

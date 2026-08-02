@@ -301,6 +301,28 @@ session, not in a Spotify endpoint. Python is a dumb sensing + acting layer.
   to one column correctly, but the track's default `minmax(auto,1fr)` floors at the
   min-content width of `.skiprow`/`.stuckwrap`, clipping percentages ("1.1%"→"1."). Fix is
   `min-width:0` on the grid item plus wrapping rules inside the rows.
+- **Canon-list layer (Recipe 35) — done, 2026-08-02.** A published critics' greatest-albums
+  list as a *closed* candidate pool: `knowledge/paste300_albums.json` (Paste's 300 Greatest
+  Albums, tracked via a `.gitignore` negation like `genres_coords.json`), `canon_list.py`, and
+  `cli.py canon-snapshot`. **Never `Read` the raw list** — the accessor tiers it against the
+  merged play history into `lived_in` (≥15 album plays) / `brushed` (1–14) / `near_miss`
+  (artist ≥4 plays, album never opened) / `unheard`, which is the only interesting structure
+  in it. First run: 31 / 103 / 46 / 120. **`near_miss` is the point** — Dolly Parton 66 plays
+  and zero of *Coat of Many Colors* beats both a worn-out record and a stranger.
+  - **The export is not the whole truth.** `tier_list` cross-checks
+    `discovery_log.known_listened_artists()`, because Erykah Badu had 1 export play (below the
+    near-miss floor → "unheard") while sitting in the live taste dump's `top_tracks`: the GDPR
+    export ends at its export date, the API's recency windows don't. Any artist in the known
+    set is at minimum `near_miss`, flagged `library_only` when the export shows nothing.
+    Don't remove that cross-check; regression-tested.
+  - Album matching is **deliberately looser** than the album-art gate (containment, no 0.87
+    threshold): a false positive only drops a candidate from the pool, a false negative would
+    claim the user has never heard a record they play constantly. Name normalization reuses
+    `name_match` — do not hand-roll a second normalizer.
+  - Loader is list-agnostic (`--list-path`); adding a list needs no code change. **Verify rank
+    integrity after parsing** — Paste's rank 269 has a 30-word album title that overflowed a
+    naive heading regex and silently dropped a row. Docs: `knowledge/canon_lists.md`.
+    329 tests green (+13 in `tests/test_canon_list.py`).
 - **Deviation:** redirect URI uses port **8889** (not the plan's 8888) because an
   SNL Jupyter server permanently holds 8888. Recorded in `.env`.
 - **Showcase page — done, 2026-07-14.** `docs/recipes.html` is now a tabbed

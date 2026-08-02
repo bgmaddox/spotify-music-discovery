@@ -22,4 +22,6 @@ docs/history.local.html
 !config/*.json
 # keep the parsed everynoise genre map (static reference data, not a secret/dump)
 !knowledge/genres_coords.json
+# keep the published critics' canon lists (static reference data — see knowledge/canon_lists.md)
+!knowledge/paste300_albums.json
 .playwright-mcp/

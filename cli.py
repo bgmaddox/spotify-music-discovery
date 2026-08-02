@@ -21,6 +21,7 @@ session can drive each primitive with a single uniform command:
     python cli.py history-build          # GDPR + Apple exports -> data/history_summary.json
     python cli.py history-build --no-apple   # Spotify-only aggregate
     python cli.py history-snapshot [--year YYYY]   # lean multi-year history digest
+    python cli.py canon-snapshot         # a critics' canon list tiered against your history (Recipe 35)
     python cli.py apple-build            # Apple Media Services export -> data/apple_history_events.json
     python cli.py apple-unresolved       # unresolved-artist report -> data/apple_unresolved.md
     python cli.py apple-resolve [--apply]  # propose artists for those songs via Spotify search
@@ -38,6 +39,7 @@ data/taste_*.json if it's younger than N minutes, avoiding a redundant API pull.
 from __future__ import annotations
 
 import argparse
+import re
 import glob
 import json
 import os
@@ -57,6 +59,7 @@ from genre_map import _cmd_neighbors as _cmd_genre_neighbors
 from lastfm import _cmd_artist_tags, _cmd_similar_artists, _cmd_similar_tracks
 from sensing import _cmd_library_scan, _cmd_now_playing
 from streaming_history import _cmd_history_build, _cmd_history_snapshot
+from canon_list import _cmd_canon_snapshot
 import streaming_history
 from build_timeline_data import _cmd_timeline_build, _cmd_timeline_inject
 from enrich_meta import _cmd_enrich
@@ -68,7 +71,15 @@ from apple_resolve import _add_apple_resolve_args, _cmd_apple_resolve
 
 def _latest_taste_dump() -> str | None:
     """Return the path of the newest data/taste_*.json, or None if none exist."""
-    paths = glob.glob(os.path.join(taste_profile.DATA_DIR, "taste_*.json"))
+    # Timestamped dumps only (taste_20260614T043631Z.json). The bare taste_*.json glob
+    # also matches data/taste_timeline.json — the viz build's output, which has none of
+    # a dump's keys — and since it is rewritten on every timeline-build it is almost
+    # always the newest match, which silently emptied taste-snapshot's known_artists.
+    paths = [
+        p
+        for p in glob.glob(os.path.join(taste_profile.DATA_DIR, "taste_*.json"))
+        if re.search(r"taste_\d{8}T\d{6}Z\.json$", p)
+    ]
     return max(paths, key=os.path.getmtime) if paths else None
 
 
@@ -288,6 +299,20 @@ def main() -> int:
     )
     hs.add_argument("--year", default=None, help="Zoom into a single year (YYYY).")
     hs.set_defaults(func=_cmd_history_snapshot)
+
+    cs = sub.add_parser(
+        "canon-snapshot",
+        help="Tier a published critics' canon list against your own play history "
+             "(lived-in / brushed / near-miss / unheard) — the Recipe 35 pool.",
+    )
+    cs.add_argument(
+        "--list-path",
+        default=None,
+        help="Canon list JSON (default: knowledge/paste300_albums.json).",
+    )
+    cs.add_argument("--near-miss", type=int, default=60, help="Near-miss rows to print.")
+    cs.add_argument("--unheard", type=int, default=45, help="Unheard rows to print.")
+    cs.set_defaults(func=_cmd_canon_snapshot)
 
     tb = sub.add_parser(
         "timeline-build",

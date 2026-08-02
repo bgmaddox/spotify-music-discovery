@@ -99,6 +99,27 @@ Not a candidate-finder but a *finishing pass*: once a set is verified, order it 
 (warm-up → build → peak → comedown). No audio-features in this app, so the arc comes from
 `artist_tags` + session read, not a tempo column. Ordering is curation — see Recipe 9.
 
+### 15. Instrument as the constant
+Hold a *timbre* fixed and let genre, era, and geography all move — the banjo from West
+African ngoni to bluegrass to chamber-folk, the pedal steel from Hawaii to Nashville to
+ambient. This reaches somewhere similarity graphs structurally can't: scrobble data clusters
+by scene, so it never links two artists who share only an instrument. See Recipe 30. Caveat —
+search can't confirm an instrument is audible, so prefer instrumentalist-led artists over
+"the track with the great solo."
+
+### 16. Self-evidence (your own behavior)
+Not a similarity move at all: mine the extended-history layer for *measured* behavior —
+peak listening hours, seasonal concentration, skip rate at real exposure. Skip rate is the
+honest signal in this data (a play can be passive; not skipping something 900 times is a
+verdict). Always check the denominator — `artist_skip` ships an exposure guard because a 0%
+skip rate over three plays is noise. See Recipe 32.
+
+### 17. Subtract a dimension
+Remove exactly one thing the user normally leans on and keep everything else: the lead
+vocal (Recipe 33), the English lyric (Recipe 34), the studio (Recipe 22), the band (solo
+and duo recordings). Sharper than a general anti-bubble reach, because the removed axis is
+named and every other preference is deliberately preserved.
+
 ---
 
 ## Putting a ladder together (quick procedure)
